@@ -86,19 +86,15 @@ export const createOrganization = withAction(
       }
     }
 
-    // Create organization
-    const { data: organization, error: orgError } = await supabase
-      .from('organizations')
-      // @ts-ignore - Supabase types not generated
-      .insert({
-        name: data.name,
-        slug: data.slug,
-      })
-      .select()
-      .single()
+    // Create organization using Postgres function
+    // This bypasses RLS issues with Server Actions in production
+    // @ts-ignore - RPC function not in generated types
+    const { data: orgData, error: orgError } = await supabase.rpc('create_organization_with_member', {
+      p_name: data.name,
+      p_slug: data.slug,
+    })
 
-    if (orgError || !organization) {
-      // Enhanced error logging for debugging
+    if (orgError || !orgData || (orgData as any[]).length === 0) {
       console.error('Organization creation failed:', {
         error: orgError,
         code: orgError?.code,
@@ -110,34 +106,20 @@ export const createOrganization = withAction(
 
       return {
         success: false,
-        error:
-          orgError?.code === '42501'
-            ? 'Permission denied. Please ensure you are properly authenticated and migrations are applied.'
-            : orgError?.message ?? ErrorMessages.OPERATION_FAILED,
+        error: orgError?.message ?? ErrorMessages.OPERATION_FAILED,
       }
     }
 
-    // After the check, cast to Organization type
-    const org = organization as unknown as Organization
-
-    // Add creator as owner
-    // @ts-ignore - Supabase types not generated
-    const { error: memberError } = await supabase.from('organization_members').insert({
-      org_id: org.id,
-      user_id: user.id,
-      role: 'owner',
-      invited_by: user.id,
-      joined_at: new Date().toISOString(),
-    })
-
-    if (memberError) {
-      // Rollback organization creation
-      await supabase.from('organizations').delete().eq('id', org.id)
-
-      return {
-        success: false,
-        error: memberError.message,
-      }
+    // Get the created organization
+    const result = (orgData as any[])[0]
+    const org: Organization = {
+      id: result.organization_id,
+      name: result.organization_name,
+      slug: result.organization_slug,
+      settings: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deleted_at: null,
     }
 
     revalidateOrganization(org.slug)
