@@ -1,6 +1,6 @@
 # Claude Code Commands & Agents
 
-This project has **9 custom slash commands** to accelerate development and maintain quality.
+This project has **10 custom slash commands** to accelerate development and maintain quality.
 
 ## Quick Reference
 
@@ -18,7 +18,8 @@ Type `/` in Claude Code to see all available commands, or use these directly:
 
 | Command | When to Use | Example |
 |---------|-------------|---------|
-| `/debugger` | 🔴 **Any error or bug** | TypeError, test failure, unexpected behavior |
+| `/build-doctor` | 🔴 **USE FIRST when build fails (10+ errors)** | Build failing with 187 TypeScript errors |
+| `/debugger` | 🔴 **Any single error or bug** | TypeError, test failure, unexpected behavior |
 | `/database` | 🔴 **Migrations, RLS policies** | "Create rfis table with RLS" |
 | `/test-writer` | 🔴 **Writing tests** | "Test createProject action" |
 | `/domain-validator` | 🟡 **Validate construction logic** | "Is this RFI workflow correct?" |
