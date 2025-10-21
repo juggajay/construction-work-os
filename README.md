@@ -51,28 +51,46 @@ npm install
 ```
 
 3. Set up environment variables:
+
+**For Local Development (Recommended)**:
 ```bash
-cp .env.local.example .env.local
+cp .env.local.development .env.local
 ```
 
-Edit `.env.local` with your Supabase credentials:
+This uses safe local Supabase keys that only work on `localhost:54321`.
+
+**For Production/Cloud Development**:
+```bash
+cp .env.local.example .env.local
+# Edit .env.local with your Supabase Cloud credentials
 ```
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
+
+See `ENVIRONMENT_SETUP.md` for detailed environment configuration guide.
 
 4. Run database migrations:
 
-If using Supabase CLI:
+**Option A: Local Supabase (Recommended for Development)**
 ```bash
-supabase db push
+# Start local Supabase
+npm run db:start
+
+# Migrations are automatically applied
+# Get local API keys
+npm run db:status
+
+# Update .env.local with the local Supabase URL and keys
 ```
 
-Or manually run the migration files in `supabase/migrations/` in order:
-- `20250120000000_initial_schema.sql`
-- `20250120000001_rls_policies.sql`
-- `20250120000002_audit_logging.sql`
+**Option B: Supabase Cloud**
+```bash
+# Link to your cloud project
+supabase link --project-ref your-project-ref
+
+# Push migrations
+npm run db:push
+```
+
+See `SUPABASE_CLI_GUIDE.md` for comprehensive Supabase CLI documentation.
 
 5. (Optional) Seed development data:
 
@@ -94,16 +112,29 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Available Scripts
 
+**Development**
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Run TypeScript type checking
 - `npm run format` - Format code with Prettier
+
+**Testing**
 - `npm test` - Run unit tests (Vitest)
 - `npm run test:coverage` - Run tests with coverage
 - `npm run test:e2e` - Run E2E tests (Playwright)
 - `npm run test:e2e:ui` - Run E2E tests with UI
+
+**Database** (Supabase CLI)
+- `npm run db:start` - Start local Supabase
+- `npm run db:stop` - Stop local Supabase
+- `npm run db:reset` - Reset database (re-run migrations + seed)
+- `npm run db:status` - Show Supabase status and API keys
+- `npm run db:migrate <name>` - Create new migration file
+- `npm run db:types` - Generate TypeScript types from schema
+- `npm run db:push` - Push migrations to production
+- `npm run db:psql` - Open PostgreSQL shell
 
 ### Project Structure
 
@@ -182,14 +213,36 @@ npm run test:e2e:ui
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 
+## Claude Code Commands
+
+This project includes **10 custom AI agents** to accelerate development. If you're using Claude Code:
+
+| Command | When to Use |
+|---------|-------------|
+| `/build-doctor` | **🔴 USE FIRST** when build fails (10+ errors) - Diagnoses root causes |
+| `/debugger` | Any error, test failure, or bug |
+| `/database` | Creating migrations, RLS policies, queries |
+| `/test-writer` | Writing unit, integration, or E2E tests |
+| `/domain-validator` | Validating construction workflows/terminology |
+| `/code-review` | Before archiving changes or creating PRs |
+| `/performance` | Optimizing slow queries or pages |
+| `/openspec:proposal` | Creating new feature proposals |
+| `/openspec:apply` | Implementing approved proposals |
+| `/openspec:archive` | Archiving completed changes |
+
+**📖 Full guide**: See `.claude/README.md` for detailed usage and examples.
+
+**Quick start**: Type `/` in Claude Code to see all available commands.
+
 ## Contributing
 
 1. Create a feature branch from `develop`
-2. Make your changes
-3. Ensure all tests pass (`npm test` and `npm run test:e2e`)
-4. Run type checking (`npm run type-check`)
-5. Run linter (`npm run lint`)
-6. Submit a pull request
+2. Make your changes following OpenSpec workflow (see `.claude/README.md`)
+3. Use `/code-review` to validate your changes
+4. Ensure all tests pass (`npm test` and `npm run test:e2e`)
+5. Run type checking (`npm run type-check`)
+6. Run linter (`npm run lint`)
+7. Submit a pull request
 
 ## License
 
