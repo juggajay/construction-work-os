@@ -32,15 +32,42 @@ export const createOrganization = withAction(
   async (data: CreateOrganizationInput): Promise<ActionResponse<Organization>> => {
     const supabase = await createClient()
 
+    // Debug: Check session state
+    const { data: sessionData } = await supabase.auth.getSession()
+    console.log('[DEBUG] Session state:', {
+      hasSession: !!sessionData.session,
+      hasUser: !!sessionData.session?.user,
+      userId: sessionData.session?.user?.id,
+      hasAccessToken: !!sessionData.session?.access_token,
+    })
+
     // Get user to verify authentication
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser()
 
+    console.log('[DEBUG] getUser result:', {
+      hasUser: !!user,
+      userId: user?.id,
+      error: userError?.message,
+    })
+
     if (userError || !user) {
       throw new UnauthorizedError(ErrorMessages.AUTH_REQUIRED)
     }
+
+    // Test auth context with a simple query first
+    const { error: testError } = await supabase
+      .from('organizations')
+      .select('id')
+      .limit(1)
+
+    console.log('[DEBUG] Test query (SELECT):', {
+      success: !testError,
+      error: testError?.message,
+      code: testError?.code,
+    })
 
     // Check if slug is available
     const { data: existingOrg } = await supabase
