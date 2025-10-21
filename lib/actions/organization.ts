@@ -32,16 +32,15 @@ export const createOrganization = withAction(
   async (data: CreateOrganizationInput): Promise<ActionResponse<Organization>> => {
     const supabase = await createClient()
 
-    // Get session to ensure JWT is set for RLS policies
+    // Get user to verify authentication
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-    if (!session?.user) {
+    if (userError || !user) {
       throw new UnauthorizedError(ErrorMessages.AUTH_REQUIRED)
     }
-
-    const user = session.user
 
     // Check if slug is available
     const { data: existingOrg } = await supabase
@@ -72,9 +71,22 @@ export const createOrganization = withAction(
       .single()
 
     if (orgError || !organization) {
+      // Enhanced error logging for debugging
+      console.error('Organization creation failed:', {
+        error: orgError,
+        code: orgError?.code,
+        details: orgError?.details,
+        hint: orgError?.hint,
+        message: orgError?.message,
+        userId: user.id,
+      })
+
       return {
         success: false,
-        error: orgError?.message ?? ErrorMessages.OPERATION_FAILED,
+        error:
+          orgError?.code === '42501'
+            ? 'Permission denied. Please ensure you are properly authenticated and migrations are applied.'
+            : orgError?.message ?? ErrorMessages.OPERATION_FAILED,
       }
     }
 
