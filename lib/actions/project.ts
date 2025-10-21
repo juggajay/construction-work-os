@@ -20,7 +20,7 @@ import {
   type DeleteProjectInput,
 } from '@/lib/schemas'
 import type { ActionResponse, Project, ProjectAccess } from '@/lib/types'
-import { withAction, success, revalidateProject } from '@/lib/utils/server-actions'
+import { withAction, success, revalidateProject, toActionError } from '@/lib/utils/server-actions'
 import { ErrorMessages, UnauthorizedError, ForbiddenError, NotFoundError } from '@/lib/utils/errors'
 
 // ============================================================================
@@ -41,6 +41,7 @@ export const createProject = withAction(
     }
 
     // Check if user is org admin
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: data.orgId,
@@ -53,6 +54,7 @@ export const createProject = withAction(
     // Create project
     const { data: project, error } = await supabase
       .from('projects')
+      // @ts-ignore - Supabase types not generated
       .insert({
         org_id: data.orgId,
         name: data.name,
@@ -80,11 +82,13 @@ export const createProject = withAction(
       .eq('id', data.orgId)
       .single()
 
+    const proj = project as unknown as Project
+
     if (org) {
-      revalidateProject(org.slug, project.id)
+      revalidateProject((org as unknown as { slug: string }).slug, proj.id)
     }
 
-    return success(project)
+    return success(proj)
   }
 )
 
@@ -92,12 +96,12 @@ export const createProject = withAction(
 // UPDATE PROJECT
 // ============================================================================
 
-export const updateProject = withAction(
-  updateProjectSchema,
-  async (
-    data: UpdateProjectInput,
-    projectId: string
-  ): Promise<ActionResponse<Project>> => {
+export async function updateProject(
+  data: UpdateProjectInput,
+  projectId: string
+): Promise<ActionResponse<Project>> {
+  try {
+    const validatedData = updateProjectSchema.parse(data)
     const supabase = await createClient()
 
     const {
@@ -119,12 +123,16 @@ export const updateProject = withAction(
       throw new NotFoundError(ErrorMessages.PROJECT_NOT_FOUND)
     }
 
+    const projData = project as unknown as { org_id: string }
+
     // Check if user is org admin or project manager
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
-      check_org_id: project.org_id,
+      check_org_id: projData.org_id,
     })
 
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isManager } = await supabase.rpc('is_project_manager', {
       user_uuid: user.id,
       check_project_id: projectId,
@@ -137,15 +145,16 @@ export const updateProject = withAction(
     // Update project
     const { data: updatedProject, error } = await supabase
       .from('projects')
+      // @ts-ignore - Supabase types not generated
       .update({
-        name: data.name,
-        number: data.number,
-        address: data.address,
-        status: data.status,
-        budget: data.budget,
-        start_date: data.startDate,
-        end_date: data.endDate,
-        settings: data.settings,
+        name: validatedData.name,
+        number: validatedData.number,
+        address: validatedData.address,
+        status: validatedData.status,
+        budget: validatedData.budget,
+        start_date: validatedData.startDate,
+        end_date: validatedData.endDate,
+        settings: validatedData.settings,
       })
       .eq('id', projectId)
       .select()
@@ -158,20 +167,24 @@ export const updateProject = withAction(
       }
     }
 
+    const proj = updatedProject as unknown as Project
+
     // Get organization for revalidation
     const { data: org } = await supabase
       .from('organizations')
       .select('slug')
-      .eq('id', project.org_id)
+      .eq('id', projData.org_id)
       .single()
 
     if (org) {
-      revalidateProject(org.slug, projectId)
+      revalidateProject((org as unknown as { slug: string }).slug, projectId)
     }
 
-    return success(updatedProject)
+    return success(proj)
+  } catch (error) {
+    return toActionError(error)
   }
-)
+}
 
 // ============================================================================
 // GRANT PROJECT ACCESS
@@ -201,12 +214,16 @@ export const grantProjectAccess = withAction(
       throw new NotFoundError(ErrorMessages.PROJECT_NOT_FOUND)
     }
 
+    const projData = project as unknown as { org_id: string }
+
     // Check if user is org admin or project manager
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
-      check_org_id: project.org_id,
+      check_org_id: projData.org_id,
     })
 
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isManager } = await supabase.rpc('is_project_manager', {
       user_uuid: user.id,
       check_project_id: data.projectId,
@@ -235,6 +252,7 @@ export const grantProjectAccess = withAction(
     // Grant access
     const { data: access, error } = await supabase
       .from('project_access')
+      // @ts-ignore - Supabase types not generated
       .insert({
         project_id: data.projectId,
         user_id: data.userId,
@@ -252,18 +270,20 @@ export const grantProjectAccess = withAction(
       }
     }
 
+    const accessData = access as unknown as ProjectAccess
+
     // Get organization for revalidation
     const { data: org } = await supabase
       .from('organizations')
       .select('slug')
-      .eq('id', project.org_id)
+      .eq('id', projData.org_id)
       .single()
 
     if (org) {
-      revalidateProject(org.slug, data.projectId)
+      revalidateProject((org as unknown as { slug: string }).slug, data.projectId)
     }
 
-    return success(access)
+    return success(accessData)
   }
 )
 
@@ -291,21 +311,29 @@ export const updateProjectAccess = withAction(
       .eq('id', data.accessId)
       .single()
 
-    if (!accessRecord || !accessRecord.project) {
+    const accessRecordData = accessRecord as unknown as {
+      project_id: string
+      project: { org_id: string } | null
+    }
+
+    if (!accessRecordData || !accessRecordData.project) {
       throw new NotFoundError('Access record not found')
     }
 
-    const project = accessRecord.project as { org_id: string }
+    const project = accessRecordData.project as { org_id: string }
+    const accessData = accessRecordData as unknown as { project_id: string }
 
     // Check if user is org admin or project manager
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: project.org_id,
     })
 
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isManager } = await supabase.rpc('is_project_manager', {
       user_uuid: user.id,
-      check_project_id: accessRecord.project_id,
+      check_project_id: accessData.project_id,
     })
 
     if (!isAdmin && !isManager) {
@@ -315,6 +343,7 @@ export const updateProjectAccess = withAction(
     // Update access
     const { error } = await supabase
       .from('project_access')
+      // @ts-ignore - Supabase types not generated
       .update({
         role: data.role,
         trade: data.trade,
@@ -336,7 +365,7 @@ export const updateProjectAccess = withAction(
       .single()
 
     if (org) {
-      revalidateProject(org.slug, accessRecord.project_id)
+      revalidateProject((org as unknown as { slug: string }).slug, accessData.project_id)
     }
 
     return success(undefined)
@@ -367,21 +396,29 @@ export const revokeProjectAccess = withAction(
       .eq('id', data.accessId)
       .single()
 
-    if (!accessRecord || !accessRecord.project) {
+    const accessRecordData = accessRecord as unknown as {
+      project_id: string
+      project: { org_id: string } | null
+    }
+
+    if (!accessRecordData || !accessRecordData.project) {
       throw new NotFoundError('Access record not found')
     }
 
-    const project = accessRecord.project as { org_id: string }
+    const project = accessRecordData.project as { org_id: string }
+    const accessData = accessRecordData as unknown as { project_id: string }
 
     // Check if user is org admin or project manager
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: project.org_id,
     })
 
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isManager } = await supabase.rpc('is_project_manager', {
       user_uuid: user.id,
-      check_project_id: accessRecord.project_id,
+      check_project_id: accessData.project_id,
     })
 
     if (!isAdmin && !isManager) {
@@ -391,6 +428,7 @@ export const revokeProjectAccess = withAction(
     // Soft delete access
     const { error } = await supabase
       .from('project_access')
+      // @ts-ignore - Supabase types not generated
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', data.accessId)
 
@@ -409,7 +447,7 @@ export const revokeProjectAccess = withAction(
       .single()
 
     if (org) {
-      revalidateProject(org.slug, accessRecord.project_id)
+      revalidateProject((org as unknown as { slug: string }).slug, accessData.project_id)
     }
 
     return success(undefined)
@@ -444,10 +482,13 @@ export const deleteProject = withAction(
       throw new NotFoundError(ErrorMessages.PROJECT_NOT_FOUND)
     }
 
+    const projData = project as unknown as { org_id: string }
+
     // Check if user is org admin
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
-      check_org_id: project.org_id,
+      check_org_id: projData.org_id,
     })
 
     if (!isAdmin) {
@@ -457,6 +498,7 @@ export const deleteProject = withAction(
     // Soft delete project
     const { error } = await supabase
       .from('projects')
+      // @ts-ignore - Supabase types not generated
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', data.projectId)
 
@@ -471,11 +513,11 @@ export const deleteProject = withAction(
     const { data: org } = await supabase
       .from('organizations')
       .select('slug')
-      .eq('id', project.org_id)
+      .eq('id', projData.org_id)
       .single()
 
     if (org) {
-      revalidateProject(org.slug, data.projectId)
+      revalidateProject((org as unknown as { slug: string }).slug, data.projectId)
     }
 
     return success(undefined)

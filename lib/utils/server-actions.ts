@@ -6,6 +6,9 @@ import { ZodSchema } from 'zod'
 import type { ActionResponse, ActionSuccess } from '@/lib/types'
 import { toActionError } from './errors'
 
+// Re-export for convenience
+export { toActionError }
+
 // ============================================================================
 // ACTION WRAPPER
 // ============================================================================
@@ -24,13 +27,13 @@ import { toActionError } from './errors'
  * )
  */
 export function withAction<TInput, TOutput>(
-  schema: ZodSchema<TInput>,
-  handler: (data: TInput) => Promise<ActionSuccess<TOutput>>
+  schema: ZodSchema<TInput> | { parse: (data: unknown) => TInput },
+  handler: (data: TInput) => Promise<ActionResponse<TOutput>>
 ) {
-  return async (formData: TInput): Promise<ActionResponse<TOutput>> => {
+  return async (formData: unknown): Promise<ActionResponse<TOutput>> => {
     try {
       // Validate input
-      const validatedData = schema.parse(formData)
+      const validatedData = schema.parse(formData) as TInput
 
       // Execute handler
       const result = await handler(validatedData)

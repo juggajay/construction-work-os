@@ -40,7 +40,7 @@ export default function MagicLinkPage() {
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            We've sent you a magic link. Click the link in your email to sign in.
+            We&apos;ve sent you a magic link. Click the link in your email to sign in.
             The link will expire in 15 minutes.
           </CardDescription>
         </CardHeader>
@@ -58,7 +58,7 @@ export default function MagicLinkPage() {
       <CardHeader>
         <CardTitle>Sign in with magic link</CardTitle>
         <CardDescription>
-          Enter your email and we'll send you a link to sign in
+          Enter your email and we&apos;ll send you a link to sign in
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

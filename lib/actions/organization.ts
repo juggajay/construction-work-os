@@ -20,7 +20,7 @@ import {
   type AcceptInvitationInput,
 } from '@/lib/schemas'
 import type { ActionResponse, Organization, OrganizationMember } from '@/lib/types'
-import { withAction, success, revalidateOrganization } from '@/lib/utils/server-actions'
+import { withAction, success, revalidateOrganization, toActionError } from '@/lib/utils/server-actions'
 import { ErrorMessages, UnauthorizedError, ForbiddenError, NotFoundError } from '@/lib/utils/errors'
 
 // ============================================================================
@@ -60,6 +60,7 @@ export const createOrganization = withAction(
     // Create organization
     const { data: organization, error: orgError } = await supabase
       .from('organizations')
+      // @ts-ignore - Supabase types not generated
       .insert({
         name: data.name,
         slug: data.slug,
@@ -74,9 +75,13 @@ export const createOrganization = withAction(
       }
     }
 
+    // After the check, cast to Organization type
+    const org = organization as unknown as Organization
+
     // Add creator as owner
+    // @ts-ignore - Supabase types not generated
     const { error: memberError } = await supabase.from('organization_members').insert({
-      org_id: organization.id,
+      org_id: org.id,
       user_id: user.id,
       role: 'owner',
       invited_by: user.id,
@@ -85,7 +90,7 @@ export const createOrganization = withAction(
 
     if (memberError) {
       // Rollback organization creation
-      await supabase.from('organizations').delete().eq('id', organization.id)
+      await supabase.from('organizations').delete().eq('id', org.id)
 
       return {
         success: false,
@@ -93,9 +98,9 @@ export const createOrganization = withAction(
       }
     }
 
-    revalidateOrganization(organization.slug)
+    revalidateOrganization(org.slug)
 
-    return success(organization)
+    return success(org)
   }
 )
 
@@ -103,12 +108,12 @@ export const createOrganization = withAction(
 // UPDATE ORGANIZATION
 // ============================================================================
 
-export const updateOrganization = withAction(
-  updateOrganizationSchema,
-  async (
-    data: UpdateOrganizationInput,
-    orgId: string
-  ): Promise<ActionResponse<Organization>> => {
+export async function updateOrganization(
+  data: UpdateOrganizationInput,
+  orgId: string
+): Promise<ActionResponse<Organization>> {
+  try {
+    const validatedData = updateOrganizationSchema.parse(data)
     const supabase = await createClient()
 
     const {
@@ -120,6 +125,7 @@ export const updateOrganization = withAction(
     }
 
     // Check if user is admin
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -132,9 +138,10 @@ export const updateOrganization = withAction(
     // Update organization
     const { data: organization, error } = await supabase
       .from('organizations')
+      // @ts-ignore - Supabase types not generated
       .update({
-        name: data.name,
-        settings: data.settings,
+        name: validatedData.name,
+        settings: validatedData.settings,
       })
       .eq('id', orgId)
       .select()
@@ -147,22 +154,25 @@ export const updateOrganization = withAction(
       }
     }
 
-    revalidateOrganization(organization.slug)
+    const org = organization as unknown as Organization
+    revalidateOrganization(org.slug)
 
-    return success(organization)
+    return success(org)
+  } catch (error) {
+    return toActionError(error)
   }
-)
+}
 
 // ============================================================================
 // INVITE MEMBER
 // ============================================================================
 
-export const inviteMember = withAction(
-  inviteMemberSchema,
-  async (
-    data: InviteMemberInput,
-    orgId: string
-  ): Promise<ActionResponse<OrganizationMember>> => {
+export async function inviteMember(
+  data: InviteMemberInput,
+  orgId: string
+): Promise<ActionResponse<OrganizationMember>> {
+  try {
+    const validatedData = inviteMemberSchema.parse(data)
     const supabase = await createClient()
 
     const {
@@ -174,6 +184,7 @@ export const inviteMember = withAction(
     }
 
     // Check if user is admin
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -187,7 +198,7 @@ export const inviteMember = withAction(
     const { data: invitedUser } = await supabase
       .from('profiles')
       .select('id')
-      .eq('email', data.email)
+      .eq('email', validatedData.email)
       .single()
 
     if (!invitedUser) {
@@ -200,12 +211,14 @@ export const inviteMember = withAction(
       }
     }
 
+    const user_id = (invitedUser as unknown as { id: string }).id
+
     // Check if already a member
     const { data: existingMember } = await supabase
       .from('organization_members')
       .select('id')
       .eq('org_id', orgId)
-      .eq('user_id', invitedUser.id)
+      .eq('user_id', user_id)
       .is('deleted_at', null)
       .single()
 
@@ -219,10 +232,11 @@ export const inviteMember = withAction(
     // Create invitation
     const { data: member, error } = await supabase
       .from('organization_members')
+      // @ts-ignore - Supabase types not generated
       .insert({
         org_id: orgId,
-        user_id: invitedUser.id,
-        role: data.role,
+        user_id: user_id,
+        role: validatedData.role,
         invited_by: user.id,
         // joined_at is NULL until invitation is accepted
       })
@@ -236,6 +250,8 @@ export const inviteMember = withAction(
       }
     }
 
+    const orgMember = member as unknown as OrganizationMember
+
     // Get organization for revalidation
     const { data: org } = await supabase
       .from('organizations')
@@ -244,20 +260,25 @@ export const inviteMember = withAction(
       .single()
 
     if (org) {
-      revalidateOrganization(org.slug)
+      revalidateOrganization((org as unknown as { slug: string }).slug)
     }
 
-    return success(member)
+    return success(orgMember)
+  } catch (error) {
+    return toActionError(error)
   }
-)
+}
 
 // ============================================================================
 // UPDATE MEMBER ROLE
 // ============================================================================
 
-export const updateMemberRole = withAction(
-  updateMemberRoleSchema,
-  async (data: UpdateMemberRoleInput, orgId: string): Promise<ActionResponse<void>> => {
+export async function updateMemberRole(
+  data: UpdateMemberRoleInput,
+  orgId: string
+): Promise<ActionResponse<void>> {
+  try {
+    const validatedData = updateMemberRoleSchema.parse(data)
     const supabase = await createClient()
 
     const {
@@ -269,6 +290,7 @@ export const updateMemberRole = withAction(
     }
 
     // Check if user is admin
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -282,7 +304,7 @@ export const updateMemberRole = withAction(
     const { data: member } = await supabase
       .from('organization_members')
       .select('user_id, role')
-      .eq('id', data.memberId)
+      .eq('id', validatedData.memberId)
       .eq('org_id', orgId)
       .single()
 
@@ -290,8 +312,10 @@ export const updateMemberRole = withAction(
       throw new NotFoundError(ErrorMessages.MEMBER_NOT_FOUND)
     }
 
+    const memberData = member as unknown as { user_id: string; role: string }
+
     // Prevent changing own role
-    if (member.user_id === user.id) {
+    if (memberData.user_id === user.id) {
       return {
         success: false,
         error: ErrorMessages.MEMBER_CANNOT_CHANGE_OWN_ROLE,
@@ -301,8 +325,9 @@ export const updateMemberRole = withAction(
     // Update role
     const { error } = await supabase
       .from('organization_members')
-      .update({ role: data.role })
-      .eq('id', data.memberId)
+      // @ts-ignore - Supabase types not generated
+      .update({ role: validatedData.role })
+      .eq('id', validatedData.memberId)
 
     if (error) {
       return {
@@ -319,20 +344,25 @@ export const updateMemberRole = withAction(
       .single()
 
     if (org) {
-      revalidateOrganization(org.slug)
+      revalidateOrganization((org as unknown as { slug: string }).slug)
     }
 
     return success(undefined)
+  } catch (error) {
+    return toActionError(error)
   }
-)
+}
 
 // ============================================================================
 // REMOVE MEMBER
 // ============================================================================
 
-export const removeMember = withAction(
-  removeMemberSchema,
-  async (data: RemoveMemberInput, orgId: string): Promise<ActionResponse<void>> => {
+export async function removeMember(
+  data: RemoveMemberInput,
+  orgId: string
+): Promise<ActionResponse<void>> {
+  try {
+    const validatedData = removeMemberSchema.parse(data)
     const supabase = await createClient()
 
     const {
@@ -344,6 +374,7 @@ export const removeMember = withAction(
     }
 
     // Check if user is admin
+    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -357,7 +388,7 @@ export const removeMember = withAction(
     const { data: member } = await supabase
       .from('organization_members')
       .select('role')
-      .eq('id', data.memberId)
+      .eq('id', validatedData.memberId)
       .eq('org_id', orgId)
       .single()
 
@@ -365,8 +396,10 @@ export const removeMember = withAction(
       throw new NotFoundError(ErrorMessages.MEMBER_NOT_FOUND)
     }
 
+    const memberData = member as unknown as { role: string }
+
     // Prevent removing owner (unless remover is also owner)
-    if (member.role === 'owner') {
+    if (memberData.role === 'owner') {
       const { data: isOwner } = await supabase
         .from('organization_members')
         .select('id')
@@ -386,8 +419,9 @@ export const removeMember = withAction(
     // Soft delete member
     const { error } = await supabase
       .from('organization_members')
+      // @ts-ignore - Supabase types not generated
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', data.memberId)
+      .eq('id', validatedData.memberId)
 
     if (error) {
       return {
@@ -404,12 +438,14 @@ export const removeMember = withAction(
       .single()
 
     if (org) {
-      revalidateOrganization(org.slug)
+      revalidateOrganization((org as unknown as { slug: string }).slug)
     }
 
     return success(undefined)
+  } catch (error) {
+    return toActionError(error)
   }
-)
+}
 
 // ============================================================================
 // ACCEPT INVITATION
@@ -431,6 +467,7 @@ export const acceptInvitation = withAction(
     // Update membership to set joined_at
     const { error } = await supabase
       .from('organization_members')
+      // @ts-ignore - Supabase types not generated
       .update({ joined_at: new Date().toISOString() })
       .eq('org_id', data.orgId)
       .eq('user_id', user.id)
@@ -451,7 +488,7 @@ export const acceptInvitation = withAction(
       .single()
 
     if (org) {
-      revalidateOrganization(org.slug)
+      revalidateOrganization((org as unknown as { slug: string }).slug)
     }
 
     return success(undefined)

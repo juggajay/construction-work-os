@@ -2,7 +2,29 @@
  * Shared application types
  */
 
-import type { Database } from './database'
+import type {
+  Database,
+  Organization,
+  OrganizationInsert,
+  OrganizationInsert as OrganizationUpdate,
+  Project,
+  ProjectInsert,
+  ProjectUpdate,
+  Profile,
+  ProfileInsert,
+  ProfileUpdate,
+  OrganizationMember,
+  OrganizationMemberInsert,
+  OrganizationMemberUpdate,
+  ProjectAccess,
+  ProjectAccessInsert,
+  ProjectAccessUpdate,
+  AuditLog,
+  OrgRole,
+  ProjectRole,
+  ProjectStatus,
+  AuditAction,
+} from './database'
 
 // ============================================================================
 // RE-EXPORTS FROM DATABASE
@@ -30,7 +52,7 @@ export type {
   ProjectStatus,
   AuditAction,
   Database,
-} from './database'
+}
 
 // ============================================================================
 // SUPABASE CLIENT TYPES

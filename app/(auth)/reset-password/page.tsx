@@ -30,6 +30,7 @@ export default function ResetPasswordPage() {
 
     const data = {
       password,
+      confirmPassword,
     }
 
     startTransition(async () => {

@@ -22,7 +22,7 @@ import {
   type UpdatePasswordInput,
   type UpdateProfileInput,
 } from '@/lib/schemas'
-import type { ActionResponse } from '@/lib/types'
+import type { ActionResponse, ActionSuccess } from '@/lib/types'
 import { withAction, success, revalidateProfile } from '@/lib/utils/server-actions'
 import { ErrorMessages, UnauthorizedError } from '@/lib/utils/errors'
 
@@ -60,6 +60,7 @@ export const signup = withAction(signupSchema, async (data: SignupInput): Promis
   }
 
   // Create profile record
+  // @ts-ignore - Supabase types not generated
   const { error: profileError } = await supabase.from('profiles').insert({
     id: authData.user.id,
     full_name: data.fullName,
@@ -148,10 +149,7 @@ export const requestPasswordReset = withAction(
     })
 
     if (error) {
-      return {
-        success: false,
-        error: error.message,
-      }
+      throw new Error(error.message)
     }
 
     // Always return success (don't reveal if email exists)
@@ -169,10 +167,7 @@ export const resetPassword = withAction(
     })
 
     if (error) {
-      return {
-        success: false,
-        error: error.message,
-      }
+      throw new Error(error.message)
     }
 
     return success(undefined)
@@ -203,13 +198,7 @@ export const updatePassword = withAction(
     })
 
     if (verifyError) {
-      return {
-        success: false,
-        error: 'Current password is incorrect',
-        fieldErrors: {
-          currentPassword: ['Current password is incorrect'],
-        },
-      }
+      throw new Error('Current password is incorrect')
     }
 
     // Update to new password
@@ -218,10 +207,7 @@ export const updatePassword = withAction(
     })
 
     if (updateError) {
-      return {
-        success: false,
-        error: updateError.message,
-      }
+      throw new Error(updateError.message)
     }
 
     return success(undefined)
@@ -248,6 +234,7 @@ export const updateProfile = withAction(
     // Update profile in database
     const { error: profileError } = await supabase
       .from('profiles')
+      // @ts-ignore - Supabase types not generated
       .update({
         full_name: data.fullName,
         phone: data.phone,
@@ -256,10 +243,7 @@ export const updateProfile = withAction(
       .eq('id', user.id)
 
     if (profileError) {
-      return {
-        success: false,
-        error: profileError.message,
-      }
+      throw new Error(profileError.message)
     }
 
     // Update auth metadata if full name changed

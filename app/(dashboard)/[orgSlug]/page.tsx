@@ -6,19 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Plus, FolderOpen } from 'lucide-react'
+import type { Organization, Project } from '@/lib/types'
 
 export default async function OrganizationPage({
   params,
 }: {
   params: { orgSlug: string }
 }) {
-  const org = await getOrganizationBySlug(params.orgSlug)
+  const orgResult = await getOrganizationBySlug(params.orgSlug)
 
-  if (!org) {
+  if (!orgResult) {
     redirect('/dashboard')
   }
 
-  const projects = await getOrganizationProjects(org.id)
+  // After the redirect check, we know org is defined
+  const org = orgResult as Organization
+  const projects = (await getOrganizationProjects(org.id)) as Project[]
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">

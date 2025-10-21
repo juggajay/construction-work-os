@@ -30,7 +30,8 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: Avoid writing logic between createServerClient and getClaims().
   // Using getClaims() instead of getUser() for performance (no DB query).
   const { data } = await supabase.auth.getClaims()
-  const user = data?.user ?? null
+  // Check if user is authenticated by verifying sub (subject) claim exists
+  const user = data?.claims?.sub ? { id: data.claims.sub } : null
 
   const { pathname } = request.nextUrl
 

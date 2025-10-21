@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            If that email exists in our system, you'll receive password reset instructions.
+            If that email exists in our system, you&apos;ll receive password reset instructions.
             The link will expire in 1 hour.
           </CardDescription>
         </CardHeader>
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
       <CardHeader>
         <CardTitle>Reset your password</CardTitle>
         <CardDescription>
-          Enter your email and we'll send you a link to reset your password
+          Enter your email and we&apos;ll send you a link to reset your password
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

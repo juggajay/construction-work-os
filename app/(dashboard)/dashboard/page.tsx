@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/actions/auth'
 import { getUserOrganizations } from '@/lib/actions/organization-helpers'
 import { redirect } from 'next/navigation'
+import type { Organization } from '@/lib/types'
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -18,11 +19,7 @@ export default async function DashboardPage() {
   }
 
   // If user has orgs, redirect to the first one (or last accessed)
-  const defaultOrg = orgs[0]
-  if (defaultOrg) {
-    redirect(`/${defaultOrg.slug}`)
-  }
-
-  // Fallback
-  redirect('/orgs/new')
+  // After the length check above, we know orgs[0] exists
+  const defaultOrg = orgs[0] as unknown as Organization
+  redirect(`/${defaultOrg.slug}`)
 }

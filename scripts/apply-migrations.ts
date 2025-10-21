@@ -46,7 +46,7 @@ async function applyMigrations() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            apikey: supabaseServiceKey,
+            apikey: supabaseServiceKey!,
             Authorization: `Bearer ${supabaseServiceKey}`,
           },
           body: JSON.stringify({ query: sql }),
@@ -65,7 +65,7 @@ async function applyMigrations() {
       console.error(`  ❌ Failed to apply migration: ${file}`)
       console.error(`  Error: ${err}`)
       console.error(`\nPlease apply remaining migrations manually via Supabase SQL Editor:`)
-      console.error(`https://supabase.com/dashboard/project/${supabaseUrl.split('.')[0].split('//')[1]}/sql/new`)
+      console.error(`https://supabase.com/dashboard/project/${supabaseUrl!.split('.')[0]!.split('//')[1]}/sql/new`)
       process.exit(1)
     }
   }

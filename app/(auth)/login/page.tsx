@@ -109,7 +109,7 @@ export default function LoginPage() {
             <Link href="/magic-link">Sign in with magic link</Link>
           </Button>
           <p className="text-center text-sm text-neutral-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="font-medium text-neutral-900 hover:underline">
               Sign up
             </Link>

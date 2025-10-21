@@ -26,9 +26,10 @@ export function ProjectForm({ orgId, orgSlug }: ProjectFormProps) {
 
     const data = {
       name: formData.get('name') as string,
+      status: 'planning' as const,
       number: formData.get('number') as string || undefined,
       address: formData.get('address') as string || undefined,
-      budget: formData.get('budget') ? parseFloat(formData.get('budget') as string) : undefined,
+      budget: formData.get('budget') as string || undefined,
       startDate: formData.get('startDate') as string || undefined,
       endDate: formData.get('endDate') as string || undefined,
       orgId,

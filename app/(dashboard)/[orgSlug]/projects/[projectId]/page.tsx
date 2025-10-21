@@ -5,17 +5,20 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Calendar, DollarSign, MapPin, FileText } from 'lucide-react'
+import type { Project } from '@/lib/types'
 
 export default async function ProjectPage({
   params,
 }: {
   params: { orgSlug: string; projectId: string }
 }) {
-  const project = await getProjectById(params.projectId)
+  const projectResult = await getProjectById(params.projectId)
 
-  if (!project) {
+  if (!projectResult) {
     redirect(`/${params.orgSlug}`)
   }
+
+  const project = projectResult as Project
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
