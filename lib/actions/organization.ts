@@ -32,13 +32,16 @@ export const createOrganization = withAction(
   async (data: CreateOrganizationInput): Promise<ActionResponse<Organization>> => {
     const supabase = await createClient()
 
+    // Get session to ensure JWT is set for RLS policies
     const {
-      data: { user },
-    } = await supabase.auth.getUser()
+      data: { session },
+    } = await supabase.auth.getSession()
 
-    if (!user) {
+    if (!session?.user) {
       throw new UnauthorizedError(ErrorMessages.AUTH_REQUIRED)
     }
+
+    const user = session.user
 
     // Check if slug is available
     const { data: existingOrg } = await supabase

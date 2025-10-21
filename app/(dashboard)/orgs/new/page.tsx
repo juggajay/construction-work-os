@@ -94,7 +94,7 @@ export default function NewOrganizationPage() {
                     required
                     minLength={3}
                     maxLength={30}
-                    pattern="[a-z0-9-]+"
+                    pattern="[a-z0-9\-]+"
                     disabled={isPending}
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
