@@ -1,10 +1,20 @@
 # Quick Start: Claude Code Agents
 
-**Hey! Your project has 10 AI agents ready to help you code faster. Here's how to use them.**
+**Hey! Your project has 11 AI agents ready to help you code faster. Here's how to use them.**
 
 ---
 
 ## TL;DR - The Top Agents You'll Use
+
+### 0. `/orchestrator` - 🟣 **NOT SURE WHICH AGENT? START HERE!**
+
+```
+You: "Something is broken but I'm not sure what"
+Type: /orchestrator
+Result: Analyzes context, figures out the problem type, deploys the right specialist
+```
+
+**Why it's first:** Prevents choosing wrong agent, losing context, or getting stuck in loops. It's your intelligent router.
 
 ### 1. `/build-doctor` - 🔴 **BUILD FAILS? START HERE!**
 
@@ -100,10 +110,11 @@ Result: Complete Vitest test with mocks and edge cases
 
 ---
 
-## All 10 Agents
+## All 11 Agents
 
 | Priority | Command | Use When |
 |----------|---------|----------|
+| 🟣 **ROUTER** | `/orchestrator` | **Unsure which agent to use** - Analyzes context & routes to right specialist |
 | 🔴 **FIRST** | `/build-doctor` | **Build fails with 10+ errors** - Use BEFORE debugging individual errors |
 | 🔴 Daily | `/debugger` | Errors, bugs, unexpected behavior |
 | 🔴 Daily | `/database` | Migrations, RLS, queries |

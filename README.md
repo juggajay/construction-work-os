@@ -215,10 +215,11 @@ npm run test:e2e:ui
 
 ## Claude Code Commands
 
-This project includes **10 custom AI agents** to accelerate development. If you're using Claude Code:
+This project includes **11 custom AI agents** to accelerate development. If you're using Claude Code:
 
 | Command | When to Use |
 |---------|-------------|
+| `/orchestrator` | **🟣 USE WHEN UNSURE** - Analyzes context, routes to right specialist |
 | `/build-doctor` | **🔴 USE FIRST** when build fails (10+ errors) - Diagnoses root causes |
 | `/debugger` | Any error, test failure, or bug |
 | `/database` | Creating migrations, RLS policies, queries |

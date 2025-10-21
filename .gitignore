@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Vitest
 /coverage
+
+# Supabase
+/supabase/.temp

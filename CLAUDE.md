@@ -21,7 +21,10 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 # Available Claude Code Agents
 
-This project has **10 custom slash commands** to help you work faster:
+This project has **11 custom slash commands** to help you work faster:
+
+**Meta Agent** (intelligent routing):
+- `/orchestrator` - **🟣 USE WHEN UNSURE** - Analyzes context, routes to right specialist, prevents loops
 
 **Development Agents** (use these proactively):
 - `/build-doctor` - **🔴 USE FIRST** when build fails - Diagnoses root causes, prevents whack-a-mole fixing

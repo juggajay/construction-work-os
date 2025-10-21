@@ -1,6 +1,6 @@
 # Claude Code Commands & Agents
 
-This project has **10 custom slash commands** to accelerate development and maintain quality.
+This project has **11 custom slash commands** to accelerate development and maintain quality.
 
 ## Quick Reference
 
@@ -14,6 +14,12 @@ Type `/` in Claude Code to see all available commands, or use these directly:
 | `/openspec:apply` | Implementing an approved proposal | After proposal approved |
 | `/openspec:archive` | After deploying a change | When change is live |
 
+### Meta Agent (Intelligent Routing)
+
+| Command | When to Use | Example |
+|---------|-------------|---------|
+| `/orchestrator` | 🟣 **USE WHEN UNSURE which agent to use** | "Something is broken" (analyzes & routes) |
+
 ### Development Agents (Your AI Assistants)
 
 | Command | When to Use | Example |
@@ -26,11 +32,133 @@ Type `/` in Claude Code to see all available commands, or use these directly:
 | `/code-review` | 🟡 **Before archiving** | "Review add-rfi-workflow" |
 | `/performance` | 🔵 **Optimization** | "Why is project list slow?" |
 
-**Legend**: 🔴 Use daily | 🟡 Use regularly | 🔵 Use when optimizing
+**Legend**: 🟣 Intelligent router | 🔴 Use daily | 🟡 Use regularly | 🔵 Use when optimizing
 
 ---
 
 ## Detailed Usage
+
+### -1. `/orchestrator` - Meta Agent 🟣 **USE WHEN UNSURE**
+
+**Use whenever you encounter**:
+- Unsure which agent to use for the task
+- Ambiguous problem ("something is broken")
+- Getting stuck in loops with other agents
+- Need to gather context before deciding
+- Multiple possible problem types
+
+**What it does**:
+1. **Gathers context first** - Checks build, git status, errors, recent changes
+2. **Analyzes problem type** - Uses decision tree to classify issue
+3. **Routes to specialist** - Deploys the RIGHT agent for the job
+4. **Preserves context** - Passes full context to the specialist
+5. **Monitors progress** - Switches agents if stuck (circuit breaker)
+
+**Decision Tree**:
+```
+Build failing (10+ errors)? → /build-doctor
+Database task? → /database
+Single error? → /debugger
+Performance issue? → /performance
+Construction domain? → /domain-validator
+Ambiguous? → Ask user for clarification
+```
+
+**Example**:
+```
+You: "Something is broken after pulling changes"
+
+/orchestrator
+
+Agent:
+## 🎯 ORCHESTRATOR ANALYSIS
+
+Context Gathered:
+- Build status: FAILING (47 errors)
+- Recent changes: Database migration (git log)
+- Error pattern: Type 'never' errors in Supabase queries
+
+Decision: Deploying /build-doctor
+Reason: Build failures with 10+ errors need root cause diagnosis
+
+Context for build-doctor:
+- 47 TypeScript errors
+- Recent migration changes
+- Likely cause: Missing Supabase types
+
+[Deploys /build-doctor which fixes the issue]
+```
+
+**Anti-Loop Mechanisms**:
+- **Circuit Breaker**: Stops after 3 failed attempts with same agent
+- **Context Preservation**: Creates summary before routing
+- **Progress Monitoring**: Switches approach if no progress
+
+**When to use**:
+- ✅ Not sure which agent fits the problem
+- ✅ Complex/ambiguous issues
+- ✅ Want intelligent routing instead of guessing
+- ❌ You already know which agent you need (use that agent directly)
+
+---
+
+### 0. `/build-doctor` - Build Diagnostics Specialist 🔴 **USE FIRST**
+
+**Use whenever you encounter**:
+- Build fails with 10+ errors
+- TypeScript reports dozens/hundreds of errors
+- "Whack-a-mole" fixing isn't working
+- Before starting to fix errors one-by-one
+- After pulling changes that break the build
+
+**What it does**:
+1. Runs `npm run build`, `npm run type-check`, `npm run lint`
+2. **Groups errors by pattern** (not one-by-one)
+3. **Identifies root causes** (e.g., missing Supabase types, outdated deps)
+4. Prioritizes fixes by impact (high/medium/low)
+5. **Recommends strategic fix order** (fix root cause, not symptoms)
+
+**Example**:
+```
+You: "Build failing with 187 TypeScript errors after schema changes"
+
+/build-doctor
+
+Agent:
+## BUILD DIAGNOSTIC REPORT
+
+**Total Errors:** 187
+
+### ROOT CAUSES
+
+🔴 CRITICAL: Missing Supabase Types (162 errors, 87%)
+- All Supabase queries return 'never'
+- FIX: npm run db:types
+- Impact: Fixes 162 errors instantly
+
+🟡 MEDIUM: Multi-param handlers (18 errors, 10%)
+- FIX: Refactor to standalone functions
+
+🟢 LOW: ESLint quotes (7 errors, 4%)
+- FIX: npm run lint -- --fix
+
+RECOMMENDED STRATEGY:
+1. Generate Supabase types ← START HERE (fixes 87%)
+2. Then refactor handlers (fixes 10%)
+3. Finally auto-fix ESLint (fixes 4%)
+```
+
+**Real-world impact**:
+- ❌ Without Build Doctor: 3+ hours of whack-a-mole fixing, 200+ `@ts-ignore` comments
+- ✅ With Build Doctor: 30 minutes, ONE command (`npm run db:types`) fixes 87% of errors
+
+**Special focus**:
+- Missing Supabase TypeScript types (most common root cause)
+- Outdated dependencies
+- Type inference failures
+- Function signature mismatches
+
+---
 
 ### 1. `/debugger` - Debugging Specialist
 
