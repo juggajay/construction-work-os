@@ -51,28 +51,42 @@ export const createProject = withAction(
       throw new ForbiddenError(ErrorMessages.ORG_ADMIN_REQUIRED)
     }
 
-    // Create project
-    const { data: project, error } = await supabase
-      .from('projects')
-      // @ts-ignore - Supabase types not generated
-      .insert({
-        org_id: data.orgId,
-        name: data.name,
-        number: data.number,
-        address: data.address,
-        status: data.status,
-        budget: data.budget,
-        start_date: data.startDate,
-        end_date: data.endDate,
-      })
-      .select()
-      .single()
+    // Create project using Postgres function (bypasses RLS issue)
+    // @ts-ignore - RPC function not in generated types
+    const { data: projectData, error } = await supabase.rpc('create_project_with_access', {
+      p_org_id: data.orgId,
+      p_name: data.name,
+      p_number: data.number || null,
+      p_address: data.address || null,
+      p_status: data.status || 'planning',
+      p_budget: data.budget || null,
+      p_start_date: data.startDate || null,
+      p_end_date: data.endDate || null,
+    })
 
-    if (error || !project) {
+    if (error || !projectData || (projectData as any[]).length === 0) {
       return {
         success: false,
         error: error?.message ?? ErrorMessages.OPERATION_FAILED,
       }
+    }
+
+    // Map RPC result to Project type
+    const result = (projectData as any[])[0]
+    const project: Project = {
+      id: result.project_id,
+      org_id: result.project_org_id,
+      name: result.project_name,
+      number: result.project_number,
+      address: result.project_address,
+      status: result.project_status,
+      budget: result.project_budget,
+      start_date: result.project_start_date,
+      end_date: result.project_end_date,
+      settings: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deleted_at: null,
     }
 
     // Get organization for revalidation
@@ -82,13 +96,11 @@ export const createProject = withAction(
       .eq('id', data.orgId)
       .single()
 
-    const proj = project as unknown as Project
-
     if (org) {
-      revalidateProject((org as unknown as { slug: string }).slug, proj.id)
+      revalidateProject((org as unknown as { slug: string }).slug, project.id)
     }
 
-    return success(proj)
+    return success(project)
   }
 )
 
