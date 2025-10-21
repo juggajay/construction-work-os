@@ -88,25 +88,43 @@ export const createOrganization = withAction(
 
     // Create organization using Postgres function
     // This bypasses RLS issues with Server Actions in production
+    console.log('[DEBUG] Calling RPC function with params:', {
+      p_name: data.name,
+      p_slug: data.slug,
+      userId: user.id,
+    })
+
     // @ts-ignore - RPC function not in generated types
     const { data: orgData, error: orgError } = await supabase.rpc('create_organization_with_member', {
       p_name: data.name,
       p_slug: data.slug,
     })
 
+    console.log('[DEBUG] RPC function result:', {
+      hasData: !!orgData,
+      dataLength: orgData ? (orgData as any[]).length : 0,
+      hasError: !!orgError,
+      errorCode: orgError?.code,
+      errorMessage: orgError?.message,
+      errorDetails: orgError?.details,
+      errorHint: orgError?.hint,
+    })
+
     if (orgError || !orgData || (orgData as any[]).length === 0) {
-      console.error('Organization creation failed:', {
+      console.error('[ERROR] Organization creation failed via RPC:', {
         error: orgError,
         code: orgError?.code,
         details: orgError?.details,
         hint: orgError?.hint,
         message: orgError?.message,
         userId: user.id,
+        hasData: !!orgData,
+        dataLength: orgData ? (orgData as any[]).length : 0,
       })
 
       return {
         success: false,
-        error: orgError?.message ?? ErrorMessages.OPERATION_FAILED,
+        error: orgError?.message ?? 'Failed to create organization. Please try again.',
       }
     }
 
