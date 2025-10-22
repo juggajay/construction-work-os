@@ -44,6 +44,9 @@ export default async function NewDailyReportPage({ params, searchParams }: PageP
     notFound();
   }
 
+  // Type assertion for project data
+  const projectData = project as any;
+
   // If copyFrom is provided, get the previous report
   let previousReport = null;
   if (copyFrom) {
@@ -65,22 +68,22 @@ export default async function NewDailyReportPage({ params, searchParams }: PageP
     }
   }
 
-  // Determine default date
-  const defaultDate = date || new Date().toISOString().split('T')[0];
+  // Determine default date (always string, never undefined due to fallback)
+  const defaultDate = (date || new Date().toISOString().split('T')[0]) as string;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Create Daily Report</h1>
-        <p className="text-muted-foreground">{project.name}</p>
+        <p className="text-muted-foreground">{projectData.name}</p>
       </div>
 
       <DailyReportForm
-        projectId={project.id}
+        projectId={projectData.id}
         orgSlug={orgSlug}
         defaultDate={defaultDate}
-        latitude={project.latitude}
-        longitude={project.longitude}
+        latitude={projectData.latitude}
+        longitude={projectData.longitude}
         previousReport={previousReport}
       />
     </div>

@@ -3,12 +3,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-interface CopyFromPreviousInput {
+export interface CopyFromPreviousInput {
   projectId: string;
   reportDate: string; // YYYY-MM-DD for new report
 }
 
-interface CopyFromPreviousResult {
+export interface CopyFromPreviousResult {
   success: boolean;
   data?: {
     id: string;
@@ -62,31 +62,37 @@ export async function copyFromPreviousReport(
       };
     }
 
-    // Create new draft report
-    const { data: newReport, error: createError } = await supabase
+    // Type assertion for complex nested query
+    const previousReportData = previousReport as any;
+
+    // Create new draft report (type assertion needed for Supabase client)
+    const { data: newReport, error: createError } = await (supabase as any)
       .from('daily_reports')
       .insert({
         project_id: input.projectId,
         report_date: input.reportDate,
         status: 'draft',
         created_by: user.id,
-        work_hours_start: previousReport.work_hours_start,
-        work_hours_end: previousReport.work_hours_end,
+        work_hours_start: previousReportData.work_hours_start,
+        work_hours_end: previousReportData.work_hours_end,
       })
       .select('id')
       .single();
 
-    if (createError) {
-      return { success: false, error: createError.message };
+    if (createError || !newReport) {
+      return { success: false, error: createError?.message || 'Failed to create report' };
     }
+
+    // Type assertion for newReport
+    const newReportData = newReport as any;
 
     let crewEntriesCopied = 0;
     let equipmentEntriesCopied = 0;
 
     // Copy crew entries (without notes)
-    if (previousReport.crew_entries && previousReport.crew_entries.length > 0) {
-      const crewEntries = previousReport.crew_entries.map((entry: any) => ({
-        daily_report_id: newReport.id,
+    if (previousReportData.crew_entries && previousReportData.crew_entries.length > 0) {
+      const crewEntries = previousReportData.crew_entries.map((entry: any) => ({
+        daily_report_id: newReportData.id,
         trade: entry.trade,
         csi_division: entry.csi_division,
         subcontractor_org_id: entry.subcontractor_org_id,
@@ -108,12 +114,12 @@ export async function copyFromPreviousReport(
 
     // Copy equipment entries (without notes)
     if (
-      previousReport.equipment_entries &&
-      previousReport.equipment_entries.length > 0
+      previousReportData.equipment_entries &&
+      previousReportData.equipment_entries.length > 0
     ) {
-      const equipmentEntries = previousReport.equipment_entries.map(
+      const equipmentEntries = previousReportData.equipment_entries.map(
         (entry: any) => ({
-          daily_report_id: newReport.id,
+          daily_report_id: newReportData.id,
           equipment_type: entry.equipment_type,
           equipment_id: entry.equipment_id,
           operator_name: entry.operator_name,
@@ -139,8 +145,8 @@ export async function copyFromPreviousReport(
     return {
       success: true,
       data: {
-        id: newReport.id,
-        copiedFrom: previousReport.report_date,
+        id: newReportData.id,
+        copiedFrom: previousReportData.report_date,
         crewEntriesCopied,
         equipmentEntriesCopied,
       },

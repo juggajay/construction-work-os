@@ -48,6 +48,9 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
     notFound();
   }
 
+  // Type assertion for project data
+  const projectData = project as any;
+
   // Build query for daily reports
   let query = supabase
     .from('daily_reports')
@@ -83,13 +86,16 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
     console.error('Error fetching daily reports:', reportsError);
   }
 
+  // Type assertion for reports data (complex nested query)
+  const reportsData = reports as any[];
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Daily Reports</h1>
-          <p className="text-muted-foreground">{project.name}</p>
+          <p className="text-muted-foreground">{projectData.name}</p>
         </div>
         <Link href={`/${orgSlug}/projects/${projectId}/daily-reports/new`}>
           <Button>
@@ -144,7 +150,7 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
       </div>
 
       {/* Reports List */}
-      {!reports || reports.length === 0 ? (
+      {!reportsData || reportsData.length === 0 ? (
         <div className="text-center py-12 border rounded-lg">
           <p className="text-muted-foreground">No daily reports found</p>
           <Link href={`/${orgSlug}/projects/${projectId}/daily-reports/new`}>
@@ -155,7 +161,7 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
         </div>
       ) : (
         <div className="grid gap-4">
-          {reports.map((report) => (
+          {reportsData.map((report) => (
             <Link
               key={report.id}
               href={`/${orgSlug}/projects/${projectId}/daily-reports/${report.id}`}

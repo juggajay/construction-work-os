@@ -15,7 +15,7 @@ import { z } from 'zod';
 
 export type CreateDailyReportInput = z.infer<typeof CreateDailyReportSchema>;
 
-interface CreateDailyReportResult {
+export interface CreateDailyReportResult {
   success: boolean;
   data?: {
     id: string;
@@ -69,9 +69,11 @@ export async function createDailyReport(
       .maybeSingle();
 
     if (existingReport) {
+      // Type assertion for query result
+      const existingReportData = existingReport as any;
       return {
         success: false,
-        error: `A ${existingReport.status} report already exists for this date`,
+        error: `A ${existingReportData.status} report already exists for this date`,
       };
     }
 
@@ -131,8 +133,8 @@ export async function createDailyReport(
       }
     }
 
-    // Create daily report
-    const { data: report, error: createError } = await supabase
+    // Create daily report (type assertion needed for Supabase client)
+    const { data: report, error: createError } = await (supabase as any)
       .from('daily_reports')
       .insert({
         project_id: validated.projectId,
@@ -148,9 +150,12 @@ export async function createDailyReport(
       .select('id')
       .single();
 
-    if (createError) {
-      return { success: false, error: createError.message };
+    if (createError || !report) {
+      return { success: false, error: createError?.message || 'Failed to create report' };
     }
+
+    // Type assertion for report data
+    const reportData = report as any;
 
     // Revalidate project page
     revalidatePath(`/[orgSlug]/projects/${validated.projectId}`);
@@ -158,7 +163,7 @@ export async function createDailyReport(
     return {
       success: true,
       data: {
-        id: report.id,
+        id: reportData.id,
         weatherFetched,
         weatherSource,
       },

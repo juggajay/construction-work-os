@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-interface UpdateDailyReportInput {
+export interface UpdateDailyReportInput {
   id: string;
   narrative?: string;
   delays?: string;
@@ -19,7 +19,7 @@ interface UpdateDailyReportInput {
   humidity?: number;
 }
 
-interface UpdateDailyReportResult {
+export interface UpdateDailyReportResult {
   success: boolean;
   error?: string;
 }
@@ -55,8 +55,11 @@ export async function updateDailyReport(
       return { success: false, error: 'Daily report not found' };
     }
 
+    // Type assertion for query result
+    const reportData = report as any;
+
     // Only allow updates to draft reports
-    if (report.status !== 'draft') {
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot edit daily report after submission',
@@ -64,7 +67,7 @@ export async function updateDailyReport(
     }
 
     // Only creator can update draft reports
-    if (report.created_by !== user.id) {
+    if (reportData.created_by !== user.id) {
       return {
         success: false,
         error: 'Only the creator can update this draft report',
@@ -94,8 +97,8 @@ export async function updateDailyReport(
     if (input.windSpeed !== undefined) updateData.wind_speed = input.windSpeed;
     if (input.humidity !== undefined) updateData.humidity = input.humidity;
 
-    // Update daily report
-    const { error: updateError } = await supabase
+    // Update daily report (type assertion needed for Supabase client)
+    const { error: updateError } = await (supabase as any)
       .from('daily_reports')
       .update(updateData)
       .eq('id', input.id);
@@ -105,9 +108,9 @@ export async function updateDailyReport(
     }
 
     // Revalidate paths
-    revalidatePath(`/[orgSlug]/projects/${report.project_id}/daily-reports`);
+    revalidatePath(`/[orgSlug]/projects/${reportData.project_id}/daily-reports`);
     revalidatePath(
-      `/[orgSlug]/projects/${report.project_id}/daily-reports/${input.id}`
+      `/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.id}`
     );
 
     return { success: true };

@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-interface AddCrewEntryInput {
+export interface AddCrewEntryInput {
   dailyReportId: string;
   trade: string;
   csiDivision?: string;
@@ -15,7 +15,7 @@ interface AddCrewEntryInput {
   notes?: string;
 }
 
-interface AddCrewEntryResult {
+export interface AddCrewEntryResult {
   success: boolean;
   data?: { id: string };
   error?: string;
@@ -51,7 +51,10 @@ export async function addCrewEntry(
       return { success: false, error: 'Daily report not found' };
     }
 
-    if (report.status !== 'draft') {
+    // Type assertion for query result
+    const reportData = report as any;
+
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot add entries to non-draft reports',
@@ -71,8 +74,8 @@ export async function addCrewEntry(
       return { success: false, error: 'Hours worked cannot be negative' };
     }
 
-    // Insert crew entry
-    const { data: entry, error: insertError } = await supabase
+    // Insert crew entry (type assertion needed for Supabase client)
+    const { data: entry, error: insertError } = await (supabase as any)
       .from('daily_report_crew_entries')
       .insert({
         daily_report_id: input.dailyReportId,
@@ -92,10 +95,13 @@ export async function addCrewEntry(
       return { success: false, error: insertError.message };
     }
 
-    // Revalidate paths
-    revalidatePath(`/[orgSlug]/projects/${report.project_id}/daily-reports/${input.dailyReportId}`);
+    // Type assertion for entry data
+    const entryData = entry as any;
 
-    return { success: true, data: { id: entry.id } };
+    // Revalidate paths
+    revalidatePath(`/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.dailyReportId}`);
+
+    return { success: true, data: { id: entryData.id } };
   } catch (error) {
     console.error('Error adding crew entry:', error);
     return {

@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-interface AddEquipmentEntryInput {
+export interface AddEquipmentEntryInput {
   dailyReportId: string;
   equipmentType: string;
   equipmentId?: string;
@@ -14,7 +14,7 @@ interface AddEquipmentEntryInput {
   notes?: string;
 }
 
-interface AddEquipmentEntryResult {
+export interface AddEquipmentEntryResult {
   success: boolean;
   data?: { id: string };
   error?: string;
@@ -50,7 +50,10 @@ export async function addEquipmentEntry(
       return { success: false, error: 'Daily report not found' };
     }
 
-    if (report.status !== 'draft') {
+    // Type assertion for query result
+    const reportData = report as any;
+
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot add entries to non-draft reports',
@@ -66,8 +69,8 @@ export async function addEquipmentEntry(
       return { success: false, error: 'Hours used must be greater than 0' };
     }
 
-    // Insert equipment entry
-    const { data: entry, error: insertError } = await supabase
+    // Insert equipment entry (type assertion needed for Supabase client)
+    const { data: entry, error: insertError } = await (supabase as any)
       .from('daily_report_equipment_entries')
       .insert({
         daily_report_id: input.dailyReportId,
@@ -82,14 +85,17 @@ export async function addEquipmentEntry(
       .select('id')
       .single();
 
-    if (insertError) {
-      return { success: false, error: insertError.message };
+    if (insertError || !entry) {
+      return { success: false, error: insertError?.message || 'Failed to add entry' };
     }
 
-    // Revalidate paths
-    revalidatePath(`/[orgSlug]/projects/${report.project_id}/daily-reports/${input.dailyReportId}`);
+    // Type assertion for entry data
+    const entryData = entry as any;
 
-    return { success: true, data: { id: entry.id } };
+    // Revalidate paths
+    revalidatePath(`/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.dailyReportId}`);
+
+    return { success: true, data: { id: entryData.id } };
   } catch (error) {
     console.error('Error adding equipment entry:', error);
     return {

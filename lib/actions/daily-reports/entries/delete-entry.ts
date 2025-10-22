@@ -3,15 +3,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-type EntryType = 'crew' | 'equipment' | 'material' | 'incident';
+export type EntryType = 'crew' | 'equipment' | 'material' | 'incident';
 
-interface DeleteEntryInput {
+export interface DeleteEntryInput {
   entryId: string;
   entryType: EntryType;
   dailyReportId: string; // For revalidation
 }
 
-interface DeleteEntryResult {
+export interface DeleteEntryResult {
   success: boolean;
   error?: string;
 }
@@ -54,7 +54,10 @@ export async function deleteEntry(
       return { success: false, error: 'Daily report not found' };
     }
 
-    if (report.status !== 'draft') {
+    // Type assertion for query result
+    const reportData = report as any;
+
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot delete entries from non-draft reports',
@@ -80,7 +83,7 @@ export async function deleteEntry(
 
     // Revalidate paths
     revalidatePath(
-      `/[orgSlug]/projects/${report.project_id}/daily-reports/${input.dailyReportId}`
+      `/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.dailyReportId}`
     );
 
     return { success: true };
