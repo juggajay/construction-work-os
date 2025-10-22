@@ -13,17 +13,20 @@ CREATE TABLE IF NOT EXISTS daily_report_attachments (
   uploaded_by UUID NOT NULL REFERENCES profiles(id),
 
   -- File details
-  file_path TEXT NOT NULL, -- Supabase Storage path
+  storage_path TEXT NOT NULL, -- Supabase Storage path
   file_name TEXT NOT NULL,
   file_size BIGINT NOT NULL, -- bytes
-  file_type TEXT NOT NULL, -- MIME type
+  content_type TEXT NOT NULL, -- MIME type
   attachment_type attachment_type NOT NULL DEFAULT 'photo',
-  description TEXT, -- user-provided description
+  caption TEXT, -- user-provided caption/description
+  category TEXT CHECK (category IN ('progress', 'safety', 'quality', 'site_conditions', 'other')) DEFAULT 'other',
 
   -- EXIF metadata (from photos)
   gps_latitude NUMERIC(10,7), -- decimal degrees, e.g., 37.7749000
   gps_longitude NUMERIC(10,7), -- decimal degrees, e.g., -122.4194000
-  captured_at TIMESTAMPTZ, -- from EXIF DateTimeOriginal or upload time
+  photo_taken_at TIMESTAMPTZ, -- from EXIF DateTimeOriginal or upload time
+  camera_make TEXT, -- Camera manufacturer
+  camera_model TEXT, -- Camera model
 
   -- Timestamp
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
