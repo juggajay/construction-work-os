@@ -37,11 +37,6 @@ export default function RFIsPage() {
   const projectId = params.projectId as string
   const orgSlug = params.orgSlug as string
 
-  console.log('🔍 DEBUG: RFIsPage mounted')
-  console.log('🔍 DEBUG: params =', params)
-  console.log('🔍 DEBUG: orgSlug =', orgSlug)
-  console.log('🔍 DEBUG: projectId =', projectId)
-
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [overdueFilter, setOverdueFilter] = useState<string>('all')
@@ -109,12 +104,7 @@ export default function RFIsPage() {
   })
 
   const handleCreateRFI = () => {
-    console.log('🔍 DEBUG: handleCreateRFI called')
-    console.log('🔍 DEBUG: orgSlug =', orgSlug)
-    console.log('🔍 DEBUG: projectId =', projectId)
-    const targetUrl = `/${orgSlug}/projects/${projectId}/rfis/new`
-    console.log('🔍 DEBUG: Navigating to:', targetUrl)
-    router.push(targetUrl)
+    router.push(`/${orgSlug}/projects/${projectId}/rfis/new`)
   }
 
   const handleRowClick = (rfiId: string) => {

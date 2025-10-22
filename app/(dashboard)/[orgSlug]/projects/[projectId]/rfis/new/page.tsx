@@ -12,10 +12,6 @@ export default function NewRFIPage() {
   const projectId = params.projectId as string
   const orgSlug = params.orgSlug as string
 
-  console.log('🔍 DEBUG: NewRFIPage mounted')
-  console.log('🔍 DEBUG: projectId =', projectId)
-  console.log('🔍 DEBUG: orgSlug =', orgSlug)
-
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
