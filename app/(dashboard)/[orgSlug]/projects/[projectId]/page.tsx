@@ -99,20 +99,22 @@ export default async function ProjectPage({
                   <span>RFIs</span>
                 </Link>
               </Button>
-              <Button variant="outline" className="h-24 flex-col" disabled>
-                <FileText className="mb-2 h-6 w-6" />
-                <span>Submittals</span>
-                <span className="mt-1 text-xs text-neutral-500">Coming soon</span>
+              <Button variant="outline" className="h-24 flex-col" asChild>
+                <Link href={`/${params.orgSlug}/projects/${params.projectId}/submittals`}>
+                  <FileText className="mb-2 h-6 w-6" />
+                  <span>Submittals</span>
+                </Link>
               </Button>
               <Button variant="outline" className="h-24 flex-col" disabled>
                 <FileText className="mb-2 h-6 w-6" />
                 <span>Change Orders</span>
                 <span className="mt-1 text-xs text-neutral-500">Coming soon</span>
               </Button>
-              <Button variant="outline" className="h-24 flex-col" disabled>
-                <FileText className="mb-2 h-6 w-6" />
-                <span>Daily Reports</span>
-                <span className="mt-1 text-xs text-neutral-500">Coming soon</span>
+              <Button variant="outline" className="h-24 flex-col" asChild>
+                <Link href={`/${params.orgSlug}/projects/${params.projectId}/daily-reports`}>
+                  <FileText className="mb-2 h-6 w-6" />
+                  <span>Daily Reports</span>
+                </Link>
               </Button>
             </div>
           </CardContent>
