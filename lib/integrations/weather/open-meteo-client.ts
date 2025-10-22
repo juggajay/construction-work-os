@@ -63,7 +63,7 @@ export async function fetchWeatherData(
     }
 
     // Format date as YYYY-MM-DD
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0] as string;
 
     // Open-Meteo API endpoint (no API key required!)
     const url = new URL('https://api.open-meteo.com/v1/forecast');
@@ -161,16 +161,16 @@ function transformWeatherData(data: OpenMeteoResponse): WeatherData {
   const daily = data.daily;
 
   // Get first (and only) day's data
-  const weatherCode = daily.weathercode[0];
+  const weatherCode = daily.weathercode[0] as number;
   const condition = mapWeatherCode(weatherCode);
 
   return {
     condition,
-    temperatureHigh: Math.round(daily.temperature_2m_max[0] * 100) / 100,
-    temperatureLow: Math.round(daily.temperature_2m_min[0] * 100) / 100,
-    precipitation: Math.round(daily.precipitation_sum[0] * 100) / 100,
-    windSpeed: Math.round(daily.windspeed_10m_max[0] * 100) / 100,
-    humidity: Math.round(daily.relative_humidity_2m_max[0]),
+    temperatureHigh: Math.round((daily.temperature_2m_max[0] as number) * 100) / 100,
+    temperatureLow: Math.round((daily.temperature_2m_min[0] as number) * 100) / 100,
+    precipitation: Math.round((daily.precipitation_sum[0] as number) * 100) / 100,
+    windSpeed: Math.round((daily.windspeed_10m_max[0] as number) * 100) / 100,
+    humidity: Math.round(daily.relative_humidity_2m_max[0] as number),
     source: 'api',
     fetchedAt: new Date(),
   };
