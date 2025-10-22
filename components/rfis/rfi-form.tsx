@@ -41,6 +41,10 @@ interface RFIFormProps {
 }
 
 export function RFIForm({ projectId, orgSlug, onSuccess }: RFIFormProps) {
+  console.log('🔍 DEBUG: RFIForm rendered')
+  console.log('🔍 DEBUG: projectId =', projectId)
+  console.log('🔍 DEBUG: orgSlug =', orgSlug)
+
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
