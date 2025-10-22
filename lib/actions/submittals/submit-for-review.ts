@@ -41,19 +41,21 @@ export async function submitForReview(
     }
 
     // Get submittal and verify status
-    const { data: submittal, error: fetchError } = await supabase
+    const { data: submittal, error: fetchError } = (await supabase
       .from('submittals')
       .select('id, status, created_by, project_id, version_number')
       .eq('id', validated.submittalId)
       .is('deleted_at', null)
-      .single();
+      .single()) as any;
 
     if (fetchError || !submittal) {
       return { success: false, error: 'Submittal not found' };
     }
 
+    const submittalData = submittal as any;
+
     // Permission check: only creator can submit
-    if (submittal.created_by !== user.id) {
+    if (submittalData.created_by !== user.id) {
       return {
         success: false,
         error: 'Only the creator can submit this submittal for review',
@@ -61,7 +63,7 @@ export async function submitForReview(
     }
 
     // Status check: must be draft
-    if (submittal.status !== 'draft') {
+    if (submittalData.status !== 'draft') {
       return {
         success: false,
         error: 'Submittal must be in draft status to submit for review',
@@ -69,12 +71,12 @@ export async function submitForReview(
     }
 
     // Validate that at least one attachment exists
-    const { data: attachments, error: attachmentError } = await supabase
+    const { data: attachments, error: attachmentError } = (await supabase
       .from('submittal_attachments')
       .select('id')
       .eq('submittal_id', validated.submittalId)
-      .eq('version_number', submittal.version_number)
-      .limit(1);
+      .eq('version_number', submittalData.version_number)
+      .limit(1)) as any;
 
     if (attachmentError) {
       console.error('Error checking attachments:', attachmentError);
@@ -89,7 +91,7 @@ export async function submitForReview(
     }
 
     // Update submittal status
-    const { error: updateError } = await supabase
+    const { error: updateError } = (await supabase
       .from('submittals')
       .update({
         status: 'submitted',
@@ -97,7 +99,7 @@ export async function submitForReview(
         current_reviewer_id: validated.reviewerId,
         submitted_at: new Date().toISOString(),
       })
-      .eq('id', validated.submittalId);
+      .eq('id', validated.submittalId)) as any;
 
     if (updateError) {
       console.error('Error submitting submittal:', updateError);
@@ -108,8 +110,8 @@ export async function submitForReview(
     // await sendSubmittalAssignedEmail(validated.submittalId, validated.reviewerId);
 
     // Revalidate pages
-    revalidatePath(`/[orgSlug]/projects/${submittal.project_id}/submittals/${validated.submittalId}`);
-    revalidatePath(`/[orgSlug]/projects/${submittal.project_id}/submittals`);
+    revalidatePath(`/[orgSlug]/projects/${submittalData.project_id}/submittals/${validated.submittalId}`);
+    revalidatePath(`/[orgSlug]/projects/${submittalData.project_id}/submittals`);
 
     return {
       success: true,

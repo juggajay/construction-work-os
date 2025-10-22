@@ -43,7 +43,7 @@ export async function deleteAttachment(
       .from('submittal_attachments')
       .select('id, file_path, uploaded_by, submittal_id, submittals!inner(status, project_id)')
       .eq('id', validated.attachmentId)
-      .single();
+      .single()) as any;
 
     if (fetchError || !attachment) {
       return { success: false, error: 'Attachment not found' };

@@ -42,13 +42,13 @@ export async function createSubmittal(
     }
 
     // Generate next submittal number using database function
-    const { data: numberData, error: numberError } = await supabase.rpc(
+    const { data: numberData, error: numberError } = (await supabase.rpc(
       'next_submittal_number',
       {
         p_project_id: validated.projectId,
         p_spec_section: validated.specSection,
       }
-    );
+    )) as any;
 
     if (numberError || !numberData) {
       console.error('Error generating submittal number:', numberError);
@@ -67,11 +67,12 @@ export async function createSubmittal(
       if (isNaN(date.getTime())) {
         return { success: false, error: 'Invalid required on site date' };
       }
-      requiredOnSite = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const isoDate = date.toISOString().split('T')[0];
+      requiredOnSite = isoDate || null; // YYYY-MM-DD format
     }
 
     // Insert submittal record
-    const { data: submittal, error: insertError } = await supabase
+    const { data: submittal, error: insertError } = (await supabase
       .from('submittals')
       .insert({
         project_id: validated.projectId,
@@ -91,7 +92,7 @@ export async function createSubmittal(
         lead_time_days: validated.leadTimeDays || null,
       })
       .select('id, number, version, status')
-      .single();
+      .single()) as any;
 
     if (insertError) {
       console.error('Error creating submittal:', insertError);

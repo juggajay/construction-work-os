@@ -54,8 +54,11 @@ export async function createResubmittal(
       return { success: false, error: 'Parent submittal not found' };
     }
 
+    // Type assertion for parent submittal data (until DB types are generated)
+    const parentData = parent as any;
+
     // Permission check: only creator can create resubmittal
-    if (parent.created_by !== user.id) {
+    if (parentData.created_by !== user.id) {
       return {
         success: false,
         error: 'Only the original creator can create a resubmittal',
@@ -63,7 +66,7 @@ export async function createResubmittal(
     }
 
     // Status check: parent must be in revision or rejected status
-    if (parent.status !== 'revise_resubmit' && parent.status !== 'rejected') {
+    if (parentData.status !== 'revise_resubmit' && parentData.status !== 'rejected') {
       return {
         success: false,
         error: 'Can only create resubmittal after revision request or rejection',
@@ -71,7 +74,7 @@ export async function createResubmittal(
     }
 
     // Calculate next version
-    const nextVersionNumber = parent.version_number + 1;
+    const nextVersionNumber = parentData.version_number + 1;
     let nextVersion: string;
     if (nextVersionNumber === 0) {
       nextVersion = 'Rev 0';
@@ -84,25 +87,25 @@ export async function createResubmittal(
     }
 
     // Create new submittal (resubmittal)
-    const { data: newSubmittal, error: insertError } = await supabase
+    const { data: newSubmittal, error: insertError } = (await supabase
       .from('submittals')
       .insert({
         // Inherit metadata from parent
-        project_id: parent.project_id,
-        number: parent.number, // Same number
-        title: parent.title,
-        description: parent.description,
-        submittal_type: parent.submittal_type,
-        spec_section: parent.spec_section,
-        spec_section_title: parent.spec_section_title,
-        required_on_site: parent.required_on_site,
-        lead_time_days: parent.lead_time_days,
-        submitted_by_org: parent.submitted_by_org,
+        project_id: parentData.project_id,
+        number: parentData.number, // Same number
+        title: parentData.title,
+        description: parentData.description,
+        submittal_type: parentData.submittal_type,
+        spec_section: parentData.spec_section,
+        spec_section_title: parentData.spec_section_title,
+        required_on_site: parentData.required_on_site,
+        lead_time_days: parentData.lead_time_days,
+        submitted_by_org: parentData.submitted_by_org,
 
         // New version fields
         version: nextVersion,
         version_number: nextVersionNumber,
-        parent_submittal_id: parent.id,
+        parent_submittal_id: parentData.id,
 
         // Reset workflow fields
         status: 'draft',
@@ -116,7 +119,7 @@ export async function createResubmittal(
         created_by: user.id,
       })
       .select('id, number, version, version_number')
-      .single();
+      .single()) as any;
 
     if (insertError) {
       console.error('Error creating resubmittal:', insertError);
@@ -128,7 +131,7 @@ export async function createResubmittal(
     }
 
     // Create version history record
-    const { error: versionError } = await supabase
+    const { error: versionError } = (await supabase
       .from('submittal_versions')
       .insert({
         submittal_id: newSubmittal.id,
@@ -137,7 +140,7 @@ export async function createResubmittal(
         notes: validated.notes,
         uploaded_by: user.id,
         uploaded_at: new Date().toISOString(),
-      });
+      })) as any;
 
     if (versionError) {
       console.error('Error creating version record:', versionError);
@@ -145,8 +148,8 @@ export async function createResubmittal(
     }
 
     // Revalidate pages
-    revalidatePath(`/[orgSlug]/projects/${parent.project_id}/submittals`);
-    revalidatePath(`/[orgSlug]/projects/${parent.project_id}/submittals/${validated.parentSubmittalId}`);
+    revalidatePath(`/[orgSlug]/projects/${parentData.project_id}/submittals`);
+    revalidatePath(`/[orgSlug]/projects/${parentData.project_id}/submittals/${validated.parentSubmittalId}`);
 
     return {
       success: true,

@@ -46,7 +46,7 @@ export async function reviewSubmittal(
       .select('id, status, current_stage, current_reviewer_id, project_id, version_number')
       .eq('id', validated.submittalId)
       .is('deleted_at', null)
-      .single();
+      .single()) as any;
 
     if (fetchError || !submittal) {
       return { success: false, error: 'Submittal not found' };

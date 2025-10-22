@@ -70,7 +70,7 @@ export async function getSubmittalDetail(
       .select('*')
       .eq('id', validated.submittalId)
       .is('deleted_at', null)
-      .single();
+      .single()) as any;
 
     if (fetchError || !submittal) {
       return { success: false, error: 'Submittal not found' };

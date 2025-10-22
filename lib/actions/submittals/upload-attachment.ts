@@ -45,7 +45,7 @@ export async function uploadAttachment(
       .select('id, project_id')
       .eq('id', validated.submittalId)
       .is('deleted_at', null)
-      .single();
+      .single()) as any;
 
     if (fetchError || !submittal) {
       return { success: false, error: 'Submittal not found' };
@@ -74,7 +74,7 @@ export async function uploadAttachment(
         uploaded_by: user.id,
       })
       .select('id, file_name')
-      .single();
+      .single()) as any;
 
     if (insertError) {
       console.error('Error creating attachment record:', insertError);
