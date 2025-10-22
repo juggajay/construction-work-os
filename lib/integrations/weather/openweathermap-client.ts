@@ -188,14 +188,14 @@ function transformWeatherData(
   let tempHigh: number;
   let tempLow: number;
 
-  if ('temp' in weatherData) {
+  if ('temp' in weatherData && typeof weatherData.temp === 'number') {
     // Historical data has current temp only
     tempHigh = kelvinToFahrenheit(weatherData.temp);
     tempLow = tempHigh; // Use same for high/low
   } else {
     // Forecast data has min/max
-    tempHigh = kelvinToFahrenheit(weatherData.temp.max);
-    tempLow = kelvinToFahrenheit(weatherData.temp.min);
+    tempHigh = kelvinToFahrenheit((weatherData.temp as { min: number; max: number }).max);
+    tempLow = kelvinToFahrenheit((weatherData.temp as { min: number; max: number }).min);
   }
 
   // Convert wind speed (m/s to mph)

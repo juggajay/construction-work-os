@@ -194,10 +194,14 @@ export function getWeatherImpactSeverity(data: WeatherData): {
     severity = 'critical';
   } else if (precip > 0.5) {
     reasons.push('Moderate precipitation (>0.5")');
-    severity = severity === 'critical' ? severity : 'high';
+    if (severity === 'none' || severity === 'low' || severity === 'medium') {
+      severity = 'high';
+    }
   } else if (precip > 0.1) {
     reasons.push('Light precipitation');
-    severity = severity === 'none' ? 'low' : severity;
+    if (severity === 'none') {
+      severity = 'low';
+    }
   }
 
   // Check temperature
