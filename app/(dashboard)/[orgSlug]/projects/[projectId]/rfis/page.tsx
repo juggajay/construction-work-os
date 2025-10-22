@@ -35,6 +35,7 @@ export default function RFIsPage() {
   const params = useParams()
   const router = useRouter()
   const projectId = params.projectId as string
+  const orgSlug = params.orgSlug as string
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -107,11 +108,11 @@ export default function RFIsPage() {
   })
 
   const handleCreateRFI = () => {
-    router.push(`/${params.orgSlug}/projects/${projectId}/rfis/new`)
+    router.push(`/${orgSlug}/projects/${projectId}/rfis/new`)
   }
 
   const handleRowClick = (rfiId: string) => {
-    router.push(`/${params.orgSlug}/projects/${projectId}/rfis/${rfiId}`)
+    router.push(`/${orgSlug}/projects/${projectId}/rfis/${rfiId}`)
   }
 
   return (
