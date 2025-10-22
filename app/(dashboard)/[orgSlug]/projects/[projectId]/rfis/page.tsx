@@ -65,11 +65,7 @@ export default function RFIsPage() {
           answered_at,
           closed_at,
           created_at,
-          assigned_to:profiles!assigned_to_id (
-            id,
-            full_name,
-            email
-          )
+          assigned_to_id
         `)
         .eq('project_id', projectId)
         .is('deleted_at', null)
@@ -228,7 +224,7 @@ export default function RFIsPage() {
                     </TableCell>
                     <TableCell className="capitalize">{rfi.priority}</TableCell>
                     <TableCell>
-                      {rfi.assigned_to?.full_name || rfi.assigned_to?.email || '-'}
+                      {rfi.assigned_to_id ? 'Assigned' : 'Unassigned'}
                     </TableCell>
                     <TableCell>
                       {rfi.response_due_date
