@@ -65,7 +65,7 @@ export async function getSubmittalDetail(
     }
 
     // Fetch submittal with related data
-    const { data: submittal, error: fetchError } = await supabase
+    const { data: submittal, error: fetchError } = (await supabase
       .from('submittals')
       .select('*')
       .eq('id', validated.submittalId)

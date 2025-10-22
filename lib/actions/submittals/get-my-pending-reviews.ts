@@ -53,14 +53,14 @@ export async function getMyPendingReviews(
     }
 
     // Fetch submittals assigned to current user
-    const { data: submittals, error: queryError, count } = await supabase
+    const { data: submittals, error: queryError, count } = (await supabase
       .from('submittals')
       .select('id, number, title, spec_section, status, current_stage, submitted_at, procurement_deadline, project_id', { count: 'exact' })
       .eq('current_reviewer_id', user.id)
       .in('current_stage', ['gc_review', 'ae_review', 'owner_review'])
       .is('deleted_at', null)
       .order('submitted_at', { ascending: true })
-      .limit(validated.limit);
+      .limit(validated.limit)) as any;
 
     if (queryError) {
       console.error('Error fetching pending reviews:', queryError);
@@ -69,7 +69,7 @@ export async function getMyPendingReviews(
 
     // Calculate days pending and urgency
     const now = new Date();
-    const reviewsWithMetrics = (submittals || []).map((submittal) => {
+    const reviewsWithMetrics = (submittals || []).map((submittal: any) => {
       let daysPending = 0;
       if (submittal.submitted_at) {
         const submittedDate = new Date(submittal.submitted_at);

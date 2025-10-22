@@ -40,7 +40,7 @@ export async function uploadAttachment(
     }
 
     // Verify submittal exists and user has access
-    const { data: submittal, error: fetchError } = await supabase
+    const { data: submittal, error: fetchError } = (await supabase
       .from('submittals')
       .select('id, project_id')
       .eq('id', validated.submittalId)
@@ -61,7 +61,7 @@ export async function uploadAttachment(
     }
 
     // Insert attachment record
-    const { data: attachment, error: insertError } = await supabase
+    const { data: attachment, error: insertError } = (await supabase
       .from('submittal_attachments')
       .insert({
         submittal_id: validated.submittalId,
@@ -72,7 +72,7 @@ export async function uploadAttachment(
         file_type: validated.fileType,
         attachment_type: validated.attachmentType,
         uploaded_by: user.id,
-      })
+      } as any)
       .select('id, file_name')
       .single()) as any;
 

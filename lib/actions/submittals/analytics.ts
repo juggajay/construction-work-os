@@ -242,7 +242,7 @@ export async function getOverdueSubmittals(
   try {
     const supabase = await createClient();
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0]!; // Format: YYYY-MM-DD
 
     const { data: submittals, error } = (await supabase
       .from('submittals')

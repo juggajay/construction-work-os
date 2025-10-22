@@ -46,8 +46,6 @@ export async function extractExifData(file: File): Promise<PhotoMetadata | null>
       tiff: true,
       exif: true,
       jfif: true,
-      ifd0: true,
-      ifd1: true,
     });
 
     if (!exif) {
@@ -140,7 +138,7 @@ export async function extractGPSCoordinates(
     return {
       latitude: gps.latitude,
       longitude: gps.longitude,
-      altitude: gps.altitude,
+      altitude: (gps as any).altitude,
     };
   } catch (error) {
     console.error('GPS extraction failed:', error);

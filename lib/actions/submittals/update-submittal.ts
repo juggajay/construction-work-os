@@ -40,7 +40,7 @@ export async function updateSubmittal(
     }
 
     // Check if submittal exists and get current state
-    const { data: existingSubmittal, error: fetchError } = await supabase
+    const { data: existingSubmittal, error: fetchError } = (await supabase
       .from('submittals')
       .select('id, status, created_by, current_reviewer_id, project_id')
       .eq('id', validated.submittalId)
@@ -86,10 +86,10 @@ export async function updateSubmittal(
     if (validated.leadTimeDays !== undefined) updateData.lead_time_days = validated.leadTimeDays;
 
     // Update submittal
-    const { error: updateError } = await supabase
+    const { error: updateError } = (await (supabase as any)
       .from('submittals')
       .update(updateData)
-      .eq('id', validated.submittalId);
+      .eq('id', validated.submittalId)) as any;
 
     if (updateError) {
       console.error('Error updating submittal:', updateError);

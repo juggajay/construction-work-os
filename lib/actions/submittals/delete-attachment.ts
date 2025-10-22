@@ -39,7 +39,7 @@ export async function deleteAttachment(
     }
 
     // Get attachment and verify permissions
-    const { data: attachment, error: fetchError } = await supabase
+    const { data: attachment, error: fetchError } = (await supabase
       .from('submittal_attachments')
       .select('id, file_path, uploaded_by, submittal_id, submittals!inner(status, project_id)')
       .eq('id', validated.attachmentId)

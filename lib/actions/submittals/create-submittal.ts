@@ -47,7 +47,7 @@ export async function createSubmittal(
       {
         p_project_id: validated.projectId,
         p_spec_section: validated.specSection,
-      }
+      } as any
     )) as any;
 
     if (numberError || !numberData) {
@@ -90,7 +90,7 @@ export async function createSubmittal(
         submitted_by_org: validated.submittedByOrg || null,
         required_on_site: requiredOnSite,
         lead_time_days: validated.leadTimeDays || null,
-      })
+      } as any)
       .select('id, number, version, status')
       .single()) as any;
 

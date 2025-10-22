@@ -43,12 +43,12 @@ export async function createResubmittal(
     }
 
     // Get parent submittal
-    const { data: parent, error: fetchError } = await supabase
+    const { data: parent, error: fetchError } = (await supabase
       .from('submittals')
       .select('*')
       .eq('id', validated.parentSubmittalId)
       .is('deleted_at', null)
-      .single();
+      .single()) as any;
 
     if (fetchError || !parent) {
       return { success: false, error: 'Parent submittal not found' };
@@ -117,7 +117,7 @@ export async function createResubmittal(
 
         // User tracking
         created_by: user.id,
-      })
+      } as any)
       .select('id, number, version, version_number')
       .single()) as any;
 
@@ -140,7 +140,7 @@ export async function createResubmittal(
         notes: validated.notes,
         uploaded_by: user.id,
         uploaded_at: new Date().toISOString(),
-      })) as any;
+      } as any)) as any;
 
     if (versionError) {
       console.error('Error creating version record:', versionError);

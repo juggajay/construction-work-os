@@ -41,7 +41,7 @@ export async function reviewSubmittal(
     }
 
     // Get submittal and verify current state
-    const { data: submittal, error: fetchError } = await supabase
+    const { data: submittal, error: fetchError } = (await supabase
       .from('submittals')
       .select('id, status, current_stage, current_reviewer_id, project_id, version_number')
       .eq('id', validated.submittalId)
@@ -124,7 +124,7 @@ export async function reviewSubmittal(
     }
 
     // Create review record
-    const { error: reviewError } = await supabase
+    const { error: reviewError } = (await supabase
       .from('submittal_reviews')
       .insert({
         submittal_id: validated.submittalId,
@@ -134,7 +134,7 @@ export async function reviewSubmittal(
         action: validated.action,
         comments: validated.comments,
         reviewed_at: new Date().toISOString(),
-      });
+      } as any)) as any;
 
     if (reviewError) {
       console.error('Error creating review record:', reviewError);
@@ -142,16 +142,20 @@ export async function reviewSubmittal(
     }
 
     // Update submittal status
-    const { error: updateError } = await supabase
+    const updateData: any = {
+      status: newStatus,
+      current_stage: newStage,
+      current_reviewer_id: newReviewerId,
+      reviewed_at: new Date().toISOString(),
+    };
+    if (closedAt) {
+      updateData.closed_at = closedAt;
+    }
+
+    const { error: updateError } = (await (supabase as any)
       .from('submittals')
-      .update({
-        status: newStatus,
-        current_stage: newStage,
-        current_reviewer_id: newReviewerId,
-        reviewed_at: new Date().toISOString(),
-        ...(closedAt && { closed_at: closedAt }),
-      })
-      .eq('id', validated.submittalId);
+      .update(updateData)
+      .eq('id', validated.submittalId)) as any;
 
     if (updateError) {
       console.error('Error updating submittal status:', updateError);

@@ -202,8 +202,8 @@ function transformWeatherData(
   const windSpeed = weatherData.wind_speed * 2.237;
 
   // Convert precipitation (mm to inches)
-  const precipitationMm = ('rain' in weatherData ? weatherData.rain : 0) +
-                          ('snow' in weatherData ? weatherData.snow : 0);
+  const precipitationMm = ('rain' in weatherData ? (weatherData.rain || 0) : 0) +
+                          ('snow' in weatherData ? (weatherData.snow || 0) : 0);
   const precipitation = precipitationMm / 25.4;
 
   return {

@@ -91,7 +91,7 @@ export async function submitForReview(
     }
 
     // Update submittal status
-    const { error: updateError } = (await supabase
+    const { error: updateError } = (await (supabase as any)
       .from('submittals')
       .update({
         status: 'submitted',
