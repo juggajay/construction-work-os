@@ -5,8 +5,8 @@
 
 -- UP Migration
 
--- Create attachment_type enum
-CREATE TYPE attachment_type AS ENUM (
+-- Create submittal_attachment_type enum
+CREATE TYPE submittal_attachment_type AS ENUM (
   'product_data',
   'shop_drawing',
   'sample_photo',
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS submittal_attachments (
   file_type TEXT NOT NULL,  -- MIME type (e.g., "application/pdf", "image/jpeg")
 
   -- Attachment categorization
-  attachment_type attachment_type NOT NULL,
+  attachment_type submittal_attachment_type NOT NULL,
 
   -- User tracking
   uploaded_by UUID NOT NULL REFERENCES auth.users(id),
@@ -67,4 +67,4 @@ COMMENT ON COLUMN submittal_attachments.attachment_type IS 'Type of attachment: 
 -- DROP INDEX IF EXISTS idx_submittal_attachments_submittal_version;
 -- DROP INDEX IF EXISTS idx_submittal_attachments_submittal_id;
 -- DROP TABLE IF EXISTS submittal_attachments CASCADE;
--- DROP TYPE IF EXISTS attachment_type CASCADE;
+-- DROP TYPE IF EXISTS submittal_attachment_type CASCADE;

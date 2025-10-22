@@ -54,9 +54,9 @@ export const ReviewActionSchema = z.enum([
 ]);
 
 /**
- * Attachment type enum
+ * Submittal attachment type enum
  */
-export const AttachmentTypeSchema = z.enum([
+export const SubmittalAttachmentTypeSchema = z.enum([
   'product_data',
   'shop_drawing',
   'sample_photo',
@@ -129,7 +129,7 @@ export const UploadAttachmentSchema = z.object({
   fileSize: z.number().int().positive(),
   fileType: z.string().min(1),
   filePath: z.string().min(1),
-  attachmentType: AttachmentTypeSchema,
+  attachmentType: SubmittalAttachmentTypeSchema,
 });
 
 /**

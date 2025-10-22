@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_csi_spec_sections_title_search
 CREATE TRIGGER csi_spec_sections_updated_at
   BEFORE UPDATE ON csi_spec_sections
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+  EXECUTE FUNCTION update_updated_at();
 
 -- Seed CSI MasterFormat data (500+ sections across divisions 00-49)
 -- Division 00: Procurement and Contracting Requirements

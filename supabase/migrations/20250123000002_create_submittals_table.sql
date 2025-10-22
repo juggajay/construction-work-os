@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS submittals (
   submitted_at TIMESTAMPTZ,
   required_on_site DATE,  -- When material is needed on site
   lead_time_days INTEGER CHECK (lead_time_days >= 0),  -- Procurement lead time
-  procurement_deadline DATE GENERATED ALWAYS AS (required_on_site - (lead_time_days || ' days')::INTERVAL) STORED,
+  procurement_deadline DATE GENERATED ALWAYS AS (required_on_site - (lead_time_days * INTERVAL '1 day')) STORED,
   reviewed_at TIMESTAMPTZ,  -- Last review action timestamp
   closed_at TIMESTAMPTZ,    -- When status reached final state (approved/rejected/cancelled)
 
@@ -116,7 +116,7 @@ CREATE INDEX IF NOT EXISTS idx_submittals_search
 CREATE TRIGGER submittals_updated_at
   BEFORE UPDATE ON submittals
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+  EXECUTE FUNCTION update_updated_at();
 
 -- Comments for documentation
 COMMENT ON TABLE submittals IS 'Main submittals table for tracking product data, shop drawings, and samples through multi-stage review workflow';
