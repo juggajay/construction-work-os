@@ -44,7 +44,10 @@ export async function deleteAttachment(
       return { success: false, error: 'Daily report not found' };
     }
 
-    if (report.status !== 'draft') {
+    // Type assertion for query result
+    const reportData = report as any;
+
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot delete attachments from non-draft reports',
@@ -63,10 +66,13 @@ export async function deleteAttachment(
       return { success: false, error: 'Attachment not found' };
     }
 
+    // Type assertion for attachment data
+    const attachmentData = attachment as any;
+
     // Delete from storage
     const { error: storageError } = await supabase.storage
       .from('daily-report-photos')
-      .remove([attachment.storage_path]);
+      .remove([attachmentData.storage_path]);
 
     if (storageError) {
       console.error('Storage deletion error:', storageError);
@@ -86,7 +92,7 @@ export async function deleteAttachment(
 
     // Revalidate paths
     revalidatePath(
-      `/[orgSlug]/projects/${report.project_id}/daily-reports/${input.dailyReportId}`
+      `/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.dailyReportId}`
     );
 
     return { success: true };
@@ -130,7 +136,10 @@ export async function deleteAttachments(
       return { success: false, error: 'Daily report not found' };
     }
 
-    if (report.status !== 'draft') {
+    // Type assertion for query result
+    const reportData = report as any;
+
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot delete attachments from non-draft reports',
@@ -152,8 +161,11 @@ export async function deleteAttachments(
       return { success: false, error: 'No attachments found' };
     }
 
+    // Type assertion for attachments data
+    const attachmentsData = attachments as any[];
+
     // Delete from storage (bulk)
-    const storagePaths = attachments.map((a) => a.storage_path);
+    const storagePaths = attachmentsData.map((a) => a.storage_path);
     const { error: storageError } = await supabase.storage
       .from('daily-report-photos')
       .remove(storagePaths);
@@ -176,7 +188,7 @@ export async function deleteAttachments(
 
     // Revalidate paths
     revalidatePath(
-      `/[orgSlug]/projects/${report.project_id}/daily-reports/${dailyReportId}`
+      `/[orgSlug]/projects/${reportData.project_id}/daily-reports/${dailyReportId}`
     );
 
     return { success: true };

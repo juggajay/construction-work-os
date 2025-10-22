@@ -60,7 +60,10 @@ export async function uploadPhoto(
       return { success: false, error: 'Daily report not found' };
     }
 
-    if (report.status !== 'draft') {
+    // Type assertion for query result
+    const reportData = report as any;
+
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot upload photos to non-draft reports',
@@ -85,8 +88,8 @@ export async function uploadPhoto(
     const randomStr = Math.random().toString(36).substring(2, 8);
     const storagePath = `daily-reports/${input.dailyReportId}/${timestamp}-${randomStr}.${fileExtension}`;
 
-    // Create attachment record
-    const { data: attachment, error: insertError } = await supabase
+    // Create attachment record (type assertion needed for Supabase client)
+    const { data: attachment, error: insertError } = await (supabase as any)
       .from('daily_report_attachments')
       .insert({
         daily_report_id: input.dailyReportId,
@@ -107,9 +110,12 @@ export async function uploadPhoto(
       .select('id')
       .single();
 
-    if (insertError) {
-      return { success: false, error: insertError.message };
+    if (insertError || !attachment) {
+      return { success: false, error: insertError?.message || 'Failed to create attachment' };
     }
+
+    // Type assertion for attachment data
+    const attachmentData = attachment as any;
 
     // Generate presigned upload URL (valid for 5 minutes)
     const { data: uploadData, error: urlError } = await supabase.storage
@@ -121,20 +127,20 @@ export async function uploadPhoto(
       await supabase
         .from('daily_report_attachments')
         .delete()
-        .eq('id', attachment.id);
+        .eq('id', attachmentData.id);
 
       return { success: false, error: 'Failed to generate upload URL' };
     }
 
     // Revalidate paths
     revalidatePath(
-      `/[orgSlug]/projects/${report.project_id}/daily-reports/${input.dailyReportId}`
+      `/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.dailyReportId}`
     );
 
     return {
       success: true,
       data: {
-        id: attachment.id,
+        id: attachmentData.id,
         uploadUrl: uploadData.signedUrl,
         storagePath,
       },
@@ -179,11 +185,14 @@ export async function confirmPhotoUpload(
       return { success: false, error: 'Attachment not found' };
     }
 
+    // Type assertion for attachment data
+    const attachmentData = attachment as any;
+
     // Verify file exists in storage
     const { data: file, error: storageError } = await supabase.storage
       .from('daily-report-photos')
-      .list(attachment.storage_path.split('/').slice(0, -1).join('/'), {
-        search: attachment.storage_path.split('/').pop(),
+      .list(attachmentData.storage_path.split('/').slice(0, -1).join('/'), {
+        search: attachmentData.storage_path.split('/').pop(),
       });
 
     if (storageError || !file || file.length === 0) {

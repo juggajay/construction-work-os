@@ -60,7 +60,8 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
   }
 
   // Verify project match
-  if (report.project_id !== projectId) {
+  const reportData = report as any; // Type assertion for complex nested query
+  if (reportData.project_id !== projectId) {
     notFound();
   }
 
@@ -77,20 +78,20 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">
-                {new Date(report.report_date).toLocaleDateString('en-US', {
+                {new Date(reportData.report_date).toLocaleDateString('en-US', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
                 })}
               </h1>
-              <DailyReportStatusBadge status={report.status} />
+              <DailyReportStatusBadge status={reportData.status} />
             </div>
-            <p className="text-muted-foreground">{report.project.name}</p>
+            <p className="text-muted-foreground">{reportData.project.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {report.status === 'draft' && (
+          {reportData.status === 'draft' && (
             <Link
               href={`/${orgSlug}/projects/${projectId}/daily-reports/${reportId}/edit`}
             >
@@ -113,28 +114,28 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
 
       {/* Weather Section */}
       <WeatherWidget
-        condition={report.weather_condition}
-        temperatureHigh={report.temperature_high}
-        temperatureLow={report.temperature_low}
-        precipitation={report.precipitation}
-        windSpeed={report.wind_speed}
-        humidity={report.humidity}
+        condition={reportData.weather_condition}
+        temperatureHigh={reportData.temperature_high}
+        temperatureLow={reportData.temperature_low}
+        precipitation={reportData.precipitation}
+        windSpeed={reportData.wind_speed}
+        humidity={reportData.humidity}
       />
 
       {/* Narrative */}
-      {report.narrative && (
+      {reportData.narrative && (
         <div className="border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-3">Daily Summary</h2>
-          <p className="text-sm whitespace-pre-wrap">{report.narrative}</p>
+          <p className="text-sm whitespace-pre-wrap">{reportData.narrative}</p>
         </div>
       )}
 
       {/* Crew Entries */}
-      {report.crew_entries && report.crew_entries.length > 0 && (
+      {reportData.crew_entries && reportData.crew_entries.length > 0 && (
         <div className="border rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Crew ({report.total_crew_count})</h2>
+          <h2 className="text-lg font-semibold mb-4">Crew ({reportData.total_crew_count})</h2>
           <div className="space-y-3">
-            {report.crew_entries.map((entry: any) => (
+            {reportData.crew_entries.map((entry: any) => (
               <div key={entry.id} className="flex items-center justify-between py-2 border-b last:border-0">
                 <div>
                   <div className="font-medium">{entry.trade}</div>
@@ -159,11 +160,11 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
       )}
 
       {/* Equipment Entries */}
-      {report.equipment_entries && report.equipment_entries.length > 0 && (
+      {reportData.equipment_entries && reportData.equipment_entries.length > 0 && (
         <div className="border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4">Equipment</h2>
           <div className="space-y-3">
-            {report.equipment_entries.map((entry: any) => (
+            {reportData.equipment_entries.map((entry: any) => (
               <div key={entry.id} className="flex items-center justify-between py-2 border-b last:border-0">
                 <div>
                   <div className="font-medium">{entry.equipment_description}</div>
@@ -190,11 +191,11 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
       )}
 
       {/* Material Deliveries */}
-      {report.material_entries && report.material_entries.length > 0 && (
+      {reportData.material_entries && reportData.material_entries.length > 0 && (
         <div className="border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4">Material Deliveries</h2>
           <div className="space-y-3">
-            {report.material_entries.map((entry: any) => (
+            {reportData.material_entries.map((entry: any) => (
               <div key={entry.id} className="py-2 border-b last:border-0">
                 <div className="flex items-center justify-between mb-1">
                   <div className="font-medium">{entry.material_description}</div>
@@ -216,11 +217,11 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
       )}
 
       {/* Incidents */}
-      {report.incidents && report.incidents.length > 0 && (
+      {reportData.incidents && reportData.incidents.length > 0 && (
         <div className="border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4">Incidents & Notes</h2>
           <div className="space-y-4">
-            {report.incidents.map((incident: any) => (
+            {reportData.incidents.map((incident: any) => (
               <div key={incident.id} className="p-4 bg-muted rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -254,11 +255,11 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
       )}
 
       {/* Attachments/Photos */}
-      {report.attachments && report.attachments.length > 0 && (
+      {reportData.attachments && reportData.attachments.length > 0 && (
         <div className="border rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Photos ({report.attachments.length})</h2>
+          <h2 className="text-lg font-semibold mb-4">Photos ({reportData.attachments.length})</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {report.attachments.map((attachment: any) => (
+            {reportData.attachments.map((attachment: any) => (
               <div key={attachment.id} className="group relative aspect-square rounded-lg overflow-hidden border">
                 <img
                   src={`/api/storage/daily-report-photos/${attachment.storage_path}`}
@@ -281,21 +282,21 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <div className="font-medium text-foreground mb-1">Created</div>
-            <div>{formatDistanceToNow(new Date(report.created_at))} ago</div>
-            {report.created_by_user && <div>by {report.created_by_user.full_name}</div>}
+            <div>{formatDistanceToNow(new Date(reportData.created_at))} ago</div>
+            {reportData.created_by_user && <div>by {reportData.created_by_user.full_name}</div>}
           </div>
-          {report.submitted_at && (
+          {reportData.submitted_at && (
             <div>
               <div className="font-medium text-foreground mb-1">Submitted</div>
-              <div>{formatDistanceToNow(new Date(report.submitted_at))} ago</div>
-              {report.submitted_by_user && <div>by {report.submitted_by_user.full_name}</div>}
+              <div>{formatDistanceToNow(new Date(reportData.submitted_at))} ago</div>
+              {reportData.submitted_by_user && <div>by {reportData.submitted_by_user.full_name}</div>}
             </div>
           )}
-          {report.approved_at && (
+          {reportData.approved_at && (
             <div>
               <div className="font-medium text-foreground mb-1">Approved</div>
-              <div>{formatDistanceToNow(new Date(report.approved_at))} ago</div>
-              {report.approved_by_user && <div>by {report.approved_by_user.full_name}</div>}
+              <div>{formatDistanceToNow(new Date(reportData.approved_at))} ago</div>
+              {reportData.approved_by_user && <div>by {reportData.approved_by_user.full_name}</div>}
             </div>
           )}
         </div>

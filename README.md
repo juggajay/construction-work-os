@@ -93,13 +93,11 @@ npm run db:push
 See `SUPABASE_CLI_GUIDE.md` for comprehensive Supabase CLI documentation.
 
 5. (Optional) Seed development data:
-
-First, create a user account via Supabase Auth, then run:
 ```bash
-psql -h your-db-host -U postgres -d postgres -f supabase/seed.sql
+npm run db:seed
 ```
 
-Or use the Supabase dashboard SQL editor to run `supabase/seed.sql`.
+This creates test users, organizations, and projects for local development. See `supabase/seed.sql` for login credentials (password: `password123`).
 
 6. Start the development server:
 ```bash
@@ -129,7 +127,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 **Database** (Supabase CLI)
 - `npm run db:start` - Start local Supabase
 - `npm run db:stop` - Stop local Supabase
-- `npm run db:reset` - Reset database (re-run migrations + seed)
+- `npm run db:reset` - Reset database (re-run migrations)
+- `npm run db:seed` - Load development seed data (users, orgs, projects)
 - `npm run db:status` - Show Supabase status and API keys
 - `npm run db:migrate <name>` - Create new migration file
 - `npm run db:types` - Generate TypeScript types from schema

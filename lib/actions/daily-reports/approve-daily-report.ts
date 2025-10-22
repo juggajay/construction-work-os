@@ -3,11 +3,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-interface ApproveDailyReportInput {
+export interface ApproveDailyReportInput {
   id: string;
 }
 
-interface ApproveDailyReportResult {
+export interface ApproveDailyReportResult {
   success: boolean;
   error?: string;
 }
@@ -43,16 +43,19 @@ export async function approveDailyReport(
       return { success: false, error: 'Daily report not found' };
     }
 
+    // Type assertion for query result
+    const reportData = report as any;
+
     // Check status
-    if (report.status !== 'submitted') {
+    if (reportData.status !== 'submitted') {
       return {
         success: false,
-        error: `Cannot approve report with status: ${report.status}`,
+        error: `Cannot approve report with status: ${reportData.status}`,
       };
     }
 
-    // Approve report
-    const { error: updateError } = await supabase
+    // Approve report (type assertion needed for Supabase client)
+    const { error: updateError } = await (supabase as any)
       .from('daily_reports')
       .update({
         status: 'approved',
@@ -66,9 +69,9 @@ export async function approveDailyReport(
     }
 
     // Revalidate paths
-    revalidatePath(`/[orgSlug]/projects/${report.project_id}/daily-reports`);
+    revalidatePath(`/[orgSlug]/projects/${reportData.project_id}/daily-reports`);
     revalidatePath(
-      `/[orgSlug]/projects/${report.project_id}/daily-reports/${input.id}`
+      `/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.id}`
     );
 
     // TODO: Send notification to submitter

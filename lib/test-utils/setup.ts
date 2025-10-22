@@ -27,3 +27,14 @@ vi.mock('next/navigation', () => ({
   useParams: () => ({}),
   redirect: vi.fn(),
 }))
+
+// Mock Supabase server client
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(),
+}))
+
+// Mock Next.js cache revalidation
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+}))

@@ -1,6 +1,7 @@
 import { getOrganizationBySlug } from '@/lib/actions/organization-helpers'
-import { redirect } from 'next/navigation'
-import { AppHeader } from '@/components/app-header'
+import { notFound } from 'next/navigation'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/app-sidebar'
 
 export default async function OrgLayout({
   children,
@@ -12,13 +13,17 @@ export default async function OrgLayout({
   const org = await getOrganizationBySlug(params.orgSlug)
 
   if (!org) {
-    redirect('/dashboard')
+    notFound()
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <AppHeader currentOrgSlug={params.orgSlug} />
-      <main className="flex-1 bg-neutral-50">{children}</main>
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar orgSlug={params.orgSlug} />
+        <SidebarInset className="flex-1">
+          <main className="flex-1 p-6">{children}</main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   )
 }

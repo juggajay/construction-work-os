@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-interface AddIncidentInput {
+export interface AddIncidentInput {
   dailyReportId: string;
   incidentType: 'safety' | 'delay' | 'quality' | 'visitor' | 'inspection' | 'other';
   severity?: 'low' | 'medium' | 'high' | 'critical';
@@ -17,7 +17,7 @@ interface AddIncidentInput {
   notes?: string;
 }
 
-interface AddIncidentResult {
+export interface AddIncidentResult {
   success: boolean;
   data?: { id: string };
   error?: string;
@@ -54,7 +54,10 @@ export async function addIncident(
       return { success: false, error: 'Daily report not found' };
     }
 
-    if (report.status !== 'draft') {
+    // Type assertion for query result
+    const reportData = report as any;
+
+    if (reportData.status !== 'draft') {
       return {
         success: false,
         error: 'Cannot add entries to non-draft reports',
@@ -66,8 +69,8 @@ export async function addIncident(
       return { success: false, error: 'Description is required' };
     }
 
-    // Insert incident entry
-    const { data: entry, error: insertError } = await supabase
+    // Insert incident entry (type assertion needed for Supabase client)
+    const { data: entry, error: insertError } = await (supabase as any)
       .from('daily_report_incidents')
       .insert({
         daily_report_id: input.dailyReportId,
@@ -85,16 +88,19 @@ export async function addIncident(
       .select('id')
       .single();
 
-    if (insertError) {
-      return { success: false, error: insertError.message };
+    if (insertError || !entry) {
+      return { success: false, error: insertError?.message || 'Failed to add incident' };
     }
+
+    // Type assertion for entry data
+    const entryData = entry as any;
 
     // TODO: If OSHA-recordable, send notification to safety manager
 
     // Revalidate paths
-    revalidatePath(`/[orgSlug]/projects/${report.project_id}/daily-reports/${input.dailyReportId}`);
+    revalidatePath(`/[orgSlug]/projects/${reportData.project_id}/daily-reports/${input.dailyReportId}`);
 
-    return { success: true, data: { id: entry.id } };
+    return { success: true, data: { id: entryData.id } };
   } catch (error) {
     console.error('Error adding incident:', error);
     return {
