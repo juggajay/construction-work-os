@@ -10,6 +10,10 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  // Global setup runs once before all tests
+  globalSetup: require.resolve('./e2e/setup/global-setup.ts'),
+  // Global teardown runs once after all tests
+  globalTeardown: require.resolve('./e2e/setup/global-teardown.ts'),
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',

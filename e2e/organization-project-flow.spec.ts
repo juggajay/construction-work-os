@@ -180,7 +180,7 @@ test.describe('Organization and Project Creation Flow', () => {
       await page.goto(`/${orgSlug}`)
 
       // Should be redirected to login
-      await page.waitForURL('**/login', { timeout: 5000 })
+      await page.waitForURL(/\/login/, { timeout: 5000 })
 
       expect(page.url()).toContain('/login')
     })

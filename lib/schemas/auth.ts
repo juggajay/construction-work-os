@@ -34,11 +34,17 @@ export const phoneSchema = z
 // SIGNUP
 // ============================================================================
 
-export const signupSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  fullName: z.string().min(2, 'Name must be at least 2 characters').max(100).trim(),
-})
+export const signupSchema = z
+  .object({
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string(),
+    fullName: z.string().min(2, 'Name must be at least 2 characters').max(100).trim(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
 
 export type SignupInput = z.infer<typeof signupSchema>
 

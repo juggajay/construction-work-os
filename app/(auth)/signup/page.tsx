@@ -13,24 +13,32 @@ export default function SignupPage() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setFieldErrors({})
 
     const formData = new FormData(event.currentTarget)
     const data = {
       fullName: formData.get('fullName') as string,
       email: formData.get('email') as string,
       password: formData.get('password') as string,
+      confirmPassword: formData.get('confirmPassword') as string,
     }
 
     startTransition(async () => {
       const result = await signup(data)
 
       if (!result.success) {
-        setError(result.error || 'Failed to create account')
+        // Check if the error contains field-specific errors
+        if (result.error?.includes('Passwords do not match')) {
+          setFieldErrors({ confirmPassword: 'Passwords do not match' })
+        } else {
+          setError(result.error || 'Failed to create account')
+        }
         return
       }
 
@@ -108,6 +116,22 @@ export default function SignupPage() {
             <p className="text-xs text-neutral-500">
               At least 8 characters, 1 uppercase, 1 number
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              required
+              minLength={8}
+              disabled={isPending}
+            />
+            {fieldErrors.confirmPassword && (
+              <p className="text-sm text-red-500">{fieldErrors.confirmPassword}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
