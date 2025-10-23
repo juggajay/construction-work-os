@@ -8,9 +8,10 @@ export default async function OrgLayout({
   params,
 }: {
   children: React.ReactNode
-  params: { orgSlug: string }
+  params: Promise<{ orgSlug: string }>
 }) {
-  const org = await getOrganizationBySlug(params.orgSlug)
+  const { orgSlug } = await params
+  const org = await getOrganizationBySlug(orgSlug)
 
   if (!org) {
     notFound()
@@ -19,7 +20,7 @@ export default async function OrgLayout({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar orgSlug={params.orgSlug} />
+        <AppSidebar orgSlug={orgSlug} />
         <SidebarInset className="flex-1">
           <main className="flex-1 p-6">{children}</main>
         </SidebarInset>

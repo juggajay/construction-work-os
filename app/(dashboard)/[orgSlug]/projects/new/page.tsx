@@ -6,9 +6,10 @@ import type { Organization } from '@/lib/types'
 export default async function NewProjectPage({
   params,
 }: {
-  params: { orgSlug: string }
+  params: Promise<{ orgSlug: string }>
 }) {
-  const orgResult = await getOrganizationBySlug(params.orgSlug)
+  const { orgSlug } = await params
+  const orgResult = await getOrganizationBySlug(orgSlug)
 
   if (!orgResult) {
     redirect('/dashboard')
@@ -18,7 +19,7 @@ export default async function NewProjectPage({
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">
-      <ProjectForm orgId={org.id} orgSlug={params.orgSlug} />
+      <ProjectForm orgId={org.id} orgSlug={orgSlug} />
     </div>
   )
 }

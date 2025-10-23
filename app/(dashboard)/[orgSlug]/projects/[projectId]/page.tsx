@@ -10,12 +10,13 @@ import type { Project } from '@/lib/types'
 export default async function ProjectPage({
   params,
 }: {
-  params: { orgSlug: string; projectId: string }
+  params: Promise<{ orgSlug: string; projectId: string }>
 }) {
-  const projectResult = await getProjectById(params.projectId)
+  const { orgSlug, projectId } = await params
+  const projectResult = await getProjectById(projectId)
 
   if (!projectResult) {
-    redirect(`/${params.orgSlug}`)
+    redirect(`/${orgSlug}`)
   }
 
   const project = projectResult as Project
@@ -34,7 +35,7 @@ export default async function ProjectPage({
             )}
           </div>
           <Button variant="outline" asChild>
-            <Link href={`/${params.orgSlug}/projects/${params.projectId}/settings`}>
+            <Link href={`/${orgSlug}/projects/${projectId}/settings`}>
               Settings
             </Link>
           </Button>
@@ -94,13 +95,13 @@ export default async function ProjectPage({
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Button variant="outline" className="h-24 flex-col" asChild>
-                <Link href={`/${params.orgSlug}/projects/${params.projectId}/rfis`}>
+                <Link href={`/${orgSlug}/projects/${projectId}/rfis`}>
                   <FileText className="mb-2 h-6 w-6" />
                   <span>RFIs</span>
                 </Link>
               </Button>
               <Button variant="outline" className="h-24 flex-col" asChild>
-                <Link href={`/${params.orgSlug}/projects/${params.projectId}/submittals`}>
+                <Link href={`/${orgSlug}/projects/${projectId}/submittals`}>
                   <FileText className="mb-2 h-6 w-6" />
                   <span>Submittals</span>
                 </Link>
@@ -111,7 +112,7 @@ export default async function ProjectPage({
                 <span className="mt-1 text-xs text-neutral-500">Coming soon</span>
               </Button>
               <Button variant="outline" className="h-24 flex-col" asChild>
-                <Link href={`/${params.orgSlug}/projects/${params.projectId}/daily-reports`}>
+                <Link href={`/${orgSlug}/projects/${projectId}/daily-reports`}>
                   <FileText className="mb-2 h-6 w-6" />
                   <span>Daily Reports</span>
                 </Link>

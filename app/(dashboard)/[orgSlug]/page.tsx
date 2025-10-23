@@ -11,9 +11,10 @@ import type { Organization, Project } from '@/lib/types'
 export default async function OrganizationPage({
   params,
 }: {
-  params: { orgSlug: string }
+  params: Promise<{ orgSlug: string }>
 }) {
-  const orgResult = await getOrganizationBySlug(params.orgSlug)
+  const { orgSlug } = await params
+  const orgResult = await getOrganizationBySlug(orgSlug)
 
   if (!orgResult) {
     redirect('/dashboard')
@@ -33,7 +34,7 @@ export default async function OrganizationPage({
           </p>
         </div>
         <Button asChild>
-          <Link href={`/${params.orgSlug}/projects/new`}>
+          <Link href={`/${orgSlug}/projects/new`}>
             <Plus className="mr-2 h-4 w-4" />
             New Project
           </Link>
@@ -49,7 +50,7 @@ export default async function OrganizationPage({
               Get started by creating your first construction project
             </p>
             <Button className="mt-6" asChild>
-              <Link href={`/${params.orgSlug}/projects/new`}>
+              <Link href={`/${orgSlug}/projects/new`}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Project
               </Link>
@@ -61,7 +62,7 @@ export default async function OrganizationPage({
           {projects.map((project) => (
             <Link
               key={project.id}
-              href={`/${params.orgSlug}/projects/${project.id}`}
+              href={`/${orgSlug}/projects/${project.id}`}
             >
               <Card className="transition-shadow hover:shadow-md">
                 <CardHeader>
