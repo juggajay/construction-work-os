@@ -16,11 +16,28 @@ export async function debugCurrentUser() {
   }
 
   // Check if profile exists
-  const { data: profile, error: profileError } = await supabase
+  const { data, error: profileError } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, full_name')
     .eq('id', user.id)
     .single()
+
+  const profileData = data as { id: string; full_name: string } | null
+
+  if (profileData) {
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at
+      },
+      profile: {
+        id: profileData.id,
+        full_name: profileData.full_name,
+        exists: true as const
+      }
+    }
+  }
 
   return {
     user: {
@@ -28,12 +45,8 @@ export async function debugCurrentUser() {
       email: user.email,
       created_at: user.created_at
     },
-    profile: profile ? {
-      id: profile.id,
-      full_name: profile.full_name,
-      exists: true
-    } : {
-      exists: false,
+    profile: {
+      exists: false as const,
       error: profileError?.message
     }
   }
