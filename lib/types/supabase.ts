@@ -350,6 +350,13 @@ export type Database = {
             foreignKeyName: "change_orders_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "change_orders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -769,31 +776,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "daily_reports_approved_by_fkey"
-            columns: ["approved_by"]
+            foreignKeyName: "daily_reports_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "daily_reports_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "daily_reports_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "daily_reports_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -945,6 +938,243 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_access_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_access_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_budget_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_amount: number
+          old_amount: number | null
+          project_budget_id: string
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_amount: number
+          old_amount?: number | null
+          project_budget_id: string
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_amount?: number
+          old_amount?: number | null
+          project_budget_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_history_project_budget_id_fkey"
+            columns: ["project_budget_id"]
+            isOneToOne: false
+            referencedRelation: "project_budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_budgets: {
+        Row: {
+          allocated_amount: number
+          category: Database["public"]["Enums"]["project_budget_category"]
+          created_at: string
+          deleted_at: string | null
+          id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          allocated_amount: number
+          category: Database["public"]["Enums"]["project_budget_category"]
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          allocated_amount?: number
+          category?: Database["public"]["Enums"]["project_budget_category"]
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budgets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_budgets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_costs: {
+        Row: {
+          amount: number
+          attachments: Json | null
+          budget_category: Database["public"]["Enums"]["project_budget_category"]
+          cost_date: string
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          description: string
+          id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          attachments?: Json | null
+          budget_category: Database["public"]["Enums"]["project_budget_category"]
+          cost_date: string
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          description: string
+          id?: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          attachments?: Json | null
+          budget_category?: Database["public"]["Enums"]["project_budget_category"]
+          cost_date?: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          description?: string
+          id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_invoices: {
+        Row: {
+          ai_confidence: number | null
+          ai_parsed: boolean | null
+          ai_raw_response: Json | null
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          budget_category: Database["public"]["Enums"]["project_budget_category"]
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          mime_type: string
+          project_id: string
+          status: Database["public"]["Enums"]["invoice_status"]
+          updated_at: string
+          uploaded_by: string
+          vendor_name: string | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_parsed?: boolean | null
+          ai_raw_response?: Json | null
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_category: Database["public"]["Enums"]["project_budget_category"]
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          mime_type: string
+          project_id: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          updated_at?: string
+          uploaded_by: string
+          vendor_name?: string | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_parsed?: boolean | null
+          ai_raw_response?: Json | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_category?: Database["public"]["Enums"]["project_budget_category"]
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          mime_type?: string
+          project_id?: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          updated_at?: string
+          uploaded_by?: string
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_invoices_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1234,6 +1464,13 @@ export type Database = {
             foreignKeyName: "rfis_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "rfis_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -1465,6 +1702,13 @@ export type Database = {
             foreignKeyName: "submittals_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "submittals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -1479,13 +1723,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      project_cost_summary: {
+        Row: {
+          allocated_amount: number | null
+          category:
+            | Database["public"]["Enums"]["project_budget_category"]
+            | null
+          project_id: string | null
+          remaining_amount: number | null
+          spent_amount: number | null
+          spent_percentage: number | null
+          total_budget: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accessible_project_ids: {
         Args: never
         Returns: {
           project_id: string
+        }[]
+      }
+      calculate_burn_rate: {
+        Args: { p_project_id: string }
+        Returns: {
+          daily_burn_rate: number
+          days_elapsed: number
+          days_remaining: number
+          days_total: number
+          forecasted_overrun: number
+          forecasted_total: number
+          status: string
+          total_spent: number
         }[]
       }
       cleanup_orphaned_attachments: {
@@ -1605,8 +1875,10 @@ export type Database = {
         | "visitor"
         | "inspection"
         | "other"
+      invoice_status: "pending" | "approved" | "rejected" | "paid"
       org_role: "owner" | "admin" | "member"
       originating_event_type: "rfi" | "submittal" | "daily_report" | "manual"
+      project_budget_category: "labor" | "materials" | "equipment" | "other"
       project_role: "manager" | "supervisor" | "viewer"
       project_status:
         | "planning"
@@ -1819,8 +2091,10 @@ export const Constants = {
         "inspection",
         "other",
       ],
+      invoice_status: ["pending", "approved", "rejected", "paid"],
       org_role: ["owner", "admin", "member"],
       originating_event_type: ["rfi", "submittal", "daily_report", "manual"],
+      project_budget_category: ["labor", "materials", "equipment", "other"],
       project_role: ["manager", "supervisor", "viewer"],
       project_status: [
         "planning",

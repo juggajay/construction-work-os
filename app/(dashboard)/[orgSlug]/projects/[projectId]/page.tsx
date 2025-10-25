@@ -93,7 +93,13 @@ export default async function ProjectPage({
             <CardTitle>Project Workflows</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <Button variant="outline" className="h-24 flex-col" asChild>
+                <Link href={`/${orgSlug}/projects/${projectId}/costs`}>
+                  <DollarSign className="mb-2 h-6 w-6" />
+                  <span>Costs</span>
+                </Link>
+              </Button>
               <Button variant="outline" className="h-24 flex-col" asChild>
                 <Link href={`/${orgSlug}/projects/${projectId}/rfis`}>
                   <FileText className="mb-2 h-6 w-6" />

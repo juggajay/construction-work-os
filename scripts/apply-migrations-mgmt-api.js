@@ -66,12 +66,8 @@ async function main() {
 
   const migrations = [
     {
-      file: 'supabase/migrations/20251025025919_fix_change_order_numbering_case_type_mismatch.sql',
-      name: 'fix_change_order_numbering_case_type_mismatch'
-    },
-    {
-      file: 'supabase/migrations/20251025030803_fix_daily_reports_user_foreign_keys.sql',
-      name: 'fix_daily_reports_user_foreign_keys'
+      file: 'supabase/migrations/20251025162555_add_project_cost_tracking.sql',
+      name: 'add_project_cost_tracking'
     }
   ];
 
