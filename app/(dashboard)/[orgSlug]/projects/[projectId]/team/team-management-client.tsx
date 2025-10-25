@@ -190,10 +190,11 @@ export function TeamManagementClient({
 
   const getInitials = (name: string | null, email: string) => {
     if (name) {
-      const parts = name.split(' ')
-      return parts.length > 1
-        ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-        : name.slice(0, 2).toUpperCase()
+      const parts = name.split(' ').filter(p => p.length > 0)
+      if (parts.length > 1 && parts[0] && parts[1]) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+      }
+      return name.slice(0, 2).toUpperCase()
     }
     return email.slice(0, 2).toUpperCase()
   }
