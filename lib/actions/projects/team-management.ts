@@ -276,7 +276,7 @@ export async function updateTeamMemberRole(params: {
       return { success: false, error: updateError.message }
     }
 
-    return { success: true }
+    return { success: true, data: undefined }
   } catch (error) {
     return {
       success: false,
@@ -345,7 +345,7 @@ export async function removeTeamMember(
       return { success: false, error: deleteError.message }
     }
 
-    return { success: true }
+    return { success: true, data: undefined }
   } catch (error) {
     return {
       success: false,
