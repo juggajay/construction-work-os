@@ -82,7 +82,7 @@ CREATE POLICY "Users can view line items for accessible change orders"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
   );
 
@@ -92,7 +92,7 @@ CREATE POLICY "Users can create line items for editable change orders"
   WITH CHECK (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
         AND status NOT IN ('approved', 'invoiced')
     )
   );
@@ -103,7 +103,7 @@ CREATE POLICY "Users can update line items for editable change orders"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
         AND status NOT IN ('approved', 'invoiced')
     )
   );
@@ -114,7 +114,7 @@ CREATE POLICY "Users can delete line items for editable change orders"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
         AND status NOT IN ('approved', 'invoiced')
     )
   );
@@ -131,7 +131,7 @@ CREATE POLICY "Users can view approvals for accessible change orders"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
   );
 
@@ -146,7 +146,7 @@ CREATE POLICY "Approvers can update their approval decisions"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
     AND (
       approver_id = auth.uid()
@@ -181,7 +181,7 @@ CREATE POLICY "Users can view versions for accessible change orders"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
   );
 
@@ -191,7 +191,7 @@ CREATE POLICY "Users can create versions for editable change orders"
   WITH CHECK (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
     AND created_by = auth.uid()
   );
@@ -208,7 +208,7 @@ CREATE POLICY "Users can view attachments for accessible change orders"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
   );
 
@@ -218,7 +218,7 @@ CREATE POLICY "Users can upload attachments for accessible change orders"
   WITH CHECK (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
     AND uploaded_by = auth.uid()
   );
@@ -229,7 +229,7 @@ CREATE POLICY "Users can delete their own attachments"
   USING (
     change_order_id IN (
       SELECT id FROM change_orders
-      WHERE project_id IN (SELECT accessible_project_ids())
+      WHERE project_id IN (SELECT * FROM accessible_project_ids())
     )
     AND uploaded_by = auth.uid()
   );
