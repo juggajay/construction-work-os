@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ProjectSettingsForm } from '@/components/projects/project-settings-form'
+import { BudgetAllocationForm } from '@/components/projects/budget-allocation-form'
 
 interface ProjectSettingsPageProps {
   params: Promise<{
@@ -51,6 +52,23 @@ export default async function ProjectSettingsPage({ params }: ProjectSettingsPag
             <ProjectSettingsForm orgSlug={orgSlug} project={project} />
           </CardContent>
         </Card>
+
+        {project.budget && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Budget Allocations</CardTitle>
+              <CardDescription>
+                Allocate your project budget across labor, materials, equipment, and other categories
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BudgetAllocationForm
+                projectId={project.id}
+                totalBudget={parseFloat(project.budget)}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
