@@ -310,6 +310,127 @@ supabase db pull
 
 ---
 
+## Direct Database Connection (When CLI Fails)
+
+**⚠️ IMPORTANT:** If `supabase db push` or CLI connection methods fail with timeouts or authentication errors, use this direct connection method.
+
+### When to Use Direct Connection
+
+Use this method if you encounter:
+- Connection timeout errors when using `supabase db push`
+- "password authentication failed for user" errors
+- Pooler connection issues
+- CLI connection failures despite correct credentials
+
+### Method: Direct PostgreSQL Connection with Node.js
+
+**Step 1: Get the Direct Connection URL**
+
+From your Supabase Dashboard → Project Settings → Database → Connection String:
+- **DO NOT** use the "Connection pooling" URL (ends with `:6543`)
+- **USE** the "Direct connection" URL (ends with `:5432`)
+
+Format:
+```
+postgresql://postgres:<PASSWORD>@db.<PROJECT_REF>.supabase.co:5432/postgres
+```
+
+Example:
+```
+postgresql://postgres:fJ1XI7m5uBkvokYS@db.tokjmeqjvexnmtampyjm.supabase.co:5432/postgres
+```
+
+**Step 2: Create a Migration Runner Script**
+
+Create `scripts/run-migration-simple.js`:
+
+```javascript
+const { Client } = require('pg')
+const fs = require('fs')
+const path = require('path')
+
+// Use direct connection URL (not pooler)
+const databaseUrl = 'postgresql://postgres:<YOUR_PASSWORD>@db.<PROJECT_REF>.supabase.co:5432/postgres'
+
+async function runMigration() {
+  const client = new Client({
+    connectionString: databaseUrl,
+    ssl: { rejectUnauthorized: false }
+  })
+
+  try {
+    console.log('📤 Connecting to database...')
+    await client.connect()
+    console.log('✅ Connected!')
+
+    // Get migration file name from command line argument
+    const migrationFile = process.argv[2]
+    if (!migrationFile) {
+      throw new Error('Please provide migration file name as argument')
+    }
+
+    const sqlPath = path.join(__dirname, '..', 'supabase', 'migrations', migrationFile)
+
+    if (!fs.existsSync(sqlPath)) {
+      throw new Error(`Migration file not found: ${sqlPath}`)
+    }
+
+    console.log(`📤 Executing migration: ${migrationFile}`)
+    const sql = fs.readFileSync(sqlPath, 'utf8')
+
+    await client.query(sql)
+    console.log('✅ Migration completed successfully!')
+  } catch (error) {
+    console.error('❌ Migration failed:', error.message)
+    process.exit(1)
+  } finally {
+    await client.end()
+    console.log('📤 Database connection closed')
+  }
+}
+
+runMigration()
+```
+
+**Step 3: Run the Migration**
+
+```bash
+# Run a specific migration file
+node scripts/run-migration-simple.js 20251026000000_your_migration.sql
+
+# Example:
+node scripts/run-migration-simple.js 20251026000000_add_project_team_management_rls.sql
+```
+
+### Why This Works
+
+1. **Direct Connection**: Bypasses Supabase CLI and connection pooler issues
+2. **PostgreSQL Client**: Uses battle-tested `pg` library directly
+3. **Simple & Reliable**: No intermediate tools or authentication layers
+4. **Full SQL Support**: Can execute any valid PostgreSQL SQL
+
+### Security Notes
+
+- ⚠️ **Never commit** database passwords to git
+- ⚠️ Store the connection URL in environment variables for production use
+- ⚠️ The service role key has full database access - use carefully
+
+### Alternative: Using Environment Variables
+
+Update the script to use environment variables:
+
+```javascript
+// At the top of run-migration-simple.js
+const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:54322/postgres'
+```
+
+Then run:
+```bash
+DATABASE_URL='postgresql://postgres:<PASSWORD>@db.<PROJECT_REF>.supabase.co:5432/postgres' node scripts/run-migration-simple.js migration_file.sql
+```
+
+---
+
 ## Troubleshooting
 
 ### Problem: "Connection refused" errors
@@ -385,6 +506,7 @@ When working with Supabase, the AI should:
 | List tables | `supabase db psql -c "\dt"` |
 | Describe table | `supabase db psql -c "\d <table>"` |
 | Push to production | `supabase db push` |
+| **Direct connection (CLI fails)** | `node scripts/run-migration-simple.js <migration-file.sql>` |
 
 ---
 
