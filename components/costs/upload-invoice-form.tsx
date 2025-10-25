@@ -98,6 +98,12 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       return
     }
 
+    const amount = parseFloat(formData.amount)
+    if (!formData.amount || isNaN(amount) || amount <= 0) {
+      toast({ title: 'Error', description: 'Please enter a valid amount greater than 0', variant: 'destructive' })
+      return
+    }
+
     setIsUploading(true)
 
     try {
@@ -108,7 +114,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
         vendorName: formData.vendorName,
         invoiceNumber: formData.invoiceNumber,
         invoiceDate: formData.invoiceDate,
-        amount: parseFloat(formData.amount),
+        amount,
         description: formData.description,
       })
 
@@ -252,7 +258,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isParsing || isUploading || !selectedFile}>
+        <Button type="submit" disabled={isParsing || isUploading || !selectedFile || !formData.amount || !formData.category}>
           {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isUploading ? 'Uploading...' : 'Upload Invoice'}
         </Button>
