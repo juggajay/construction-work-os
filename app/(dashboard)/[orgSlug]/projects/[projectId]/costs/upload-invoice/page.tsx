@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft, Upload } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { UploadInvoiceForm } from '@/components/costs/upload-invoice-form'
 
 interface UploadInvoicePageProps {
   params: Promise<{
@@ -38,30 +39,14 @@ export default async function UploadInvoicePage({ params }: UploadInvoicePagePro
 
       <Card>
         <CardHeader>
-          <CardTitle>Invoice Upload</CardTitle>
+          <CardTitle>Invoice Upload with AI Extraction</CardTitle>
           <CardDescription>
-            Upload invoices for AI-powered data extraction and automatic cost tracking
+            Upload an invoice and let AI automatically extract vendor name, invoice number, date, and amount.
+            Review and edit the data before submitting.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-12 text-center">
-            <Upload className="mx-auto h-12 w-12 text-neutral-400" />
-            <p className="mt-4 text-neutral-600">
-              <strong>Coming Soon:</strong> Invoice upload with AI extraction
-            </p>
-            <p className="mt-2 text-sm text-neutral-500">
-              This feature will use AI to automatically extract vendor name, invoice number, date,
-              amount, and line items from uploaded invoices.
-            </p>
-            <p className="mt-2 text-sm text-neutral-500">
-              Supported formats: PDF, JPEG, PNG, HEIC (max 25MB)
-            </p>
-            <Button variant="outline" asChild className="mt-4">
-              <Link href={`/${orgSlug}/projects/${projectId}/costs`}>
-                Return to Cost Tracking
-              </Link>
-            </Button>
-          </div>
+          <UploadInvoiceForm projectId={projectId} orgSlug={orgSlug} />
         </CardContent>
       </Card>
     </div>

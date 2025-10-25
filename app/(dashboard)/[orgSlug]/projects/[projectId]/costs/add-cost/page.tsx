@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { AddCostForm } from '@/components/costs/add-cost-form'
 
 interface AddCostPageProps {
   params: Promise<{
@@ -44,19 +45,7 @@ export default async function AddCostPage({ params }: AddCostPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-12 text-center">
-            <p className="text-neutral-600">
-              <strong>Coming Soon:</strong> Manual cost entry form
-            </p>
-            <p className="mt-2 text-sm text-neutral-500">
-              This feature will allow you to manually record costs without an invoice.
-            </p>
-            <Button variant="outline" asChild className="mt-4">
-              <Link href={`/${orgSlug}/projects/${projectId}/costs`}>
-                Return to Cost Tracking
-              </Link>
-            </Button>
-          </div>
+          <AddCostForm projectId={projectId} orgSlug={orgSlug} />
         </CardContent>
       </Card>
     </div>
