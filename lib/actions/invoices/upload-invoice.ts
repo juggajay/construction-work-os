@@ -11,25 +11,22 @@ import type { Database } from '@/lib/types/supabase'
 
 type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
-export interface UploadInvoiceInput {
-  projectId: string
-  category: BudgetCategory
-  file: File
-  // Manual entry fields
-  vendorName?: string
-  invoiceNumber?: string
-  invoiceDate?: string
-  amount: number
-  description?: string
-}
-
 export async function uploadInvoice(
-  input: UploadInvoiceInput
+  formData: FormData
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { projectId, category, file, vendorName, invoiceNumber, invoiceDate, amount, description } = input
+    const projectId = formData.get('projectId') as string
+    const category = formData.get('category') as BudgetCategory
+    const file = formData.get('file') as File
+    const vendorName = formData.get('vendorName') as string | null
+    const invoiceNumber = formData.get('invoiceNumber') as string | null
+    const invoiceDate = formData.get('invoiceDate') as string | null
+    const amountStr = formData.get('amount') as string
+    const description = formData.get('description') as string | null
 
-    if (!file || !projectId || !category || !amount) {
+    const amount = parseFloat(amountStr)
+
+    if (!file || !projectId || !category || !amount || isNaN(amount)) {
       return { success: false, error: 'Missing required fields' }
     }
 

@@ -107,16 +107,18 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     setIsUploading(true)
 
     try {
-      const result = await uploadInvoice({
-        projectId,
-        category: formData.category as any,
-        file: selectedFile,
-        vendorName: formData.vendorName,
-        invoiceNumber: formData.invoiceNumber,
-        invoiceDate: formData.invoiceDate,
-        amount,
-        description: formData.description,
-      })
+      // Create FormData to send file
+      const data = new FormData()
+      data.append('projectId', projectId)
+      data.append('category', formData.category)
+      data.append('file', selectedFile)
+      data.append('vendorName', formData.vendorName || '')
+      data.append('invoiceNumber', formData.invoiceNumber || '')
+      data.append('invoiceDate', formData.invoiceDate || '')
+      data.append('amount', amount.toString())
+      data.append('description', formData.description || '')
+
+      const result = await uploadInvoice(data)
 
       if (result.success) {
         toast({ title: 'Success', description: 'Invoice uploaded successfully' })
