@@ -3,14 +3,9 @@
  * This bucket stores uploaded invoice files (PDF, images) for project cost tracking
  */
 
--- Create the storage bucket
-INSERT INTO storage.buckets (id, name, file_size_limit, allowed_mime_types)
-VALUES (
-  'project-invoices',
-  'project-invoices',
-  26214400, -- 25MB max file size
-  ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/heic']
-)
+-- Create the storage bucket (file_size_limit and allowed_mime_types don't exist in older Supabase versions)
+INSERT INTO storage.buckets (id, name)
+VALUES ('project-invoices', 'project-invoices')
 ON CONFLICT (id) DO NOTHING;
 
 -- RLS Policy: Allow authenticated users to upload invoices to their projects
