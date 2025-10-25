@@ -4,11 +4,10 @@
  */
 
 -- Create the storage bucket
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+INSERT INTO storage.buckets (id, name, file_size_limit, allowed_mime_types)
 VALUES (
   'project-invoices',
   'project-invoices',
-  FALSE, -- Private bucket, requires auth
   26214400, -- 25MB max file size
   ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/heic']
 )
