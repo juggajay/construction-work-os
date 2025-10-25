@@ -55,7 +55,7 @@ export async function updateBudgetAllocation(
     // Validate: Sum of allocations must not exceed total budget
     const totalAllocated = allocations.reduce((sum, alloc) => sum + alloc.amount, 0)
 
-    if (project.budget && totalAllocated > parseFloat(project.budget)) {
+    if (project.budget && totalAllocated > project.budget) {
       return {
         success: false,
         error: `Total allocation ($${totalAllocated.toFixed(2)}) exceeds project budget ($${project.budget})`,

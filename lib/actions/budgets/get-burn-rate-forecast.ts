@@ -71,7 +71,7 @@ export async function getBurnRateForecast(
       dailyBurnRate: Number(data.daily_burn_rate),
       forecastedTotal: Number(data.forecasted_total),
       forecastedOverrun: Number(data.forecasted_overrun),
-      status: data.status,
+      status: data.status as 'on_track' | 'warning' | 'critical',
     }
 
     return { success: true, data: forecast }
