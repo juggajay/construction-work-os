@@ -1,0 +1,46 @@
+{
+  "id": "rfi-create",
+  "name": "Create RFI",
+  "module": "rfis",
+  "prerequisites": ["auth-login"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3000/org-slug/projects/project-id/rfis",
+      "description": "Navigate to RFIs page"
+    },
+    {
+      "action": "click",
+      "selector": "[data-testid='create-rfi-button']",
+      "description": "Click Create RFI button"
+    },
+    {
+      "action": "type",
+      "selector": "[name='subject']",
+      "value": "Test RFI - Automated Testing",
+      "description": "Enter RFI subject"
+    },
+    {
+      "action": "type",
+      "selector": "[name='question']",
+      "value": "This is an automated test RFI. Please respond with test acknowledgment.",
+      "description": "Enter RFI question"
+    },
+    {
+      "action": "click",
+      "selector": "[type='submit']",
+      "description": "Submit RFI form",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for RFI creation"
+    },
+    {
+      "action": "assert",
+      "selector": ".success-message",
+      "description": "Verify RFI created successfully"
+    }
+  ]
+}

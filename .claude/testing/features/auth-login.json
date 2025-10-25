@@ -1,0 +1,47 @@
+{
+  "id": "auth-login",
+  "name": "User Authentication - Login",
+  "module": "auth",
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3000/login",
+      "description": "Navigate to login page",
+      "timeout": 10000
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for page to load"
+    },
+    {
+      "action": "type",
+      "selector": "[name='email']",
+      "value": "test@example.com",
+      "description": "Enter email address"
+    },
+    {
+      "action": "type",
+      "selector": "[name='password']",
+      "value": "password123",
+      "description": "Enter password"
+    },
+    {
+      "action": "click",
+      "selector": "[type='submit']",
+      "description": "Click login button",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for navigation"
+    },
+    {
+      "action": "assert",
+      "selector": "[data-testid='dashboard']",
+      "description": "Verify dashboard loaded",
+      "timeout": 5000
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "chrome": {
+    "headless": false,
+    "devtools": true,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "slowMo": 100
+  },
+  "orchestrator": {
+    "maxRetries": 3,
+    "retryDelay": 5000,
+    "screenshotOnError": true,
+    "pauseOnError": false,
+    "continueOnFailure": true
+  },
+  "reporting": {
+    "outputDir": "./test-results",
+    "formats": ["html", "json"],
+    "saveScreenshots": true,
+    "saveLogs": true
+  },
+  "features": [
+    "auth-login",
+    "project-create",
+    "rfi-create"
+  ]
+}

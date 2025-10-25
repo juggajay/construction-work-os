@@ -1,0 +1,54 @@
+{
+  "id": "project-create",
+  "name": "Create New Project",
+  "module": "projects",
+  "prerequisites": ["auth-login"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3000/org-slug/projects/new",
+      "description": "Navigate to new project page"
+    },
+    {
+      "action": "type",
+      "selector": "[name='name']",
+      "value": "Test Project - Automated",
+      "description": "Enter project name"
+    },
+    {
+      "action": "type",
+      "selector": "[name='number']",
+      "value": "AUTO-001",
+      "description": "Enter project number"
+    },
+    {
+      "action": "type",
+      "selector": "[name='address']",
+      "value": "123 Test Street, Test City, TC 12345",
+      "description": "Enter project address"
+    },
+    {
+      "action": "click",
+      "selector": "[type='submit']",
+      "description": "Submit project form",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for project creation"
+    },
+    {
+      "action": "assert",
+      "selector": ".success-message",
+      "description": "Verify success message"
+    }
+  ],
+  "cleanup": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3000/org-slug/projects",
+      "description": "Navigate to projects list"
+    }
+  ]
+}
