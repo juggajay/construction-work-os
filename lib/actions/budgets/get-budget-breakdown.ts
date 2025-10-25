@@ -61,14 +61,16 @@ export async function getBudgetBreakdown(
       return { success: false, error: budgetError.message }
     }
 
-    // Transform data
-    const breakdown: BudgetBreakdown[] = (budgetData || []).map((item) => ({
-      category: item.category,
-      allocated: Number(item.allocated_amount),
-      spent: Number(item.spent_amount),
-      remaining: Number(item.remaining_amount),
-      percentSpent: Number(item.spent_percentage),
-    }))
+    // Transform data (filter out null categories)
+    const breakdown: BudgetBreakdown[] = (budgetData || [])
+      .filter((item) => item.category !== null)
+      .map((item) => ({
+        category: item.category as BudgetCategory,
+        allocated: Number(item.allocated_amount),
+        spent: Number(item.spent_amount),
+        remaining: Number(item.remaining_amount),
+        percentSpent: Number(item.spent_percentage),
+      }))
 
     return { success: true, data: breakdown }
   } catch (error) {
