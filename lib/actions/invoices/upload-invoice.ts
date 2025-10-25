@@ -14,6 +14,7 @@ type BudgetCategory = Database['public']['Enums']['project_budget_category']
 export async function uploadInvoice(
   formData: FormData
 ): Promise<ActionResponse<{ id: string }>> {
+  console.log('📤 uploadInvoice: Starting upload process')
   try {
     const projectId = formData.get('projectId') as string
     const category = formData.get('category') as BudgetCategory
@@ -24,21 +25,38 @@ export async function uploadInvoice(
     const amountStr = formData.get('amount') as string
     const description = formData.get('description') as string | null
 
+    console.log('📤 uploadInvoice: Extracted data:', {
+      projectId,
+      category,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+      vendorName,
+      invoiceNumber,
+      invoiceDate,
+      amountStr,
+    })
+
     const amount = parseFloat(amountStr)
 
     if (!file || !projectId || !category || !amount || isNaN(amount)) {
+      console.error('❌ uploadInvoice: Missing required fields')
       return { success: false, error: 'Missing required fields' }
     }
 
     const supabase = await createClient()
+    console.log('📤 uploadInvoice: Supabase client created')
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     if (!user) {
+      console.error('❌ uploadInvoice: No user found')
       throw new UnauthorizedError('You must be logged in')
     }
+
+    console.log('📤 uploadInvoice: User authenticated:', user.id)
 
     // Verify project access (manager or supervisor)
     const { data: access, error: accessError } = await supabase
@@ -50,23 +68,32 @@ export async function uploadInvoice(
       .single()
 
     if (accessError || !access || !['manager', 'supervisor'].includes(access.role)) {
+      console.error('❌ uploadInvoice: Access denied', { accessError, access })
       throw new UnauthorizedError('Only managers and supervisors can upload invoices')
     }
+
+    console.log('📤 uploadInvoice: Access verified, role:', access.role)
 
     // Upload file to storage
     const timestamp = Date.now()
     const fileName = `${timestamp}-${file.name}`
     const filePath = `${projectId}/invoices/${fileName}`
 
+    console.log('📤 uploadInvoice: Uploading file to storage:', filePath)
+
     const { error: uploadError } = await supabase.storage
       .from('project-invoices')
       .upload(filePath, file)
 
     if (uploadError) {
+      console.error('❌ uploadInvoice: File upload failed:', uploadError)
       return { success: false, error: `Failed to upload file: ${uploadError.message}` }
     }
 
+    console.log('✅ uploadInvoice: File uploaded successfully')
+
     // Create invoice record
+    console.log('📤 uploadInvoice: Creating invoice record in database')
     const { data: invoice, error: invoiceError } = await supabase
       .from('project_invoices')
       .insert({
@@ -88,13 +115,16 @@ export async function uploadInvoice(
       .single()
 
     if (invoiceError) {
+      console.error('❌ uploadInvoice: Database insertion failed:', invoiceError)
       // Clean up uploaded file on error
       await supabase.storage.from('project-invoices').remove([filePath])
       return { success: false, error: invoiceError.message }
     }
 
+    console.log('✅ uploadInvoice: Invoice created successfully, ID:', invoice.id)
     return { success: true, data: { id: invoice.id } }
   } catch (error) {
+    console.error('❌ uploadInvoice: Unexpected error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to upload invoice',

@@ -105,6 +105,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     }
 
     setIsUploading(true)
+    console.log('📤 Form: Starting invoice upload...')
 
     try {
       // Create FormData to send file
@@ -118,18 +119,24 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       data.append('amount', amount.toString())
       data.append('description', formData.description || '')
 
+      console.log('📤 Form: Calling uploadInvoice server action...')
       const result = await uploadInvoice(data)
+      console.log('📤 Form: Server action response:', result)
 
       if (result.success) {
+        console.log('✅ Form: Upload successful, navigating to costs page')
         toast({ title: 'Success', description: 'Invoice uploaded successfully' })
         router.push(`/${orgSlug}/projects/${projectId}/costs`)
         router.refresh()
       } else {
+        console.error('❌ Form: Upload failed:', result.error)
         toast({ title: 'Error', description: result.error || 'Failed to upload invoice', variant: 'destructive' })
       }
     } catch (error) {
+      console.error('❌ Form: Unexpected error:', error)
       toast({ title: 'Error', description: 'An unexpected error occurred', variant: 'destructive' })
     } finally {
+      console.log('📤 Form: Upload process finished')
       setIsUploading(false)
     }
   }
