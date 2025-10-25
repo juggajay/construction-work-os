@@ -31,9 +31,10 @@ export default async function CostsPage({
   const forecast = forecastResult.success ? forecastResult.data : null
 
   // Calculate totals
+  const totalBudget = project.budget || 0 // Original project budget from creation
   const totalAllocated = budgetBreakdown.reduce((sum, item) => sum + item.allocated, 0)
   const totalSpent = budgetBreakdown.reduce((sum, item) => sum + item.spent, 0)
-  const totalRemaining = budgetBreakdown.reduce((sum, item) => sum + item.remaining, 0)
+  const totalRemaining = totalBudget - totalSpent // Remaining from original budget
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -68,9 +69,11 @@ export default async function CostsPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${totalAllocated.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-xs text-neutral-500 mt-1">Allocated across categories</p>
+            <p className="text-xs text-neutral-500 mt-1">
+              {totalAllocated > 0 ? `$${totalAllocated.toLocaleString()} allocated` : 'Set in project creation'}
+            </p>
           </CardContent>
         </Card>
 
@@ -84,7 +87,7 @@ export default async function CostsPage({
               ${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-neutral-500 mt-1">
-              {totalAllocated > 0 ? ((totalSpent / totalAllocated) * 100).toFixed(1) : 0}% of budget
+              {totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(1) : 0}% of budget
             </p>
           </CardContent>
         </Card>
