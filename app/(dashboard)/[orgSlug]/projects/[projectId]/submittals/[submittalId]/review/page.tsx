@@ -81,7 +81,7 @@ export default async function SubmittalReviewPage({ params }: PageProps) {
   }
 
   // Get potential reviewers for forwarding (project team members)
-  const { data: projectUsers } = (await supabase
+  const { data: projectUsers } = (await (supabase as any)
     .from('project_team_members')
     .select('user:users(id, full_name)')
     .eq('project_id', projectId)) as any;

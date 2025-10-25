@@ -30,7 +30,8 @@ export const createRFI = withAction(
       user_uuid: user.id,
     })
 
-    if (!projectIds || !(projectIds as string[]).includes(data.projectId)) {
+    const projectIdStrings = ((projectIds as any) || []).map((p: any) => p.project_id)
+    if (!projectIds || !projectIdStrings.includes(data.projectId)) {
       throw new ForbiddenError('You do not have access to this project')
     }
 

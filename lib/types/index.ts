@@ -24,6 +24,26 @@ import type {
   ProjectRole,
   ProjectStatus,
   AuditAction,
+  // Change Order types
+  ChangeOrder,
+  ChangeOrderInsert,
+  ChangeOrderUpdate,
+  ChangeOrderLineItem,
+  ChangeOrderLineItemInsert,
+  ChangeOrderLineItemUpdate,
+  ChangeOrderApproval,
+  ChangeOrderApprovalInsert,
+  ChangeOrderApprovalUpdate,
+  ChangeOrderVersion,
+  ChangeOrderVersionInsert,
+  ChangeOrderAttachment,
+  ChangeOrderAttachmentInsert,
+  ChangeOrderStatus,
+  ChangeOrderType,
+  OriginatingEventType,
+  ApprovalStage,
+  ApprovalStatus,
+  AttachmentCategory,
 } from './database'
 
 // ============================================================================
@@ -52,6 +72,26 @@ export type {
   ProjectStatus,
   AuditAction,
   Database,
+  // Change Order types
+  ChangeOrder,
+  ChangeOrderInsert,
+  ChangeOrderUpdate,
+  ChangeOrderLineItem,
+  ChangeOrderLineItemInsert,
+  ChangeOrderLineItemUpdate,
+  ChangeOrderApproval,
+  ChangeOrderApprovalInsert,
+  ChangeOrderApprovalUpdate,
+  ChangeOrderVersion,
+  ChangeOrderVersionInsert,
+  ChangeOrderAttachment,
+  ChangeOrderAttachmentInsert,
+  ChangeOrderStatus,
+  ChangeOrderType,
+  OriginatingEventType,
+  ApprovalStage,
+  ApprovalStatus,
+  AttachmentCategory,
 }
 
 // ============================================================================

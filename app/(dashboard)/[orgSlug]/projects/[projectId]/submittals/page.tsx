@@ -82,11 +82,11 @@ export default async function SubmittalsListPage({ params, searchParams }: PageP
 
   // Apply filters
   if (statusFilter) {
-    query = query.eq('status', statusFilter);
+    query = query.eq('status', statusFilter as any);
   }
 
   if (stageFilter) {
-    query = query.eq('current_stage', stageFilter);
+    query = query.eq('current_stage', stageFilter as any);
   }
 
   if (specFilter) {

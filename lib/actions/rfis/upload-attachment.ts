@@ -43,7 +43,8 @@ export const uploadAttachment = withAction(
       user_uuid: user.id,
     })
 
-    if (!projectIds || !(projectIds as string[]).includes((rfi as any).project_id)) {
+    const projectIdStrings = ((projectIds as any) || []).map((p: any) => p.project_id)
+    if (!projectIds || !projectIdStrings.includes((rfi as any).project_id)) {
       throw new ForbiddenError('You do not have access to this project')
     }
 

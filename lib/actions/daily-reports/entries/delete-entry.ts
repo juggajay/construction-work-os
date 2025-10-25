@@ -71,7 +71,7 @@ export async function deleteEntry(
     }
 
     // Delete entry
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from(tableName)
       .delete()
       .eq('id', input.entryId)

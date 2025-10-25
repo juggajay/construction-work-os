@@ -60,7 +60,8 @@ export const addResponse = withAction(
     })
 
     const rfiProjectId = (rfi as any).project_id
-    if (!projectIds || !(projectIds as string[]).includes(rfiProjectId)) {
+    const projectIdStrings = ((projectIds as any) || []).map((p: any) => p.project_id)
+    if (!projectIds || !projectIdStrings.includes(rfiProjectId)) {
       throw new ForbiddenError('You do not have access to this project')
     }
 

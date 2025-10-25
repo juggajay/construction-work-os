@@ -105,7 +105,7 @@ export async function submitDailyReport(
       const existingReportData = existingReport as any;
 
       // Get submitter name
-      const { data: submitter } = await supabase
+      const { data: submitter } = await (supabase as any)
         .from('users')
         .select('full_name')
         .eq('id', existingReportData.submitted_by)

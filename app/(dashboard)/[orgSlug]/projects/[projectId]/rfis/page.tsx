@@ -68,7 +68,7 @@ export default function RFIsPage() {
 
       // Apply status filter
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter)
+        query = query.eq('status', statusFilter as any)
       }
 
       const { data, error } = await query

@@ -20,6 +20,6 @@ export default async function DashboardPage() {
 
   // If user has orgs, redirect to the first one (or last accessed)
   // After the length check above, we know orgs[0] exists
-  const defaultOrg = orgs[0] as unknown as Organization
+  const defaultOrg = orgs[0] as unknown as any
   redirect(`/${defaultOrg.slug}`)
 }

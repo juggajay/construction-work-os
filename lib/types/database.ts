@@ -1,294 +1,74 @@
 /**
  * Database type definitions
- * Based on schema in supabase/migrations/20250120000000_initial_schema.sql
+ * Auto-generated from Supabase schema
  *
- * Note: After applying migrations, regenerate with:
- * npx supabase gen types typescript --local > lib/types/database.ts
+ * This file re-exports types from supabase.ts and creates convenient type aliases
+ *
+ * To regenerate:
+ * supabase gen types typescript --project-id <project-ref> > lib/types/supabase.ts
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+// Re-export everything from generated types
+export * from './supabase'
 
-// ============================================================================
-// ENUMS
-// ============================================================================
+// Re-export Database type
+export type { Database } from './supabase'
 
-export type OrgRole = 'owner' | 'admin' | 'member'
-export type ProjectRole = 'manager' | 'supervisor' | 'viewer'
-export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'archived'
+// Import for creating type aliases
+import type { Database } from './supabase'
+
+// Create convenient type aliases for table rows
+export type Organization = Database['public']['Tables']['organizations']['Row']
+export type OrganizationInsert = Database['public']['Tables']['organizations']['Insert']
+export type OrganizationUpdate = Database['public']['Tables']['organizations']['Update']
+
+export type Project = Database['public']['Tables']['projects']['Row']
+export type ProjectInsert = Database['public']['Tables']['projects']['Insert']
+export type ProjectUpdate = Database['public']['Tables']['projects']['Update']
+
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
+
+export type OrganizationMember = Database['public']['Tables']['organization_members']['Row']
+export type OrganizationMemberInsert = Database['public']['Tables']['organization_members']['Insert']
+export type OrganizationMemberUpdate = Database['public']['Tables']['organization_members']['Update']
+
+export type ProjectAccess = Database['public']['Tables']['project_access']['Row']
+export type ProjectAccessInsert = Database['public']['Tables']['project_access']['Insert']
+export type ProjectAccessUpdate = Database['public']['Tables']['project_access']['Update']
+
+export type AuditLog = Database['public']['Tables']['audit_logs']['Row']
+
+// Change Order type aliases
+export type ChangeOrder = Database['public']['Tables']['change_orders']['Row']
+export type ChangeOrderInsert = Database['public']['Tables']['change_orders']['Insert']
+export type ChangeOrderUpdate = Database['public']['Tables']['change_orders']['Update']
+
+export type ChangeOrderLineItem = Database['public']['Tables']['change_order_line_items']['Row']
+export type ChangeOrderLineItemInsert = Database['public']['Tables']['change_order_line_items']['Insert']
+export type ChangeOrderLineItemUpdate = Database['public']['Tables']['change_order_line_items']['Update']
+
+export type ChangeOrderApproval = Database['public']['Tables']['change_order_approvals']['Row']
+export type ChangeOrderApprovalInsert = Database['public']['Tables']['change_order_approvals']['Insert']
+export type ChangeOrderApprovalUpdate = Database['public']['Tables']['change_order_approvals']['Update']
+
+export type ChangeOrderVersion = Database['public']['Tables']['change_order_versions']['Row']
+export type ChangeOrderVersionInsert = Database['public']['Tables']['change_order_versions']['Insert']
+
+export type ChangeOrderAttachment = Database['public']['Tables']['change_order_attachments']['Row']
+export type ChangeOrderAttachmentInsert = Database['public']['Tables']['change_order_attachments']['Insert']
+
+// Enum type aliases
+export type OrgRole = Database['public']['Enums']['org_role']
+export type ProjectRole = Database['public']['Enums']['project_role']
+export type ProjectStatus = Database['public']['Enums']['project_status']
+// AuditAction enum doesn't exist in the generated types - defining manually
 export type AuditAction = 'INSERT' | 'UPDATE' | 'DELETE'
 
-// ============================================================================
-// TABLE TYPES
-// ============================================================================
-
-export interface Organization {
-  id: string
-  name: string
-  slug: string
-  settings: Json
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface OrganizationInsert {
-  id?: string
-  name: string
-  slug: string
-  settings?: Json
-  created_at?: string
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface OrganizationUpdate {
-  id?: string
-  name?: string
-  slug?: string
-  settings?: Json
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface Project {
-  id: string
-  org_id: string
-  name: string
-  number: string | null
-  address: string | null
-  status: ProjectStatus
-  budget: string | null // DECIMAL stored as string
-  start_date: string | null
-  end_date: string | null
-  settings: Json
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface ProjectInsert {
-  id?: string
-  org_id: string
-  name: string
-  number?: string | null
-  address?: string | null
-  status?: ProjectStatus
-  budget?: string | null
-  start_date?: string | null
-  end_date?: string | null
-  settings?: Json
-  created_at?: string
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface ProjectUpdate {
-  id?: string
-  org_id?: string
-  name?: string
-  number?: string | null
-  address?: string | null
-  status?: ProjectStatus
-  budget?: string | null
-  start_date?: string | null
-  end_date?: string | null
-  settings?: Json
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface Profile {
-  id: string // References auth.users(id)
-  full_name: string | null
-  avatar_url: string | null
-  phone: string | null
-  settings: Json
-  created_at: string
-  updated_at: string
-}
-
-export interface ProfileInsert {
-  id: string
-  full_name?: string | null
-  avatar_url?: string | null
-  phone?: string | null
-  settings?: Json
-  created_at?: string
-  updated_at?: string
-}
-
-export interface ProfileUpdate {
-  full_name?: string | null
-  avatar_url?: string | null
-  phone?: string | null
-  settings?: Json
-  updated_at?: string
-}
-
-export interface OrganizationMember {
-  id: string
-  org_id: string
-  user_id: string
-  role: OrgRole
-  invited_by: string | null
-  invited_at: string
-  joined_at: string | null
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface OrganizationMemberInsert {
-  id?: string
-  org_id: string
-  user_id: string
-  role?: OrgRole
-  invited_by?: string | null
-  invited_at?: string
-  joined_at?: string | null
-  created_at?: string
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface OrganizationMemberUpdate {
-  role?: OrgRole
-  joined_at?: string | null
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface ProjectAccess {
-  id: string
-  project_id: string
-  user_id: string
-  role: ProjectRole
-  trade: string | null
-  granted_by: string | null
-  granted_at: string
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface ProjectAccessInsert {
-  id?: string
-  project_id: string
-  user_id: string
-  role?: ProjectRole
-  trade?: string | null
-  granted_by?: string | null
-  granted_at?: string
-  created_at?: string
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface ProjectAccessUpdate {
-  role?: ProjectRole
-  trade?: string | null
-  updated_at?: string
-  deleted_at?: string | null
-}
-
-export interface AuditLog {
-  id: string
-  table_name: string
-  record_id: string
-  action: AuditAction
-  old_values: Json | null
-  new_values: Json | null
-  user_id: string | null
-  ip_address: string | null
-  user_agent: string | null
-  timestamp: string
-}
-
-// ============================================================================
-// DATABASE SCHEMA TYPE
-// ============================================================================
-
-export interface Database {
-  public: {
-    Tables: {
-      organizations: {
-        Row: Organization
-        Insert: OrganizationInsert
-        Update: OrganizationUpdate
-      }
-      projects: {
-        Row: Project
-        Insert: ProjectInsert
-        Update: ProjectUpdate
-      }
-      profiles: {
-        Row: Profile
-        Insert: ProfileInsert
-        Update: ProfileUpdate
-      }
-      organization_members: {
-        Row: OrganizationMember
-        Insert: OrganizationMemberInsert
-        Update: OrganizationMemberUpdate
-      }
-      project_access: {
-        Row: ProjectAccess
-        Insert: ProjectAccessInsert
-        Update: ProjectAccessUpdate
-      }
-      audit_logs: {
-        Row: AuditLog
-        Insert: never // Only triggers can insert
-        Update: never // Immutable
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      user_org_ids: {
-        Args: { user_uuid?: string }
-        Returns: { org_id: string }[]
-      }
-      user_project_ids: {
-        Args: { user_uuid?: string }
-        Returns: { project_id: string }[]
-      }
-      is_org_admin: {
-        Args: { user_uuid: string; check_org_id: string }
-        Returns: boolean
-      }
-      is_project_manager: {
-        Args: { user_uuid: string; check_project_id: string }
-        Returns: boolean
-      }
-      get_audit_history: {
-        Args: {
-          p_table_name: string
-          p_record_id: string
-          p_limit?: number
-        }
-        Returns: {
-          id: string
-          action: AuditAction
-          old_values: Json | null
-          new_values: Json | null
-          user_id: string | null
-          user_email: string | null
-          timestamp: string
-        }[]
-      }
-    }
-    Enums: {
-      org_role: OrgRole
-      project_role: ProjectRole
-      project_status: ProjectStatus
-    }
-  }
-}
+export type ChangeOrderStatus = Database['public']['Enums']['change_order_status']
+export type ChangeOrderType = Database['public']['Enums']['change_order_type']
+export type OriginatingEventType = Database['public']['Enums']['originating_event_type']
+export type ApprovalStage = Database['public']['Enums']['approval_stage']
+export type ApprovalStatus = Database['public']['Enums']['approval_status']
+export type AttachmentCategory = Database['public']['Enums']['attachment_category']

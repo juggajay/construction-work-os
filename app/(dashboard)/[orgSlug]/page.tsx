@@ -21,8 +21,8 @@ export default async function OrganizationPage({
   }
 
   // After the redirect check, we know org is defined
-  const org = orgResult as Organization
-  const projects = (await getOrganizationProjects(org.id)) as Project[]
+  const org = orgResult as any
+  const projects = (await getOrganizationProjects(org.id)) as any[]
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">

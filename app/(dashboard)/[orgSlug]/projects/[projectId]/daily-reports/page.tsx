@@ -77,7 +77,7 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
 
   // Apply status filter
   if (statusFilter && statusFilter !== 'all') {
-    query = query.eq('status', statusFilter);
+    query = query.eq('status', statusFilter as any);
   }
 
   const { data: reports, error: reportsError } = await query;

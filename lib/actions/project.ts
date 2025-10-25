@@ -56,12 +56,12 @@ export const createProject = withAction(
     const { data: projectData, error } = await supabase.rpc('create_project_with_access', {
       p_org_id: data.orgId,
       p_name: data.name,
-      p_number: data.number || null,
-      p_address: data.address || null,
+      p_number: data.number || undefined,
+      p_address: data.address || undefined,
       p_status: data.status || 'planning',
-      p_budget: data.budget || null,
-      p_start_date: data.startDate || null,
-      p_end_date: data.endDate || null,
+      p_budget: data.budget ? parseFloat(data.budget as any) : undefined,
+      p_start_date: data.startDate || undefined,
+      p_end_date: data.endDate || undefined,
     })
 
     if (error || !projectData || (projectData as any[]).length === 0) {
@@ -73,7 +73,7 @@ export const createProject = withAction(
 
     // Map RPC result to Project type
     const result = (projectData as any[])[0]
-    const project: Project = {
+    const project: any = {
       id: result.project_id,
       org_id: result.project_org_id,
       name: result.project_name,
@@ -163,7 +163,7 @@ export async function updateProject(
         number: validatedData.number,
         address: validatedData.address,
         status: validatedData.status,
-        budget: validatedData.budget,
+        budget: validatedData.budget ? parseFloat(validatedData.budget as any) : undefined,
         start_date: validatedData.startDate,
         end_date: validatedData.endDate,
         settings: validatedData.settings,

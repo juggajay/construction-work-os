@@ -15,7 +15,7 @@ export default async function NewProjectPage({
     redirect('/dashboard')
   }
 
-  const org = orgResult as Organization
+  const org = orgResult as any
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">
