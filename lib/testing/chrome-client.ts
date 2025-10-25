@@ -12,23 +12,34 @@ export class ChromeClient {
   private consoleLogs: ConsoleLog[] = []
   private networkErrors: NetworkError[] = []
   private chromeInstance: any = null
+  private slowMo: number = 0
 
-  async connect(headless = false, devtools = true): Promise<void> {
+  async connect(headless = false, devtools = true, slowMo = 0): Promise<void> {
+    this.slowMo = slowMo
+
     try {
-      // Launch Chrome
+      // Launch Chrome with fixed debugging port and visible window
       this.chromeInstance = await launch({
+        port: 9222,
         chromeFlags: [
-          '--remote-debugging-port=9222',
           '--no-first-run',
           '--no-default-browser-check',
-          headless ? '--headless' : '',
+          '--start-maximized',
+          '--disable-blink-features=AutomationControlled',
+          headless ? '--headless=new' : '',
+          devtools && !headless ? '--auto-open-devtools-for-tabs' : '',
         ].filter(Boolean),
       })
 
+      console.log(`Chrome launched on port ${this.chromeInstance.port}`)
+
+      // Wait a moment for Chrome to be ready
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
       // Connect to Chrome via puppeteer
       this.browser = await puppeteer.connect({
-        browserURL: 'http://localhost:9222',
-        defaultViewport: { width: 1920, height: 1080 },
+        browserURL: `http://localhost:${this.chromeInstance.port}`,
+        defaultViewport: null, // Use full window
       })
 
       // Create a new page
@@ -115,8 +126,13 @@ export class ChromeClient {
     // Highlight element before clicking
     await this.highlightElement(selector)
 
+    // Apply slowMo delay
+    if (this.slowMo > 0) {
+      await new Promise(resolve => setTimeout(resolve, this.slowMo))
+    }
+
     await this.page.click(selector)
-    await this.page.waitForTimeout(500) // Wait for any side effects
+    await new Promise(resolve => setTimeout(resolve, 500)) // Wait for any side effects
   }
 
   async type(selector: string, text: string, timeout = 5000): Promise<void> {
@@ -141,14 +157,14 @@ export class ChromeClient {
     if (!this.page) throw new Error('Page not initialized')
 
     await this.page.screenshot({
-      path,
+      path: path as `${string}.png`,
       fullPage: true,
     })
   }
 
   async wait(ms: number): Promise<void> {
     if (!this.page) throw new Error('Page not initialized')
-    await this.page.waitForTimeout(ms)
+    await new Promise(resolve => setTimeout(resolve, ms))
   }
 
   getConsoleLogs(): ConsoleLog[] {

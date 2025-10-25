@@ -1,0 +1,67 @@
+{
+  "id": "daily-report-edit",
+  "name": "Edit Daily Report Draft",
+  "module": "daily-reports",
+  "prerequisites": ["auth-login", "project-create", "daily-report-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/daily-reports",
+      "description": "Navigate to Daily Reports page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for reports list to load"
+    },
+    {
+      "action": "click",
+      "selector": "text=Draft",
+      "description": "Click on draft report to open it"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for report to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Edit')",
+      "description": "Click Edit button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for edit mode"
+    },
+    {
+      "action": "type",
+      "selector": "[name='work_performed']",
+      "value": " Updated: Also completed safety inspection and received approval from site supervisor.",
+      "description": "Add to work performed"
+    },
+    {
+      "action": "type",
+      "selector": "[name='issues']",
+      "value": "Minor delay due to material delivery. Resolved within 30 minutes.",
+      "description": "Add issues encountered"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Save Changes')",
+      "description": "Save changes",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for changes to save"
+    },
+    {
+      "action": "assert",
+      "selector": "text=Updated:",
+      "description": "Verify updates were saved"
+    }
+  ],
+  "cleanup": []
+}

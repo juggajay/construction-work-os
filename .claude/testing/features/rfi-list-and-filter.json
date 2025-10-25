@@ -1,0 +1,56 @@
+{
+  "id": "rfi-list-and-filter",
+  "name": "List and Filter RFIs",
+  "module": "rfis",
+  "prerequisites": ["auth-login", "project-create", "rfi-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/rfis",
+      "description": "Navigate to RFIs page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for RFI list to load"
+    },
+    {
+      "action": "assert",
+      "selector": "table, [role='table']",
+      "description": "Verify RFI list displays"
+    },
+    {
+      "action": "click",
+      "selector": "[name='status_filter']",
+      "description": "Click status filter dropdown"
+    },
+    {
+      "action": "click",
+      "selector": "text=Open",
+      "description": "Select Open status filter"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for filtered results"
+    },
+    {
+      "action": "type",
+      "selector": "[name='search']",
+      "value": "Test RFI",
+      "description": "Search by keyword"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for search results",
+      "screenshot": true
+    },
+    {
+      "action": "assert",
+      "selector": "text=Test RFI",
+      "description": "Verify filtered results contain search term"
+    }
+  ],
+  "cleanup": []
+}

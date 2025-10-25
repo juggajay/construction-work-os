@@ -1,0 +1,61 @@
+{
+  "id": "rfi-respond",
+  "name": "Respond to RFI",
+  "module": "rfis",
+  "prerequisites": ["auth-login", "project-create", "rfi-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/rfis",
+      "description": "Navigate to RFIs page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for RFI list to load"
+    },
+    {
+      "action": "click",
+      "selector": "text=Test RFI - Automated Testing",
+      "description": "Click on an open RFI"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for RFI details to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Respond')",
+      "description": "Click Respond button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for response form"
+    },
+    {
+      "action": "type",
+      "selector": "[name='response']",
+      "value": "This is an automated test response. The requested information has been reviewed and clarified. Please proceed as specified in the original drawings, sheet A-101.",
+      "description": "Enter response text"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Submit Response')",
+      "description": "Submit response",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for response to be recorded"
+    },
+    {
+      "action": "assert",
+      "selector": "text=automated test response",
+      "description": "Verify response was recorded"
+    }
+  ],
+  "cleanup": []
+}

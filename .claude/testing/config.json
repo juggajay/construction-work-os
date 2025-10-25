@@ -6,7 +6,7 @@
       "width": 1920,
       "height": 1080
     },
-    "slowMo": 100
+    "slowMo": 500
   },
   "orchestrator": {
     "maxRetries": 3,
@@ -24,6 +24,20 @@
   "features": [
     "auth-login",
     "project-create",
-    "rfi-create"
+    "rfi-create",
+    "rfi-list-and-filter",
+    "rfi-respond",
+    "rfi-close",
+    "change-order-create",
+    "change-order-approve",
+    "change-order-reject",
+    "daily-report-create",
+    "daily-report-edit",
+    "daily-report-submit",
+    "submittal-create",
+    "submittal-review",
+    "submittal-approve",
+    "project-settings",
+    "project-overview"
   ]
 }

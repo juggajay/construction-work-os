@@ -18,7 +18,7 @@
     "test:e2e:seed": "ts-node e2e/setup/seed-test-data.ts",
     "test:e2e:cleanup": "ts-node e2e/setup/cleanup-test-data.ts",
     "test:e2e:verify": "ts-node e2e/setup/verify-seed.ts",
-    "test:auto": "ts-node .claude/testing/scripts/run-tests.ts",
+    "test:auto": "tsx .claude/testing/scripts/run-tests.ts",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
@@ -94,6 +94,7 @@
     "puppeteer-core": "^24.26.1",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5",
     "vitest": "^3.2.4",
     "ws": "^8.18.3"

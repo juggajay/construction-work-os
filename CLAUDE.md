@@ -69,3 +69,33 @@ This project has **Supabase CLI installed and configured**. You can interact wit
 - Debugging RLS policies
 - Analyzing query performance
 - Generating TypeScript types from schema
+
+---
+
+# Remote Database Migrations (Production)
+
+**IMPORTANT**: To apply migrations to the remote Supabase database, you MUST use the Management API method.
+
+**Read this first**: `SUPABASE_MIGRATION_GUIDE.md` (comprehensive guide with credentials and exact commands)
+
+**Quick Summary**:
+- **Working Method**: `node scripts/apply-migrations-mgmt-api.js`
+- **Project Reference**: `tokjmeqjvexnmtampyjm`
+- **Access Token**: `sbp_d8294d5b91c7bcd7d7229e014ada14ca6779d6d2`
+
+**Methods that DON'T work** (don't waste time trying):
+- ❌ Direct PostgreSQL connection (timeout)
+- ❌ Supabase CLI link (timeout)
+- ❌ Port 6543 pooler (timeout)
+- ❌ Supabase SDK exec_sql (function doesn't exist)
+
+**Known Schema Differences** (remote vs local):
+- User foreign keys may reference `auth.users` instead of `profiles`
+- `change_order_approvals.rejection_reason` column doesn't exist in remote
+- Always test queries against remote schema to avoid 400 errors
+
+**When you encounter database errors**:
+1. Check `SUPABASE_MIGRATION_GUIDE.md` for documented solutions
+2. Remove problematic foreign key joins (user/profile references)
+3. Verify column names exist in remote schema
+4. Cast ENUMs to text in CASE/WHEN statements

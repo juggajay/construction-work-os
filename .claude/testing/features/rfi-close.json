@@ -1,0 +1,55 @@
+{
+  "id": "rfi-close",
+  "name": "Close RFI",
+  "module": "rfis",
+  "prerequisites": ["auth-login", "project-create", "rfi-create", "rfi-respond"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/rfis",
+      "description": "Navigate to RFIs page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for RFI list to load"
+    },
+    {
+      "action": "click",
+      "selector": "text=Test RFI - Automated Testing",
+      "description": "Click on RFI with response"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for RFI details to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Close RFI')",
+      "description": "Click Close RFI button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for confirmation dialog"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Confirm Close')",
+      "description": "Confirm closure",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for RFI to close"
+    },
+    {
+      "action": "assert",
+      "selector": "text=Closed",
+      "description": "Verify status changed to Closed"
+    }
+  ],
+  "cleanup": []
+}

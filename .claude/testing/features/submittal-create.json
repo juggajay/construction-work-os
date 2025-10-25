@@ -1,0 +1,75 @@
+{
+  "id": "submittal-create",
+  "name": "Create Submittal",
+  "module": "submittals",
+  "prerequisites": ["auth-login", "project-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/submittals",
+      "description": "Navigate to Submittals page"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('New Submittal')",
+      "description": "Click New Submittal button",
+      "timeout": 5000
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for form to load"
+    },
+    {
+      "action": "type",
+      "selector": "[name='spec_section']",
+      "value": "03 30 00",
+      "description": "Enter spec section"
+    },
+    {
+      "action": "type",
+      "selector": "[name='title']",
+      "value": "E2E Test - Cast-in-Place Concrete Mix Design",
+      "description": "Enter submittal title"
+    },
+    {
+      "action": "type",
+      "selector": "[name='description']",
+      "value": "Concrete mix design for foundation and structural elements. Includes strength requirements and material specifications.",
+      "description": "Enter submittal description"
+    },
+    {
+      "action": "type",
+      "selector": "[name='required_by']",
+      "value": "2025-11-15",
+      "description": "Set required by date"
+    },
+    {
+      "action": "click",
+      "selector": "[name='submittal_type']",
+      "description": "Click submittal type dropdown"
+    },
+    {
+      "action": "click",
+      "selector": "text=Product Data",
+      "description": "Select Product Data type"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Create Submittal')",
+      "description": "Submit submittal form",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for submittal creation"
+    },
+    {
+      "action": "assert",
+      "selector": "text=E2E Test - Cast-in-Place Concrete",
+      "description": "Verify submittal appears in list"
+    }
+  ],
+  "cleanup": []
+}

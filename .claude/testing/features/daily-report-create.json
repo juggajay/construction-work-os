@@ -1,0 +1,77 @@
+{
+  "id": "daily-report-create",
+  "name": "Create Daily Report",
+  "module": "daily-reports",
+  "prerequisites": ["auth-login", "project-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/daily-reports",
+      "description": "Navigate to Daily Reports page"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('New Daily Report')",
+      "description": "Click New Daily Report button",
+      "timeout": 5000
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for form to load"
+    },
+    {
+      "action": "type",
+      "selector": "[name='date']",
+      "value": "2025-10-25",
+      "description": "Select report date"
+    },
+    {
+      "action": "type",
+      "selector": "[name='weather_condition']",
+      "value": "Sunny, 72°F",
+      "description": "Enter weather conditions"
+    },
+    {
+      "action": "type",
+      "selector": "[name='work_performed']",
+      "value": "E2E Test - Completed foundation formwork installation. Poured concrete for north wall section. Installed rebar grid per structural plans.",
+      "description": "Enter work performed"
+    },
+    {
+      "action": "type",
+      "selector": "[name='equipment_used']",
+      "value": "Concrete mixer, rebar cutter, scaffolding",
+      "description": "Enter equipment used"
+    },
+    {
+      "action": "type",
+      "selector": "[name='labor_count']",
+      "value": "8",
+      "description": "Enter number of workers"
+    },
+    {
+      "action": "type",
+      "selector": "[name='notes']",
+      "value": "All work completed as scheduled. No safety incidents.",
+      "description": "Enter additional notes"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Save Draft')",
+      "description": "Save report as draft",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for report to save"
+    },
+    {
+      "action": "assert",
+      "selector": "text=Draft",
+      "description": "Verify report saved as draft"
+    }
+  ],
+  "cleanup": []
+}

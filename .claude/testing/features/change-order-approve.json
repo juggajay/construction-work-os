@@ -1,0 +1,61 @@
+{
+  "id": "change-order-approve",
+  "name": "Approve Change Order",
+  "module": "change-orders",
+  "prerequisites": ["auth-login", "project-create", "change-order-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/change-orders",
+      "description": "Navigate to Change Orders page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for change orders list to load"
+    },
+    {
+      "action": "click",
+      "selector": "text=E2E Test - Additional Foundation Work",
+      "description": "Click on the change order to view details"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for change order details to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Approve')",
+      "description": "Click Approve button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for approval dialog"
+    },
+    {
+      "action": "type",
+      "selector": "[name='approval_notes']",
+      "value": "Change order approved. Foundation work is necessary and cost is reasonable.",
+      "description": "Enter approval notes"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Confirm Approval')",
+      "description": "Confirm approval",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for approval to process"
+    },
+    {
+      "action": "assert",
+      "selector": "text=Approved",
+      "description": "Verify status changed to Approved"
+    }
+  ],
+  "cleanup": []
+}

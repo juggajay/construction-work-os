@@ -66,14 +66,12 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
       narrative,
       created_at,
       submitted_at,
-      approved_at,
-      submitted_by:users!daily_reports_submitted_by_fkey(id, full_name),
-      approved_by:users!daily_reports_approved_by_fkey(id, full_name)
+      approved_at
     `
     )
     .eq('project_id', projectId)
     .is('deleted_at', null)
-    .order('report_date', { ascending: false });
+    .order('report_date', { ascending: false});
 
   // Apply status filter
   if (statusFilter && statusFilter !== 'all') {
@@ -206,7 +204,8 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
                       <span className="font-medium">{report.total_crew_count}</span>
                     </div>
                   )}
-                  {report.status === 'submitted' && report.submitted_by && (
+                  {/* TODO: Re-enable after deploying migration 20251025030803_fix_daily_reports_user_foreign_keys.sql */}
+                  {/* {report.status === 'submitted' && report.submitted_by && (
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">Submitted by:</span>
                       <span className="font-medium">{report.submitted_by.full_name}</span>
@@ -217,7 +216,7 @@ export default async function DailyReportsPage({ params, searchParams }: PagePro
                       <span className="text-muted-foreground">Approved by:</span>
                       <span className="font-medium">{report.approved_by.full_name}</span>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </Link>

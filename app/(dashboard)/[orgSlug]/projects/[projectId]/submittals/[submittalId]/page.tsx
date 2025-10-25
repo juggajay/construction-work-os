@@ -35,21 +35,23 @@ export default async function SubmittalDetailPage({ params }: PageProps) {
   }
 
   // Get submittal with all related data
+  // TODO: Re-enable user data after verifying foreign keys in remote database
   const { data: submittal, error: submittalError } = (await supabase
     .from('submittals')
     .select(
       `
       *,
       project:projects(id, name, org_id),
-      created_by_user:users!submittals_created_by_fkey(id, full_name),
-      current_reviewer:users!submittals_current_reviewer_id_fkey(id, full_name),
-      submitted_by_org:organizations(id, name),
-      parent:submittals!submittals_parent_submittal_id_fkey(id, number, version)
+      submitted_by_org:organizations(id, name)
     `
     )
     .eq('id', submittalId)
     .is('deleted_at', null)
     .single()) as any;
+
+  if (submittalError) {
+    console.error('Submittal fetch error:', submittalError);
+  }
 
   if (submittalError || !submittal) {
     notFound();
@@ -72,27 +74,18 @@ export default async function SubmittalDetailPage({ params }: PageProps) {
     .order('created_at', { ascending: false })) as any;
 
   // Get review history
+  // TODO: Re-enable user data after verifying foreign keys in remote database
   const { data: reviews } = (await supabase
     .from('submittal_reviews')
-    .select(
-      `
-      *,
-      reviewer:users(id, full_name),
-      forwarded_to:users(id, full_name)
-    `
-    )
+    .select('*')
     .eq('submittal_id', submittalId)
     .order('reviewed_at', { ascending: false })) as any;
 
   // Get version history
+  // TODO: Re-enable user data after verifying foreign keys in remote database
   const { data: versions } = (await supabase
     .from('submittal_versions')
-    .select(
-      `
-      *,
-      uploaded_by_user:users(id, full_name)
-    `
-    )
+    .select('*')
     .eq('submittal_id', submittalId)
     .order('version_number', { ascending: false })) as any;
 
@@ -279,11 +272,6 @@ export default async function SubmittalDetailPage({ params }: PageProps) {
                     <span className="font-medium capitalize">
                       {review.action.replace('_', ' ')}
                     </span>
-                    {review.reviewer && (
-                      <span className="text-sm text-muted-foreground">
-                        by {review.reviewer.full_name}
-                      </span>
-                    )}
                   </div>
                   <span className="text-sm text-muted-foreground">
                     {formatDistanceToNow(new Date(review.reviewed_at), {
@@ -292,11 +280,6 @@ export default async function SubmittalDetailPage({ params }: PageProps) {
                   </span>
                 </div>
                 <p className="text-sm mb-1">{review.comments}</p>
-                {review.forwarded_to && (
-                  <p className="text-sm text-muted-foreground">
-                    Forwarded to {review.forwarded_to.full_name}
-                  </p>
-                )}
               </div>
             ))}
           </div>
@@ -321,7 +304,6 @@ export default async function SubmittalDetailPage({ params }: PageProps) {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {formatDistanceToNow(new Date(version.uploaded_at), { addSuffix: true })}
-                  {version.uploaded_by_user && ` by ${version.uploaded_by_user.full_name}`}
                 </div>
               </div>
             ))}
@@ -339,9 +321,6 @@ export default async function SubmittalDetailPage({ params }: PageProps) {
                 addSuffix: true,
               })}
             </div>
-            {submittalData.created_by_user && (
-              <div>by {submittalData.created_by_user.full_name}</div>
-            )}
           </div>
           {submittalData.submitted_at && (
             <div>
@@ -374,12 +353,6 @@ export default async function SubmittalDetailPage({ params }: PageProps) {
                   addSuffix: true,
                 })}
               </div>
-            </div>
-          )}
-          {submittalData.current_reviewer && (
-            <div>
-              <div className="font-medium text-foreground mb-1">Current Reviewer</div>
-              <div>{submittalData.current_reviewer.full_name}</div>
             </div>
           )}
         </div>

@@ -1,0 +1,99 @@
+{
+  "id": "change-order-reject",
+  "name": "Reject Change Order",
+  "module": "change-orders",
+  "prerequisites": ["auth-login", "project-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/change-orders",
+      "description": "Navigate to Change Orders page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for change orders list to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Create Change Order')",
+      "description": "Click Create Change Order button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for form to load"
+    },
+    {
+      "action": "type",
+      "selector": "[name='title']",
+      "value": "E2E Test - Unnecessary Upgrade",
+      "description": "Enter change order title"
+    },
+    {
+      "action": "type",
+      "selector": "[name='description']",
+      "value": "Test change order that will be rejected.",
+      "description": "Enter change order description"
+    },
+    {
+      "action": "type",
+      "selector": "[name='estimated_cost']",
+      "value": "50000",
+      "description": "Enter estimated cost impact"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Create Change Order')",
+      "description": "Submit change order form"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for change order creation"
+    },
+    {
+      "action": "click",
+      "selector": "text=E2E Test - Unnecessary Upgrade",
+      "description": "Click on the change order to view details"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for details to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Reject')",
+      "description": "Click Reject button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for rejection dialog"
+    },
+    {
+      "action": "type",
+      "selector": "[name='rejection_reason']",
+      "value": "Cost is too high and upgrade is not necessary for project completion.",
+      "description": "Enter rejection reason"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Confirm Rejection')",
+      "description": "Confirm rejection",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for rejection to process"
+    },
+    {
+      "action": "assert",
+      "selector": "text=Rejected",
+      "description": "Verify status changed to Rejected"
+    }
+  ],
+  "cleanup": []
+}

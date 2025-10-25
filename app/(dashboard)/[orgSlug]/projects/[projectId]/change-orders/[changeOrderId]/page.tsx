@@ -44,6 +44,7 @@ export default function ChangeOrderDetailPage() {
   const changeOrderId = params.changeOrderId as string
 
   // Fetch Change Order with line items and approvals
+  // TODO: Re-enable user/profile data after verifying foreign keys in remote database
   const { data: changeOrder, isLoading } = useQuery({
     queryKey: ['change-order', changeOrderId],
     queryFn: async () => {
@@ -57,11 +58,6 @@ export default function ChangeOrderDetailPage() {
           project:projects!inner (
             id,
             name
-          ),
-          creator:profiles!created_by (
-            id,
-            full_name,
-            email
           ),
           line_items:change_order_line_items (
             id,
@@ -87,26 +83,15 @@ export default function ChangeOrderDetailPage() {
             approver_id,
             decision_at,
             notes,
-            rejection_reason,
             created_at,
-            version,
-            approver:profiles!approver_id (
-              id,
-              full_name,
-              email
-            )
+            version
           ),
           versions:change_order_versions (
             id,
             version_number,
             created_at,
             created_by,
-            reason,
-            creator:profiles!created_by (
-              id,
-              full_name,
-              email
-            )
+            reason
           ),
           attachments:change_order_attachments (
             id,
@@ -114,11 +99,7 @@ export default function ChangeOrderDetailPage() {
             file_size,
             file_type,
             category,
-            created_at,
-            uploader:profiles!uploaded_by (
-              id,
-              full_name
-            )
+            created_at
           )
         `
         )
@@ -301,9 +282,7 @@ export default function ChangeOrderDetailPage() {
                 Created By
               </p>
               <p>
-                {(changeOrder as any).creator?.full_name ||
-                  (changeOrder as any).creator?.email ||
-                  'Unknown'}
+                {(changeOrder as any).created_by || 'Unknown'}
               </p>
             </div>
 
@@ -475,17 +454,12 @@ export default function ChangeOrderDetailPage() {
                       </div>
                       {approval.decision_at && (
                         <p className="text-sm text-muted-foreground">
-                          {approval.approver?.full_name || 'Unknown'} on{' '}
+                          {approval.approver_id || 'Unknown'} on{' '}
                           {new Date(approval.decision_at).toLocaleString()}
                         </p>
                       )}
                       {approval.notes && (
                         <p className="mt-1 text-sm">{approval.notes}</p>
-                      )}
-                      {approval.rejection_reason && (
-                        <p className="mt-1 text-sm text-red-600">
-                          Reason: {approval.rejection_reason}
-                        </p>
                       )}
                     </div>
                   </div>
@@ -518,7 +492,7 @@ export default function ChangeOrderDetailPage() {
                           Version {version.version_number}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {version.creator?.full_name || 'Unknown'} on{' '}
+                          {version.created_by || 'Unknown'} on{' '}
                           {new Date(version.created_at).toLocaleString()}
                         </p>
                         {version.reason && (
@@ -559,8 +533,7 @@ export default function ChangeOrderDetailPage() {
                         <p className="font-medium">{attachment.file_name}</p>
                         <p className="text-sm text-muted-foreground">
                           {(attachment.file_size / 1024).toFixed(1)} KB •{' '}
-                          {attachment.category} • Uploaded by{' '}
-                          {attachment.uploader?.full_name || 'Unknown'}
+                          {attachment.category}
                         </p>
                       </div>
                     </div>

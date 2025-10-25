@@ -36,8 +36,13 @@ export class TestOrchestrator {
       // Connect to Chrome
       await this.client.connect(
         this.config.chrome.headless,
-        this.config.chrome.devtools
+        this.config.chrome.devtools,
+        this.config.chrome.slowMo
       )
+
+      // Wait 3 seconds for user to see Chrome opened
+      console.log('⏸️  Chrome opened - waiting 3 seconds before starting tests...\n')
+      await new Promise(resolve => setTimeout(resolve, 3000))
 
       // Load test suite
       const tests = await this.loadTestSuite()
@@ -45,7 +50,7 @@ export class TestOrchestrator {
 
       // Execute tests sequentially
       for (let i = 0; i < tests.length; i++) {
-        const test = tests[i]
+        const test = tests[i]!
         console.log(`\n[$${i + 1}/${tests.length}] Running test: ${test.name}`)
 
         const result = await this.runTest(test, i + 1, tests.length)
@@ -71,6 +76,10 @@ export class TestOrchestrator {
       console.log(`Passed: ${report.summary.passed}/${report.summary.total}`)
       console.log(`Failed: ${report.summary.failed}/${report.summary.total}`)
       console.log(`Retried: ${report.summary.retried}`)
+
+      // Keep Chrome open for 30 seconds so user can see the results
+      console.log(`\n⏸️  Keeping Chrome open for 30 seconds so you can see the final state...`)
+      await new Promise(resolve => setTimeout(resolve, 30000))
 
       return report
     } finally {
@@ -124,7 +133,7 @@ export class TestOrchestrator {
 
         // Execute test steps
         for (let i = 0; i < test.steps.length; i++) {
-          const step = test.steps[i]
+          const step = test.steps[i]!
 
           // Update overlay
           await this.client.updateOverlay(

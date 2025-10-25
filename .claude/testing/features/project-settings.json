@@ -1,0 +1,63 @@
+{
+  "id": "project-settings",
+  "name": "Update Project Settings",
+  "module": "projects",
+  "prerequisites": ["auth-login", "project-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/settings",
+      "description": "Navigate to Project Settings page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for settings page to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Edit')",
+      "description": "Click Edit button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for edit mode"
+    },
+    {
+      "action": "type",
+      "selector": "[name='name']",
+      "value": " - Updated",
+      "description": "Update project name"
+    },
+    {
+      "action": "type",
+      "selector": "[name='address']",
+      "value": "123 Updated Address St, Test City, TC 12345",
+      "description": "Update project address"
+    },
+    {
+      "action": "type",
+      "selector": "[name='contact_email']",
+      "value": "updated-contact@example.com",
+      "description": "Update contact email"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Save Changes')",
+      "description": "Save changes",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for changes to save"
+    },
+    {
+      "action": "assert",
+      "selector": "text=Updated",
+      "description": "Verify settings were updated"
+    }
+  ],
+  "cleanup": []
+}

@@ -1,0 +1,61 @@
+{
+  "id": "submittal-review",
+  "name": "Review Submittal",
+  "module": "submittals",
+  "prerequisites": ["auth-login", "project-create", "submittal-create"],
+  "steps": [
+    {
+      "action": "navigate",
+      "value": "http://localhost:3001/ryox-carpentry/projects/b694bd30-93d0-41dc-bda6-aadc9fa3ca57/submittals",
+      "description": "Navigate to Submittals page"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for submittals list to load"
+    },
+    {
+      "action": "click",
+      "selector": "text=E2E Test - Cast-in-Place Concrete",
+      "description": "Click on the submittal to view details"
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for submittal details to load"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Review')",
+      "description": "Click Review button"
+    },
+    {
+      "action": "wait",
+      "value": "1000",
+      "description": "Wait for review form"
+    },
+    {
+      "action": "type",
+      "selector": "[name='review_comments']",
+      "value": "Mix design reviewed. Strength requirements meet specifications. Please provide additional testing data for aggregate sources.",
+      "description": "Enter review comments"
+    },
+    {
+      "action": "click",
+      "selector": "button:has-text('Submit Review')",
+      "description": "Submit review",
+      "screenshot": true
+    },
+    {
+      "action": "wait",
+      "value": "2000",
+      "description": "Wait for review to process"
+    },
+    {
+      "action": "assert",
+      "selector": "text=Reviewed",
+      "description": "Verify status changed to Reviewed"
+    }
+  ],
+  "cleanup": []
+}

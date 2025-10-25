@@ -35,15 +35,13 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
   }
 
   // Get daily report with all related data
+  // TODO: Re-enable user data after deploying migration 20251025030803_fix_daily_reports_user_foreign_keys.sql
   const { data: report, error: reportError } = await supabase
     .from('daily_reports')
     .select(
       `
       *,
       project:projects(id, name, org_id),
-      created_by_user:users!daily_reports_created_by_fkey(id, full_name),
-      submitted_by_user:users!daily_reports_submitted_by_fkey(id, full_name),
-      approved_by_user:users!daily_reports_approved_by_fkey(id, full_name),
       crew_entries:daily_report_crew_entries(*),
       equipment_entries:daily_report_equipment_entries(*),
       material_entries:daily_report_material_entries(*),
