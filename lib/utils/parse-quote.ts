@@ -8,13 +8,20 @@ import type { Database } from '@/lib/types/supabase'
 
 type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY environment variable is not set')
-}
+// Lazy initialization to avoid build-time errors
+let openaiInstance: OpenAI | null = null
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function getOpenAI(): OpenAI {
+  if (!openaiInstance) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is not set')
+    }
+    openaiInstance = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  }
+  return openaiInstance
+}
 
 export interface ParsedLineItem {
   line_number: number
@@ -53,6 +60,7 @@ export async function parseQuoteWithAI(
     const base64Image = fileBuffer.toString('base64')
     const dataUrl = `data:${mimeType};base64,${base64Image}`
 
+    const openai = getOpenAI()
     const response = await openai.chat.completions.create({
       model: 'gpt-4o', // Latest model with vision capabilities
       messages: [
