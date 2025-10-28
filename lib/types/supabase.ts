@@ -990,6 +990,85 @@ export type Database = {
           },
         ]
       }
+      budget_line_items: {
+        Row: {
+          ai_confidence: number | null
+          ai_corrections: Json | null
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          description: string
+          id: string
+          line_number: number | null
+          line_total: number
+          project_budget_id: string
+          project_quote_id: string | null
+          quantity: number | null
+          search_vector: unknown | null
+          unit_of_measure: string | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_corrections?: Json | null
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          description: string
+          id?: string
+          line_number?: number | null
+          line_total: number
+          project_budget_id: string
+          project_quote_id?: string | null
+          quantity?: number | null
+          search_vector?: unknown | null
+          unit_of_measure?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_corrections?: Json | null
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          description?: string
+          id?: string
+          line_number?: number | null
+          line_total?: number
+          project_budget_id?: string
+          project_quote_id?: string | null
+          quantity?: number | null
+          search_vector?: unknown | null
+          unit_of_measure?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_line_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_line_items_project_budget_id_fkey"
+            columns: ["project_budget_id"]
+            isOneToOne: false
+            referencedRelation: "project_budgets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_line_items_project_quote_id_fkey"
+            columns: ["project_quote_id"]
+            isOneToOne: false
+            referencedRelation: "project_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_budgets: {
         Row: {
           allocated_amount: number
@@ -1178,6 +1257,87 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_quotes: {
+        Row: {
+          ai_confidence: number | null
+          ai_parsed: boolean | null
+          ai_raw_response: Json | null
+          budget_category: Database["public"]["Enums"]["project_budget_category"]
+          created_at: string
+          deleted_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          page_count: number | null
+          project_id: string
+          quote_date: string | null
+          quote_number: string | null
+          total_amount: number | null
+          updated_at: string
+          uploaded_by: string
+          vendor_name: string | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_parsed?: boolean | null
+          ai_raw_response?: Json | null
+          budget_category: Database["public"]["Enums"]["project_budget_category"]
+          created_at?: string
+          deleted_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          page_count?: number | null
+          project_id: string
+          quote_date?: string | null
+          quote_number?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          uploaded_by: string
+          vendor_name?: string | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_parsed?: boolean | null
+          ai_raw_response?: Json | null
+          budget_category?: Database["public"]["Enums"]["project_budget_category"]
+          created_at?: string
+          deleted_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          page_count?: number | null
+          project_id?: string
+          quote_date?: string | null
+          quote_number?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          uploaded_by?: string
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_quotes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_quotes_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

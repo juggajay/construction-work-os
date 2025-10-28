@@ -9,7 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { DollarSign } from 'lucide-react'
+import { DollarSign, ChevronDown, ChevronRight } from 'lucide-react'
+import { QuoteUploadDialog } from '@/components/budgets/quote-upload-dialog'
+import { LineItemsTable } from '@/components/budgets/line-items-table'
+import type { Database } from '@/lib/types/supabase'
+
+type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
 interface BudgetAllocationFormProps {
   projectId: string
@@ -35,6 +40,8 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
     equipment: '',
     other: '',
   })
+  const [budgetIds, setBudgetIds] = useState<Record<string, string>>({})
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [reason, setReason] = useState('')
 
   // Fetch existing allocations
@@ -50,10 +57,14 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
             equipment: '',
             other: '',
           }
-          result.data.forEach((item) => {
-            newAllocations[item.category] = item.allocated.toString()
+          const newBudgetIds: Record<string, string> = {}
+          result.data.forEach((item: any) => {
+            const cat = item.category as 'labor' | 'materials' | 'equipment' | 'other'
+            newAllocations[cat] = item.allocated.toString()
+            newBudgetIds[cat] = item.budget_id
           })
           setAllocations(newAllocations)
+          setBudgetIds(newBudgetIds)
         }
       } catch (error) {
         console.error('Failed to fetch budget allocations:', error)
@@ -65,6 +76,17 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
     fetchAllocations()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId])
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }))
+  }
+
+  const handleLineItemsUpdate = () => {
+    router.refresh()
+  }
 
   const calculateTotal = () => {
     return Object.values(allocations).reduce((sum, value) => {
@@ -158,27 +180,83 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {CATEGORIES.map((category) => (
-          <div key={category.value} className="space-y-2">
-            <Label htmlFor={category.value}>
-              {category.label}
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
-              <Input
-                id={category.value}
-                type="number"
-                step="0.01"
-                min="0"
-                value={allocations[category.value]}
-                onChange={(e) => setAllocations({ ...allocations, [category.value]: e.target.value })}
-                placeholder="0.00"
-                className="pl-7"
-              />
+      <div className="space-y-4">
+        {CATEGORIES.map((category) => {
+          const budgetId = budgetIds[category.value]
+          const isExpanded = expandedCategories[category.value]
+          const hasAllocation = parseFloat(allocations[category.value]) > 0
+
+          return (
+            <div key={category.value} className="border rounded-lg">
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleCategory(category.value)}
+                      disabled={!budgetId}
+                      className="h-6 w-6 p-0"
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Label htmlFor={category.value} className="text-lg font-semibold">
+                      {category.label}
+                    </Label>
+                  </div>
+                  {budgetId && (
+                    <QuoteUploadDialog
+                      projectId={projectId}
+                      category={category.value as BudgetCategory}
+                      onUploadSuccess={() => {
+                        handleLineItemsUpdate()
+                        setExpandedCategories((prev) => ({ ...prev, [category.value]: true }))
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
+                    <Input
+                      id={category.value}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={allocations[category.value]}
+                      onChange={(e) => setAllocations({ ...allocations, [category.value]: e.target.value })}
+                      placeholder="0.00"
+                      className="pl-7"
+                    />
+                  </div>
+                </div>
+
+                {!budgetId && hasAllocation && (
+                  <p className="text-xs text-muted-foreground">
+                    Save allocation first to upload quotes and manage line items
+                  </p>
+                )}
+              </div>
+
+              {budgetId && isExpanded && (
+                <div className="border-t p-4 bg-muted/30">
+                  <LineItemsTable
+                    budgetId={budgetId}
+                    category={category.value as BudgetCategory}
+                    canEdit={true}
+                    onUpdate={handleLineItemsUpdate}
+                  />
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="rounded-lg border p-4 space-y-2">
