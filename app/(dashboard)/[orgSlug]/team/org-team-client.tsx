@@ -35,93 +35,79 @@ import { Input } from '@/components/ui/input'
 import { Plus, UserMinus, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import {
-  type TeamMember,
-  type ProjectRole,
-  type OrgMember,
-  addTeamMember,
-  removeTeamMember,
-  updateTeamMemberRole,
-  getAvailableOrgMembers,
-  getProjectTeam,
-} from '@/lib/actions/projects/team-management'
+  type OrgTeamMember,
+  type OrgRole,
+  getOrganizationMembers,
+} from '@/lib/actions/organization-members'
+import {
+  inviteMember,
+  removeMember,
+  updateMemberRole,
+} from '@/lib/actions/organization'
 
-interface TeamManagementClientProps {
-  projectId: string
+interface OrgTeamClientProps {
   orgId: string
   orgSlug: string
-  initialTeamMembers: TeamMember[]
+  initialTeamMembers: OrgTeamMember[]
   isOwnerOrAdmin: boolean
 }
 
-export function TeamManagementClient({
-  projectId,
+export function OrgTeamClient({
   orgId,
   orgSlug,
   initialTeamMembers,
   isOwnerOrAdmin,
-}: TeamManagementClientProps) {
+}: OrgTeamClientProps) {
   const { toast } = useToast()
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers)
+  const [teamMembers, setTeamMembers] = useState<OrgTeamMember[]>(initialTeamMembers)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
-  const [memberToRemove, setMemberToRemove] = useState<TeamMember | null>(null)
+  const [memberToRemove, setMemberToRemove] = useState<OrgTeamMember | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   // Add member dialog state
-  const [availableMembers, setAvailableMembers] = useState<OrgMember[]>([])
-  const [selectedUserId, setSelectedUserId] = useState<string>('')
-  const [selectedRole, setSelectedRole] = useState<ProjectRole>('viewer')
-  const [trade, setTrade] = useState<string>('')
+  const [email, setEmail] = useState<string>('')
+  const [selectedRole, setSelectedRole] = useState<OrgRole>('member')
 
   const refreshTeamMembers = async () => {
-    const result = await getProjectTeam(projectId)
+    const result = await getOrganizationMembers(orgId)
     if (result.success && result.data) {
       setTeamMembers(result.data)
     }
   }
 
-  const handleOpenAddDialog = async () => {
-    setIsLoading(true)
-    setIsAddDialogOpen(true)
-    const result = await getAvailableOrgMembers({ orgId, projectId })
-    if (result.success && result.data) {
-      setAvailableMembers(result.data)
-    }
-    setIsLoading(false)
-  }
-
   const handleAddMember = async () => {
-    if (!selectedUserId || !selectedRole) {
+    if (!email || !selectedRole) {
       toast({
         title: 'Error',
-        description: 'Please select a user and role',
+        description: 'Please enter an email and select a role',
         variant: 'destructive',
       })
       return
     }
 
     setIsLoading(true)
-    const result = await addTeamMember({
-      projectId,
-      userId: selectedUserId,
-      role: selectedRole,
-      trade: trade || undefined,
-    })
+    const result = await inviteMember(
+      {
+        email,
+        role: selectedRole,
+      },
+      orgId
+    )
 
     if (result.success) {
       toast({
         title: 'Success',
-        description: 'Team member added successfully',
+        description: 'Team member invited successfully',
       })
       setIsAddDialogOpen(false)
-      setSelectedUserId('')
-      setSelectedRole('viewer')
-      setTrade('')
+      setEmail('')
+      setSelectedRole('member')
       await refreshTeamMembers()
     } else {
       toast({
         title: 'Error',
-        description: result.error || 'Failed to add team member',
+        description: result.error || 'Failed to invite team member',
         variant: 'destructive',
       })
     }
@@ -132,7 +118,12 @@ export function TeamManagementClient({
     if (!memberToRemove) return
 
     setIsLoading(true)
-    const result = await removeTeamMember(memberToRemove.id)
+    const result = await removeMember(
+      {
+        memberId: memberToRemove.id,
+      },
+      orgId
+    )
 
     if (result.success) {
       toast({
@@ -152,12 +143,15 @@ export function TeamManagementClient({
     setIsLoading(false)
   }
 
-  const handleRoleChange = async (memberId: string, newRole: ProjectRole) => {
+  const handleRoleChange = async (memberId: string, newRole: OrgRole) => {
     setIsLoading(true)
-    const result = await updateTeamMemberRole({
-      projectAccessId: memberId,
-      newRole,
-    })
+    const result = await updateMemberRole(
+      {
+        memberId,
+        role: newRole,
+      },
+      orgId
+    )
 
     if (result.success) {
       toast({
@@ -175,13 +169,13 @@ export function TeamManagementClient({
     setIsLoading(false)
   }
 
-  const getRoleBadgeVariant = (role: ProjectRole) => {
+  const getRoleBadgeVariant = (role: OrgRole) => {
     switch (role) {
-      case 'manager':
+      case 'owner':
         return 'default'
-      case 'supervisor':
+      case 'admin':
         return 'secondary'
-      case 'viewer':
+      case 'member':
         return 'outline'
       default:
         return 'outline'
@@ -208,14 +202,14 @@ export function TeamManagementClient({
               <CardTitle>Team Members</CardTitle>
               <CardDescription>
                 {isOwnerOrAdmin
-                  ? 'Manage who has access to this project'
-                  : 'View team members on this project'}
+                  ? 'Manage who has access to this organization'
+                  : 'View team members in this organization'}
               </CardDescription>
             </div>
             {isOwnerOrAdmin && (
-              <Button onClick={handleOpenAddDialog}>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Member
+                Invite Member
               </Button>
             )}
           </div>
@@ -223,7 +217,7 @@ export function TeamManagementClient({
         <CardContent>
           {teamMembers.length === 0 ? (
             <div className="text-center py-8 text-neutral-500">
-              No team members yet. Add members to get started.
+              No team members yet. Invite members to get started.
             </div>
           ) : (
             <div className="space-y-4">
@@ -244,13 +238,14 @@ export function TeamManagementClient({
                         {member.user.fullName || member.user.email}
                       </p>
                       <p className="text-sm text-neutral-500">{member.user.email}</p>
-                      {member.trade && (
-                        <p className="text-xs text-neutral-400 mt-1">Trade: {member.trade}</p>
-                      )}
-                      {member.grantedByUser && member.grantedAt && (
+                      {member.invitedByUser && member.joinedAt && (
                         <p className="text-xs text-neutral-400 mt-1">
-                          Added by {member.grantedByUser.fullName} on{' '}
-                          {new Date(member.grantedAt).toLocaleDateString()}
+                          Joined {new Date(member.joinedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                      {member.invitedByUser && !member.joinedAt && (
+                        <p className="text-xs text-neutral-400 mt-1">
+                          Invited by {member.invitedByUser.fullName}
                         </p>
                       )}
                     </div>
@@ -261,7 +256,7 @@ export function TeamManagementClient({
                       <Select
                         value={member.role}
                         onValueChange={(value) =>
-                          handleRoleChange(member.id, value as ProjectRole)
+                          handleRoleChange(member.id, value as OrgRole)
                         }
                         disabled={isLoading}
                       >
@@ -269,9 +264,9 @@ export function TeamManagementClient({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="supervisor">Supervisor</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
+                          <SelectItem value="owner">Owner</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="member">Member</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
@@ -305,53 +300,38 @@ export function TeamManagementClient({
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogTitle>Invite Team Member</DialogTitle>
             <DialogDescription>
-              Select a user from your organization and assign them a role on this project.
+              Enter the email address of the person you want to invite to this organization.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="user">User</Label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger id="user">
-                  <SelectValue placeholder="Select a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.fullName || member.email} ({member.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="user@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as ProjectRole)}>
+              <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as OrgRole)}>
                 <SelectTrigger id="role">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manager">Manager - Full project access</SelectItem>
-                  <SelectItem value="supervisor">
-                    Supervisor - Can manage daily operations
+                  <SelectItem value="owner">Owner - Full organization access</SelectItem>
+                  <SelectItem value="admin">
+                    Admin - Can manage members and settings
                   </SelectItem>
-                  <SelectItem value="viewer">Viewer - Read-only access</SelectItem>
+                  <SelectItem value="member">Member - Basic access</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="trade">Trade (Optional)</Label>
-              <Input
-                id="trade"
-                placeholder="e.g., Electrical, Plumbing"
-                value={trade}
-                onChange={(e) => setTrade(e.target.value)}
-              />
             </div>
           </div>
 
@@ -359,9 +339,9 @@ export function TeamManagementClient({
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isLoading}>
               Cancel
             </Button>
-            <Button onClick={handleAddMember} disabled={isLoading || !selectedUserId}>
+            <Button onClick={handleAddMember} disabled={isLoading || !email}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Member
+              Invite Member
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -375,7 +355,7 @@ export function TeamManagementClient({
             <AlertDialogDescription>
               Are you sure you want to remove{' '}
               <strong>{memberToRemove?.user.fullName || memberToRemove?.user.email}</strong> from
-              this project? They will lose access immediately.
+              this organization? They will lose access immediately.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Calendar, DollarSign, MapPin, FileText, Users } from 'lucide-react'
+import { Calendar, DollarSign, MapPin, FileText } from 'lucide-react'
 import type { Project } from '@/lib/types'
 
 export default async function ProjectPage({
@@ -93,7 +93,7 @@ export default async function ProjectPage({
             <CardTitle>Project Workflows</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <Button variant="outline" className="h-24 flex-col" asChild>
                 <Link href={`/${orgSlug}/projects/${projectId}/costs`}>
                   <DollarSign className="mb-2 h-6 w-6" />
@@ -122,12 +122,6 @@ export default async function ProjectPage({
                 <Link href={`/${orgSlug}/projects/${projectId}/daily-reports`}>
                   <FileText className="mb-2 h-6 w-6" />
                   <span>Daily Reports</span>
-                </Link>
-              </Button>
-              <Button variant="outline" className="h-24 flex-col" asChild>
-                <Link href={`/${orgSlug}/projects/${projectId}/team`}>
-                  <Users className="mb-2 h-6 w-6" />
-                  <span>Team</span>
                 </Link>
               </Button>
             </div>

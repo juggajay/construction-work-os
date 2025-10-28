@@ -88,10 +88,9 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               disabled: true,
             },
             {
-              title: 'Members',
+              title: 'Team',
               icon: Users,
-              href: `/${orgSlug}/members`,
-              disabled: true,
+              href: `/${orgSlug}/team`,
             },
             {
               title: 'Reports',
