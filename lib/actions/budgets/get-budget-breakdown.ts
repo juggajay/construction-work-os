@@ -52,43 +52,43 @@ export async function getBudgetBreakdown(
       throw new UnauthorizedError('You do not have access to this project')
     }
 
-    // Fetch budget allocations from project_budgets table
+    // Fetch budget breakdown from materialized view
     const { data: budgetData, error: budgetError } = await supabase
-      .from('project_budgets')
-      .select('id, category, allocated_amount')
+      .from('project_cost_summary')
+      .select('category, allocated_amount, spent_amount, remaining_amount, spent_percentage')
       .eq('project_id', projectId)
-      .is('deleted_at', null)
 
     if (budgetError) {
       return { success: false, error: budgetError.message }
     }
 
-    // For each budget, calculate spent amount from project_costs
-    const breakdown: BudgetBreakdown[] = []
+    // Fetch budget IDs from project_budgets table
+    const { data: budgetIds, error: budgetIdsError } = await supabase
+      .from('project_budgets')
+      .select('id, category')
+      .eq('project_id', projectId)
+      .is('deleted_at', null)
 
-    for (const budget of budgetData || []) {
-      // Get total spent for this category
-      const { data: costs } = await supabase
-        .from('project_costs')
-        .select('amount')
-        .eq('project_id', projectId)
-        .eq('category', budget.category)
-        .is('deleted_at', null)
-
-      const spent = costs?.reduce((sum, cost) => sum + Number(cost.amount), 0) || 0
-      const allocated = Number(budget.allocated_amount)
-      const remaining = allocated - spent
-      const percentSpent = allocated > 0 ? (spent / allocated) * 100 : 0
-
-      breakdown.push({
-        budget_id: budget.id,
-        category: budget.category as BudgetCategory,
-        allocated,
-        spent,
-        remaining,
-        percentSpent,
-      })
+    if (budgetIdsError) {
+      return { success: false, error: budgetIdsError.message }
     }
+
+    // Create a map of category to budget_id
+    const categoryToBudgetId = new Map(
+      (budgetIds || []).map((b) => [b.category, b.id])
+    )
+
+    // Transform data (filter out null categories)
+    const breakdown: BudgetBreakdown[] = (budgetData || [])
+      .filter((item) => item.category !== null)
+      .map((item) => ({
+        budget_id: categoryToBudgetId.get(item.category as BudgetCategory) || '',
+        category: item.category as BudgetCategory,
+        allocated: Number(item.allocated_amount),
+        spent: Number(item.spent_amount),
+        remaining: Number(item.remaining_amount),
+        percentSpent: Number(item.spent_percentage),
+      }))
 
     return { success: true, data: breakdown }
   } catch (error) {
