@@ -42,7 +42,7 @@ export async function updateBudgetAllocation(
 
     console.log('💾 updateBudgetAllocation: User authenticated:', user.id)
 
-    // Verify project access (must be manager)
+    // Verify project access (must be manager or supervisor)
     console.log('💾 updateBudgetAllocation: Checking project access...')
     const { data: access, error: accessError } = await supabase
       .from('project_access')
@@ -52,16 +52,25 @@ export async function updateBudgetAllocation(
       .is('deleted_at', null)
       .single()
 
-    if (accessError || !access || access.role !== 'manager') {
+    console.log('💾 updateBudgetAllocation: Access query result', {
+      hasError: !!accessError,
+      errorMessage: accessError?.message,
+      errorCode: accessError?.code,
+      hasAccess: !!access,
+      role: access?.role,
+    })
+
+    if (accessError || !access || !['manager', 'supervisor'].includes(access.role)) {
       console.error('❌ updateBudgetAllocation: Access denied', {
         accessError: accessError?.message,
         hasAccess: !!access,
         role: access?.role,
+        requiredRoles: ['manager', 'supervisor'],
       })
-      throw new UnauthorizedError('Only project managers can update budget allocations')
+      throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
     }
 
-    console.log('💾 updateBudgetAllocation: Access verified, role:', access.role)
+    console.log('✅ updateBudgetAllocation: Access verified, role:', access.role)
 
     // Get project total budget
     console.log('💾 updateBudgetAllocation: Fetching project budget...')
