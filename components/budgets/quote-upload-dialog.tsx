@@ -25,7 +25,7 @@ type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
 interface QuoteUploadDialogProps {
   projectId: string
-  category: BudgetCategory
+  category?: BudgetCategory | null
   onUploadSuccess?: (quoteId: string) => void
 }
 
@@ -122,9 +122,9 @@ export function QuoteUploadDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Upload Quote Document</DialogTitle>
+          <DialogTitle>Upload {category ? `${category.charAt(0).toUpperCase() + category.slice(1)} ` : ''}Quote Document</DialogTitle>
           <DialogDescription>
-            Upload a quote PDF or image for {category} budget. AI will automatically extract line items for
+            Upload a quote PDF or image{category ? ` for ${category} budget` : ' for this project'}. AI will automatically extract line items for
             your review.
           </DialogDescription>
         </DialogHeader>

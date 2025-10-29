@@ -173,10 +173,19 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
-        <div className="flex items-center gap-2 text-blue-900">
-          <DollarSign className="h-4 w-4" />
-          <span className="font-semibold">Total Project Budget:</span>
-          <span className="text-xl font-bold">${totalBudget.toLocaleString()}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-blue-900">
+            <DollarSign className="h-4 w-4" />
+            <span className="font-semibold">Total Project Budget:</span>
+            <span className="text-xl font-bold">${totalBudget.toLocaleString()}</span>
+          </div>
+          <QuoteUploadDialog
+            projectId={projectId}
+            category={null}
+            onUploadSuccess={() => {
+              router.refresh()
+            }}
+          />
         </div>
       </div>
 
@@ -209,16 +218,6 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
                       {category.label}
                     </Label>
                   </div>
-                  {budgetId && (
-                    <QuoteUploadDialog
-                      projectId={projectId}
-                      category={category.value as BudgetCategory}
-                      onUploadSuccess={() => {
-                        handleLineItemsUpdate()
-                        setExpandedCategories((prev) => ({ ...prev, [category.value]: true }))
-                      }}
-                    />
-                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -236,12 +235,6 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
                     />
                   </div>
                 </div>
-
-                {!budgetId && hasAllocation && (
-                  <p className="text-xs text-muted-foreground">
-                    Save allocation first to upload quotes and manage line items
-                  </p>
-                )}
               </div>
 
               {budgetId && isExpanded && (

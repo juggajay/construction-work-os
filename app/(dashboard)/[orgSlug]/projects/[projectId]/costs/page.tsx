@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { DollarSign, TrendingUp, AlertTriangle, CheckCircle2, Plus } from 'lucide-react'
+import { LineItemSearch } from '@/components/costs/line-item-search'
 
 export default async function CostsPage({
   params,
@@ -172,11 +173,6 @@ export default async function CostsPage({
           {budgetBreakdown.length === 0 ? (
             <div className="text-center py-8 text-neutral-500">
               <p>No budget allocations yet.</p>
-              <Button variant="link" asChild className="mt-2">
-                <Link href={`/${orgSlug}/projects/${projectId}/settings`}>
-                  Set up budget allocations in project settings
-                </Link>
-              </Button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -214,6 +210,9 @@ export default async function CostsPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Line Item Search */}
+      <LineItemSearch projectId={projectId} />
     </div>
   )
 }

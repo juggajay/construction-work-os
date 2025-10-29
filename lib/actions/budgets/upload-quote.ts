@@ -14,7 +14,7 @@ type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
 export interface UploadQuoteInput {
   projectId: string
-  category: BudgetCategory
+  category?: BudgetCategory | null
   file: File
 }
 
@@ -35,7 +35,7 @@ export async function uploadQuote(
     })
 
     // Validate required fields
-    if (!file || !projectId || !category) {
+    if (!file || !projectId) {
       console.error('❌ uploadQuote: Missing required fields')
       return { success: false, error: 'Missing required fields' }
     }
@@ -117,19 +117,20 @@ export async function uploadQuote(
 
     // Create quote record (AI parsing happens later in separate step)
     console.log('📤 uploadQuote: Creating quote record in database')
+    const insertData: any = {
+      id: quoteId,
+      project_id: projectId,
+      budget_category: category || null,
+      file_path: filePath,
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: file.type,
+      ai_parsed: false, // Will be set to true after AI parsing
+      uploaded_by: user.id,
+    }
     const { data: quote, error: quoteError } = await supabase
       .from('project_quotes')
-      .insert({
-        id: quoteId,
-        project_id: projectId,
-        budget_category: category,
-        file_path: filePath,
-        file_name: file.name,
-        file_size: file.size,
-        mime_type: file.type,
-        ai_parsed: false, // Will be set to true after AI parsing
-        uploaded_by: user.id,
-      })
+      .insert(insertData)
       .select('id')
       .single()
 
