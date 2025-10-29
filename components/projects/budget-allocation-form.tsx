@@ -101,8 +101,13 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('💾 BudgetAllocationForm: Submit button clicked')
 
     if (isOverBudget) {
+      console.warn('⚠️ BudgetAllocationForm: Over budget validation failed', {
+        totalAllocated,
+        totalBudget,
+      })
       toast({
         title: 'Error',
         description: `Total allocation ($${totalAllocated.toLocaleString()}) exceeds project budget ($${totalBudget.toLocaleString()})`,
@@ -112,6 +117,7 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
     }
 
     setIsLoading(true)
+    console.log('💾 BudgetAllocationForm: Loading state set to true')
 
     try {
       const allocationArray = CATEGORIES
@@ -121,7 +127,13 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
           amount: parseFloat(allocations[cat.value]),
         }))
 
+      console.log('💾 BudgetAllocationForm: Allocations prepared', {
+        count: allocationArray.length,
+        allocations: allocationArray,
+      })
+
       if (allocationArray.length === 0) {
+        console.warn('⚠️ BudgetAllocationForm: No allocations to save')
         toast({
           title: 'Error',
           description: 'Please allocate budget to at least one category',
@@ -131,13 +143,20 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         return
       }
 
+      console.log('💾 BudgetAllocationForm: Calling updateBudgetAllocation action...')
       const result = await updateBudgetAllocation({
         projectId,
         allocations: allocationArray,
         reason: reason.trim() || undefined,
       })
 
+      console.log('💾 BudgetAllocationForm: Action returned', {
+        success: result.success,
+        hasError: !result.success && 'error' in result ? !!result.error : false,
+      })
+
       if (result.success) {
+        console.log('✅ BudgetAllocationForm: Allocations saved successfully')
         toast({
           title: 'Success',
           description: 'Budget allocations updated successfully',
@@ -145,19 +164,29 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         setReason('')
         router.refresh()
       } else {
+        console.error('❌ BudgetAllocationForm: Save failed', {
+          error: result.error,
+        })
         toast({
           title: 'Error',
           description: result.error || 'Failed to update budget allocations',
           variant: 'destructive',
+          duration: 7000, // Show error longer
         })
       }
     } catch (error) {
+      console.error('❌ BudgetAllocationForm: Unexpected error during save', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
+        duration: 7000, // Show error longer
       })
     } finally {
+      console.log('💾 BudgetAllocationForm: Loading state set to false')
       setIsLoading(false)
     }
   }
