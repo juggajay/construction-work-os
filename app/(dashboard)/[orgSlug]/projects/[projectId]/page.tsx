@@ -1,4 +1,4 @@
-import { getProjectById } from '@/lib/actions/project-helpers'
+import { getProjectById, getProjectMetrics } from '@/lib/actions/project-helpers'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -34,10 +34,13 @@ export default async function ProjectPage({
 
   const project = projectResult as Project
 
+  // Fetch real metrics from database
+  const metrics = await getProjectMetrics(projectId)
+
   // Calculate metrics
   const budget = project.budget ? project.budget / 1000000 : 0
-  const spent = budget * 0.65 // Sample data
-  const completion = Math.floor(Math.random() * 100) // TODO: Replace with actual completion
+  const spent = metrics.totalSpent / 1000000 // Convert to millions
+  const completion = metrics.completionPercentage
 
   let daysRemaining = 0
   let duration = 0
@@ -59,8 +62,8 @@ export default async function ProjectPage({
     health = 'delayed'
   }
 
-  const rfiCount = 0 // TODO: Fetch actual RFI count
-  const teamSize = 0 // TODO: Fetch actual team size
+  const rfiCount = metrics.rfiCount
+  const teamSize = metrics.teamSize
 
   return (
     <div className="min-h-screen">
