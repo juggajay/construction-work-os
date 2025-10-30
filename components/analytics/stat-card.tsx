@@ -2,8 +2,20 @@
 
 import { memo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LucideIcon } from 'lucide-react'
+import { Building2, Users, FileText, TrendingUp, DollarSign, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// Icon mapping for server-to-client component boundary
+const iconMap = {
+  Building2,
+  Users,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  ClipboardList,
+} as const
+
+export type IconName = keyof typeof iconMap
 
 interface StatItem {
   label: string
@@ -13,12 +25,13 @@ interface StatItem {
 
 interface StatCardProps {
   title: string
-  icon?: LucideIcon
+  icon?: IconName
   stats: StatItem[]
   className?: string
 }
 
-export const StatCard = memo(function StatCard({ title, icon: Icon, stats, className }: StatCardProps) {
+export const StatCard = memo(function StatCard({ title, icon, stats, className }: StatCardProps) {
+  const Icon = icon ? iconMap[icon] : null
   return (
     <Card className={cn('hover:shadow-md transition-shadow', className)}>
       <CardHeader className="pb-3">

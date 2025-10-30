@@ -2,13 +2,25 @@
 
 import { memo, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowDown, ArrowUp, Minus, LucideIcon } from 'lucide-react'
+import { ArrowDown, ArrowUp, Minus, Building2, Users, FileText, TrendingUp, DollarSign, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// Icon mapping for server-to-client component boundary
+const iconMap = {
+  Building2,
+  Users,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  ClipboardList,
+} as const
+
+export type IconName = keyof typeof iconMap
 
 export interface KPICardProps {
   title: string
   value: string | number
-  icon: LucideIcon
+  icon: IconName
   trend?: {
     value: number
     label: string
@@ -17,7 +29,8 @@ export interface KPICardProps {
   className?: string
 }
 
-export const KPICard = memo(function KPICard({ title, value, icon: Icon, trend, subtitle, className }: KPICardProps) {
+export const KPICard = memo(function KPICard({ title, value, icon, trend, subtitle, className }: KPICardProps) {
+  const Icon = iconMap[icon]
   const trendIcon = useMemo(() => {
     if (!trend) return null
     if (trend.value > 0) return <ArrowUp className="h-3 w-3" />

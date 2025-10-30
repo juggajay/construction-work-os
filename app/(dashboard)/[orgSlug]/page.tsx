@@ -7,30 +7,42 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { Plus, Calendar, Building2, FileText, ClipboardList, DollarSign, Users, TrendingUp } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import { KPICard } from '@/components/analytics/kpi-card'
 import { StatCard } from '@/components/analytics/stat-card'
-import { CardSkeleton } from '@/components/loading/card-skeleton'
+
+// Simple loading component that doesn't depend on external components
+const SimpleCardLoader = () => (
+  <Card>
+    <CardContent className="p-6">
+      <div className="animate-pulse space-y-3">
+        <div className="h-4 bg-neutral-200 rounded w-3/4" />
+        <div className="h-4 bg-neutral-200 rounded w-1/2" />
+        <div className="h-4 bg-neutral-200 rounded w-5/6" />
+      </div>
+    </CardContent>
+  </Card>
+)
 
 // Lazy load below-the-fold components for better initial load performance
 const ProjectHealthChart = dynamic(
   () => import('@/components/dashboard/project-health-chart').then(m => ({ default: m.ProjectHealthChart })),
-  { loading: () => <div className="h-64"><CardSkeleton count={1} showHeader={false} /></div>, ssr: false }
+  { loading: () => <div className="h-64"><SimpleCardLoader /></div>, ssr: false }
 )
 
 const UrgentActionsList = dynamic(
   () => import('@/components/dashboard/urgent-actions-list').then(m => ({ default: m.UrgentActionsList })),
-  { loading: () => <CardSkeleton count={1} />, ssr: false }
+  { loading: () => <SimpleCardLoader />, ssr: false }
 )
 
 const ActivityFeed = dynamic(
   () => import('@/components/dashboard/activity-feed').then(m => ({ default: m.ActivityFeed })),
-  { loading: () => <CardSkeleton count={1} />, ssr: false }
+  { loading: () => <SimpleCardLoader />, ssr: false }
 )
 
 const UpcomingSchedule = dynamic(
   () => import('@/components/dashboard/upcoming-schedule').then(m => ({ default: m.UpcomingSchedule })),
-  { loading: () => <CardSkeleton count={1} />, ssr: false }
+  { loading: () => <SimpleCardLoader />, ssr: false }
 )
 
 export default async function OrganizationPage({
@@ -73,7 +85,7 @@ export default async function OrganizationPage({
       {/* Header with Actions */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between p-4 lg:p-0">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Welcome back, {displayName}</p>
         </div>
         <div className="flex items-center gap-2 lg:gap-3">
@@ -96,25 +108,25 @@ export default async function OrganizationPage({
         <KPICard
           title="Active Projects"
           value={kpis?.activeProjects || 0}
-          icon={Building2}
+          icon="Building2"
           subtitle={`${kpis?.totalProjects || 0} total projects`}
         />
         <KPICard
           title="Team Members"
           value={kpis?.totalTeamMembers || 0}
-          icon={Users}
+          icon="Users"
           subtitle="Across all projects"
         />
         <KPICard
           title="Open RFIs"
           value={kpis?.openRFIs || 0}
-          icon={FileText}
+          icon="FileText"
           subtitle="Requiring response"
         />
         <KPICard
           title="Budget Utilization"
           value={`${(kpis?.budgetUtilization ?? 0).toFixed(0)}%`}
-          icon={TrendingUp}
+          icon="TrendingUp"
           trend={
             kpis && kpis.budgetUtilization > 0
               ? {
@@ -130,7 +142,7 @@ export default async function OrganizationPage({
       <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:gap-4 px-4 lg:px-0">
         <StatCard
           title="Project Status"
-          icon={Building2}
+          icon="Building2"
           stats={[
             { label: 'Active', value: analytics?.activeProjects || 0, color: 'text-green-600' },
             { label: 'Completed', value: analytics?.completedProjects || 0, color: 'text-blue-600' },
@@ -140,7 +152,7 @@ export default async function OrganizationPage({
 
         <StatCard
           title="Budget Overview"
-          icon={DollarSign}
+          icon="DollarSign"
           stats={[
             {
               label: 'Total Budget',
@@ -173,7 +185,7 @@ export default async function OrganizationPage({
 
         <StatCard
           title="Workflow Items"
-          icon={ClipboardList}
+          icon="ClipboardList"
           stats={[
             { label: 'Open RFIs', value: kpis?.openRFIs || 0 },
             { label: 'Pending Submittals', value: kpis?.pendingSubmittals || 0 },
