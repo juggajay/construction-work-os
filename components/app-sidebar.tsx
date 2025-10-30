@@ -10,6 +10,13 @@ import {
   FileText,
   Users,
   BarChart3,
+  HardHat,
+  Search,
+  ClipboardList,
+  DollarSign,
+  Calendar,
+  Wrench,
+  TrendingUp,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -23,7 +30,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { Badge } from '@/components/ui/badge'
 import { LogoutButton } from '@/components/logout-button'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 interface AppSidebarProps {
   orgSlug?: string
@@ -34,6 +43,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
   href: string
   disabled?: boolean
+  badge?: string | null
 }
 
 interface NavSection {
@@ -53,11 +63,13 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               title: 'Dashboard',
               icon: Home,
               href: `/${orgSlug}`,
+              badge: null,
             },
             {
               title: 'Projects',
-              icon: FolderKanban,
+              icon: Building2,
               href: `/${orgSlug}/projects`,
+              badge: null,
             },
           ],
         },
@@ -69,12 +81,54 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               icon: FileText,
               href: `/${orgSlug}/rfis`,
               disabled: true,
+              badge: null,
             },
             {
               title: 'Submittals',
-              icon: FileText,
+              icon: ClipboardList,
               href: `/${orgSlug}/submittals`,
               disabled: true,
+              badge: null,
+            },
+            {
+              title: 'Change Orders',
+              icon: DollarSign,
+              href: `/${orgSlug}/change-orders`,
+              disabled: true,
+              badge: null,
+            },
+            {
+              title: 'Daily Reports',
+              icon: Calendar,
+              href: `/${orgSlug}/daily-reports`,
+              disabled: true,
+              badge: null,
+            },
+            {
+              title: 'Punch List',
+              icon: Wrench,
+              href: `/${orgSlug}/punch-list`,
+              disabled: true,
+              badge: null,
+            },
+          ],
+        },
+        {
+          title: 'Insights',
+          items: [
+            {
+              title: 'Analytics',
+              icon: TrendingUp,
+              href: `/${orgSlug}/analytics`,
+              disabled: true,
+              badge: null,
+            },
+            {
+              title: 'Reports',
+              icon: BarChart3,
+              href: `/${orgSlug}/reports`,
+              disabled: true,
+              badge: null,
             },
           ],
         },
@@ -82,21 +136,24 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
           title: 'Settings',
           items: [
             {
+              title: 'Team',
+              icon: Users,
+              href: `/${orgSlug}/team`,
+              badge: null,
+            },
+            {
               title: 'Organization',
               icon: Building2,
               href: `/${orgSlug}/settings`,
               disabled: true,
+              badge: null,
             },
             {
-              title: 'Team',
-              icon: Users,
-              href: `/${orgSlug}/team`,
-            },
-            {
-              title: 'Reports',
-              icon: BarChart3,
-              href: `/${orgSlug}/reports`,
+              title: 'Settings',
+              icon: Settings,
+              href: `/${orgSlug}/settings/general`,
               disabled: true,
+              badge: null,
             },
           ],
         },
@@ -109,11 +166,13 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               title: 'Dashboard',
               icon: Home,
               href: '/dashboard',
+              badge: null,
             },
             {
               title: 'Organizations',
               icon: Building2,
               href: '/orgs',
+              badge: null,
             },
           ],
         },
@@ -121,16 +180,22 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <Building2 className="h-6 w-6" />
-          <span className="font-semibold">Construction OS</span>
+      <SidebarHeader className="border-b px-4 py-4">
+        <Link href="/dashboard" className="flex items-center gap-2 mb-4">
+          <HardHat className="h-8 w-8 text-construction-orange" />
+          <span className="font-bold text-lg">Construction OS</span>
         </Link>
+        <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Search (⌘K)</span>
+        </button>
       </SidebarHeader>
       <SidebarContent>
         {navigation.map((section) => (
           <SidebarGroup key={section.title}>
-            <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              {section.title}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {section.items.map((item) => {
@@ -144,9 +209,16 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
                         disabled={item.disabled}
                         tooltip={item.disabled ? 'Coming soon' : undefined}
                       >
-                        <Link href={item.disabled ? '#' : item.href}>
-                          <Icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                        <Link href={item.disabled ? '#' : item.href} className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </div>
+                          {item.badge && (
+                            <Badge variant="secondary" className="ml-auto text-xs">
+                              {item.badge}
+                            </Badge>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -158,7 +230,10 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
         ))}
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
-        <LogoutButton />
+        <div className="flex items-center justify-between gap-2">
+          <LogoutButton />
+          <ThemeToggle />
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

@@ -11,10 +11,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // SSR-friendly defaults
-            staleTime: 60 * 1000, // 1 minute
-            refetchOnWindowFocus: false,
-            retry: 1,
+            // Performance optimized defaults
+            staleTime: 60_000, // 1 minute - don't refetch for 1 min
+            gcTime: 300_000, // 5 minutes - keep in cache for 5 min (formerly cacheTime)
+            refetchOnWindowFocus: false, // Don't refetch on tab focus
+            retry: 1, // Only retry failed queries once
           },
         },
       })

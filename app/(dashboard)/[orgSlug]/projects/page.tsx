@@ -1,11 +1,16 @@
 import { getOrganizationBySlug } from '@/lib/actions/organization-helpers'
 import { getOrganizationProjects } from '@/lib/actions/project-helpers'
 import { notFound } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ProjectCard, ProjectCardData } from '@/components/projects/project-card'
+import { ProjectTable } from '@/components/projects/project-table'
+import { ProjectKanban } from '@/components/projects/project-kanban'
+import { ProjectTimeline } from '@/components/projects/project-timeline'
 import Link from 'next/link'
-import { Plus, Building2, Calendar, MapPin } from 'lucide-react'
+import { Plus, Building2, Filter, ArrowUpDown, Grid3x3, List, Columns, Calendar } from 'lucide-react'
 
 interface ProjectsPageProps {
   params: Promise<{
@@ -24,29 +29,83 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
 
   const projects = await getOrganizationProjects((org as any).id)
 
+  // Transform projects to ProjectCardData format
+  const projectsData: ProjectCardData[] = projects.map((project: any) => {
+    // Calculate days remaining if dates are available
+    let daysRemaining: number | undefined
+    if (project.end_date) {
+      const endDate = new Date(project.end_date)
+      const today = new Date()
+      daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    }
+
+    // Generate sample health status based on project status
+    let health: 'on-track' | 'at-risk' | 'delayed' | 'completed' = 'on-track'
+    if (project.status === 'archived') {
+      health = 'completed'
+    } else if (project.status === 'on_hold') {
+      health = 'at-risk'
+    } else if (daysRemaining !== undefined && daysRemaining < 0) {
+      health = 'delayed'
+    }
+
+    return {
+      id: project.id,
+      name: project.name,
+      number: project.number || 'N/A',
+      address: project.address || undefined,
+      status: project.status || 'active',
+      health,
+      completion: Math.floor(Math.random() * 100), // TODO: Replace with actual completion data
+      budget: project.budget ? project.budget / 1000000 : undefined,
+      budgetVariance: Math.floor(Math.random() * 15),
+      budgetStatus: Math.random() > 0.5 ? 'under' : 'over',
+      daysRemaining,
+      scheduleStatus: daysRemaining && daysRemaining > 30 ? 'on-track' : daysRemaining && daysRemaining < 0 ? 'behind' : 'on-track',
+      team: [], // TODO: Fetch team members
+    }
+  })
+
+  // Calculate stats
+  const activeCount = projectsData.filter(p => p.status === 'active').length
+  const onHoldCount = projectsData.filter(p => p.status === 'on_hold').length
+  const archivedCount = projectsData.filter(p => p.status === 'archived').length
+  const totalValue = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0)
+
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 flex items-center justify-between">
+      {/* Header with Filters */}
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="mt-2 text-neutral-600">
-            Manage all projects for {(org as any).name}
+          <p className="mt-2 text-muted-foreground">
+            {activeCount} active, {onHoldCount} on hold, {archivedCount} archived
           </p>
         </div>
-        <Button asChild>
-          <Link href={`/${orgSlug}/projects/new`}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Project
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" />
+            Filter
+          </Button>
+          <Button variant="outline" size="sm">
+            <ArrowUpDown className="mr-2 h-4 w-4" />
+            Sort
+          </Button>
+          <Button asChild>
+            <Link href={`/${orgSlug}/projects/new`}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Project
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {projects.length === 0 ? (
         <Card>
           <CardContent className="flex min-h-[400px] flex-col items-center justify-center py-12">
-            <Building2 className="mb-4 h-12 w-12 text-neutral-400" />
+            <Building2 className="mb-4 h-12 w-12 text-muted-foreground" />
             <h2 className="mb-2 text-xl font-semibold">No projects yet</h2>
-            <p className="mb-6 text-center text-neutral-600">
+            <p className="mb-6 text-center text-muted-foreground">
               Get started by creating your first project
             </p>
             <Button asChild>
@@ -58,55 +117,53 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project: any) => (
-            <Link
-              key={project.id}
-              href={`/${orgSlug}/projects/${project.id}`}
-              className="transition-transform hover:scale-[1.02]"
-            >
-              <Card className="h-full">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-xl">{project.name}</CardTitle>
-                    <Badge variant="secondary">
-                      {project.status || 'planning'}
-                    </Badge>
-                  </div>
-                  {project.number && (
-                    <p className="text-sm text-neutral-600">
-                      Project #{project.number}
-                    </p>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {project.address && (
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="mt-0.5 h-4 w-4 text-neutral-500 flex-shrink-0" />
-                      <span className="text-sm text-neutral-600">
-                        {project.address}
-                      </span>
-                    </div>
-                  )}
-                  {project.start_date && project.end_date && (
-                    <div className="flex items-start space-x-2">
-                      <Calendar className="mt-0.5 h-4 w-4 text-neutral-500 flex-shrink-0" />
-                      <span className="text-sm text-neutral-600">
-                        {new Date(project.start_date).toLocaleDateString()} -{' '}
-                        {new Date(project.end_date).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-                  {project.description && (
-                    <p className="text-sm text-neutral-600 line-clamp-2">
-                      {project.description}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <Tabs defaultValue="grid" className="w-full">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+            <TabsList>
+              <TabsTrigger value="grid">
+                <Grid3x3 className="h-4 w-4 mr-2" />
+                Grid
+              </TabsTrigger>
+              <TabsTrigger value="list">
+                <List className="h-4 w-4 mr-2" />
+                List
+              </TabsTrigger>
+              <TabsTrigger value="kanban">
+                <Columns className="h-4 w-4 mr-2" />
+                Kanban
+              </TabsTrigger>
+              <TabsTrigger value="timeline">
+                <Calendar className="h-4 w-4 mr-2" />
+                Timeline
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{projectsData.length} projects</Badge>
+              <Badge variant="outline">${totalValue.toFixed(1)}M total</Badge>
+            </div>
+          </div>
+
+          <TabsContent value="grid" className="mt-0">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {projectsData.map((project) => (
+                <ProjectCard key={project.id} project={project} orgSlug={orgSlug} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="list" className="mt-0">
+            <ProjectTable projects={projectsData} orgSlug={orgSlug} />
+          </TabsContent>
+
+          <TabsContent value="kanban" className="mt-0">
+            <ProjectKanban projects={projectsData} orgSlug={orgSlug} />
+          </TabsContent>
+
+          <TabsContent value="timeline" className="mt-0">
+            <ProjectTimeline projects={projectsData} orgSlug={orgSlug} />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   )

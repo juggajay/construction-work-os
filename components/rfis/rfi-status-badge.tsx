@@ -59,6 +59,10 @@ export function RFIStatusBadge({ status, isOverdue = false, className }: RFIStat
           variant="destructive"
           className={cn('bg-red-100 text-red-700 hover:bg-red-200', className)}
         >
+          <span className="relative mr-2 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+          </span>
           {config.label}
         </Badge>
         <Badge variant="destructive" className="text-xs">

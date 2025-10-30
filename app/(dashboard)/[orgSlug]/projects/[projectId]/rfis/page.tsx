@@ -6,19 +6,12 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -27,8 +20,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { RFIStatusBadge, type RFIStatus } from '@/components/rfis/rfi-status-badge'
-import { isOverdue } from '@/lib/rfis/sla-calculations'
-import { Plus, Search } from 'lucide-react'
+import { RFITable } from '@/components/rfis/rfi-table'
+import { isOverdue, calculateResponseTime } from '@/lib/rfis/sla-calculations'
+import { Plus, Search, FileText, Clock, AlertCircle, TrendingDown, Filter } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 
 export default function RFIsPage() {
@@ -60,7 +54,13 @@ export default function RFIsPage() {
           answered_at,
           closed_at,
           created_at,
-          assigned_to_id
+          assigned_to_id,
+          discipline,
+          spec_section,
+          project:projects (
+            id,
+            name
+          )
         `)
         .eq('project_id', projectId)
         .is('deleted_at', null)
@@ -75,8 +75,32 @@ export default function RFIsPage() {
 
       if (error) throw error
 
+      // Fetch assigned user profiles for all RFIs that have assigned_to_id
+      const assignedUserIds = [...new Set(data?.filter((rfi: any) => rfi.assigned_to_id).map((rfi: any) => rfi.assigned_to_id))]
+      let assignedUsers: Record<string, any> = {}
+
+      if (assignedUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, avatar_url')
+          .in('id', assignedUserIds)
+
+        if (profiles) {
+          assignedUsers = profiles.reduce((acc: any, profile: any) => {
+            acc[profile.id] = profile
+            return acc
+          }, {})
+        }
+      }
+
+      // Attach assigned_to profile to each RFI
+      const rfisWithProfiles = (data || []).map((rfi: any) => ({
+        ...rfi,
+        assigned_to: rfi.assigned_to_id ? assignedUsers[rfi.assigned_to_id] : null,
+      }))
+
       // Filter overdue in memory (complex logic)
-      let filtered = data || []
+      let filtered = rfisWithProfiles
       if (overdueFilter === 'overdue') {
         filtered = filtered.filter((rfi: any) =>
           isOverdue({
@@ -103,6 +127,57 @@ export default function RFIsPage() {
     )
   })
 
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    if (!rfis) {
+      return {
+        total: 0,
+        pending: 0,
+        overdue: 0,
+        avgResponseTime: 0,
+      }
+    }
+
+    const total = rfis.length
+    const pending = rfis.filter(
+      (rfi: any) => rfi.status === 'submitted' || rfi.status === 'under_review'
+    ).length
+    const overdue = rfis.filter((rfi: any) =>
+      isOverdue({
+        status: rfi.status,
+        submitted_at: rfi.submitted_at,
+        response_due_date: rfi.response_due_date,
+        answered_at: rfi.answered_at,
+        closed_at: rfi.closed_at,
+      })
+    ).length
+
+    // Calculate average response time in days
+    const responseTimes = rfis
+      .map((rfi: any) =>
+        calculateResponseTime({
+          status: rfi.status,
+          submitted_at: rfi.submitted_at,
+          response_due_date: rfi.response_due_date,
+          answered_at: rfi.answered_at,
+          closed_at: rfi.closed_at,
+        })
+      )
+      .filter((time): time is number => time !== null)
+
+    const avgResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length / 24 // Convert hours to days
+        : 0
+
+    return {
+      total,
+      pending,
+      overdue,
+      avgResponseTime: Math.round(avgResponseTime * 10) / 10, // Round to 1 decimal
+    }
+  }, [rfis])
+
   const handleCreateRFI = () => {
     router.push(`/${orgSlug}/projects/${projectId}/rfis/new`)
   }
@@ -112,132 +187,104 @@ export default function RFIsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">RFIs</h1>
-          <p className="text-muted-foreground">
-            Manage Requests for Information
-          </p>
-        </div>
-        <Button onClick={handleCreateRFI}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create RFI
-        </Button>
+    <div className="p-6 space-y-6">
+      {/* RFI Metrics */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total RFIs</p>
+                <p className="text-2xl font-bold">{metrics.total}</p>
+              </div>
+              <FileText className="h-8 w-8 text-muted-foreground/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-warning/50 bg-warning/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pending Response</p>
+                <p className="text-2xl font-bold text-warning">{metrics.pending}</p>
+              </div>
+              <Clock className="h-8 w-8 text-warning/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-danger/50 bg-danger/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Overdue</p>
+                <p className="text-2xl font-bold text-danger">{metrics.overdue}</p>
+              </div>
+              <AlertCircle className="h-8 w-8 text-danger/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Response</p>
+                <p className="text-2xl font-bold">
+                  {metrics.avgResponseTime > 0
+                    ? `${metrics.avgResponseTime} days`
+                    : '-'}
+                </p>
+              </div>
+              <TrendingDown className="h-8 w-8 text-success/20" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search by number or title..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="submitted">Submitted</SelectItem>
-            <SelectItem value="under_review">Under Review</SelectItem>
-            <SelectItem value="answered">Answered</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={overdueFilter} onValueChange={setOverdueFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Filter by due date" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All RFIs</SelectItem>
-            <SelectItem value="overdue">Overdue Only</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Number</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Created</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : filteredRfis?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  No RFIs found. Create your first RFI to get started.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredRfis?.map((rfi: any) => {
-                const rfiIsOverdue = isOverdue({
-                  status: rfi.status,
-                  submitted_at: rfi.submitted_at,
-                  response_due_date: rfi.response_due_date,
-                  answered_at: rfi.answered_at,
-                  closed_at: rfi.closed_at,
-                })
-
-                return (
-                  <TableRow
-                    key={rfi.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleRowClick(rfi.id)}
-                  >
-                    <TableCell className="font-medium">{rfi.number}</TableCell>
-                    <TableCell className="max-w-md truncate">{rfi.title}</TableCell>
-                    <TableCell>
-                      <RFIStatusBadge status={rfi.status as RFIStatus} isOverdue={rfiIsOverdue} />
-                    </TableCell>
-                    <TableCell className="capitalize">{rfi.priority}</TableCell>
-                    <TableCell>
-                      {rfi.assigned_to_id ? 'Assigned' : 'Unassigned'}
-                    </TableCell>
-                    <TableCell>
-                      {rfi.response_due_date
-                        ? new Date(rfi.response_due_date).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(rfi.created_at).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Summary */}
-      {filteredRfis && filteredRfis.length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredRfis.length} RFI{filteredRfis.length !== 1 ? 's' : ''}
-        </div>
-      )}
+      {/* RFI List with Ball-in-Court Tracking */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>RFI Log</CardTitle>
+              <CardDescription>Track all requests for information</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search RFIs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="submitted">Submitted</SelectItem>
+                  <SelectItem value="under_review">Under Review</SelectItem>
+                  <SelectItem value="answered">Answered</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={handleCreateRFI}>
+                <Plus className="h-4 w-4 mr-2" />
+                New RFI
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <RFITable rfis={filteredRfis || []} isLoading={isLoading} />
+        </CardContent>
+      </Card>
     </div>
   )
 }

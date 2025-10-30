@@ -11,6 +11,8 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { RFIStatusBadge, type RFIStatus } from '@/components/rfis/rfi-status-badge'
 import { ResponseForm } from '@/components/rfis/response-form'
+import { RFIMessage } from '@/components/rfis/rfi-message'
+import { RFISidebar } from '@/components/rfis/rfi-sidebar'
 import { getBallInCourt } from '@/lib/rfis/ball-in-court'
 import { isOverdue } from '@/lib/rfis/sla-calculations'
 import { Button } from '@/components/ui/button'
@@ -18,7 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertCircle, Calendar, FileText, User } from 'lucide-react'
+import { Printer, Forward, Reply } from 'lucide-react'
 
 export default function RFIDetailPage() {
   const params = useParams()
@@ -120,204 +122,105 @@ export default function RFIDetailPage() {
     (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   )
 
+  // Create a message for the original RFI question
+  const originalMessage = {
+    id: 'original',
+    content: (rfi as any).description,
+    created_at: (rfi as any).created_at,
+    author: (rfi as any).creator,
+  }
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
-      {/* Header */}
-      <div className="space-y-2">
+    <div className="min-h-screen flex">
+      {/* Main Content */}
+      <div className="flex-1 p-6 space-y-6">
+        {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold tracking-tight">{(rfi as any).number}</h1>
-              <RFIStatusBadge status={(rfi as any).status as RFIStatus} isOverdue={rfiIsOverdue} />
-            </div>
-            <h2 className="text-xl text-muted-foreground">{(rfi as any).title}</h2>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="capitalize">
-            {(rfi as any).priority} Priority
-          </Badge>
-          {(rfi as any).discipline && <Badge variant="outline">{(rfi as any).discipline}</Badge>}
-          {(rfi as any).spec_section && <Badge variant="outline">Spec: {(rfi as any).spec_section}</Badge>}
-        </div>
-      </div>
-
-      {/* Ball in Court Alert */}
-      {ballInCourt.isBlocked ? (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-yellow-600" />
-            <div>
-              <p className="font-medium text-yellow-900">Action Required</p>
-              <p className="text-sm text-yellow-700">{ballInCourt.suggestedAction}</p>
-            </div>
-          </div>
-        </div>
-      ) : ballInCourt.userId && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <div className="flex items-start gap-3">
-            <User className="h-5 w-5 text-blue-600" />
-            <div>
-              <p className="font-medium text-blue-900">Ball in Court</p>
-              <p className="text-sm text-blue-700">{ballInCourt.suggestedAction}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Details Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
           <div>
-            <h3 className="mb-2 font-semibold">Description</h3>
-            <p className="whitespace-pre-wrap text-muted-foreground">{(rfi as any).description}</p>
-          </div>
-
-          <Separator />
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Created By</p>
-              <p>{(rfi as any).creator?.full_name || (rfi as any).creator?.email || 'Unknown'}</p>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl font-bold">RFI #{(rfi as any).number}</h1>
+              <RFIStatusBadge status={(rfi as any).status as RFIStatus} isOverdue={rfiIsOverdue} />
+              {(rfi as any).priority === 'high' && (
+                <Badge variant="destructive">High Priority</Badge>
+              )}
             </div>
-
-            {(rfi as any).assigned_to && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Assigned To</p>
-                <p>{(rfi as any).assigned_to.full_name || (rfi as any).assigned_to.email}</p>
-              </div>
-            )}
-
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Created</p>
-              <p>{new Date((rfi as any).created_at).toLocaleString()}</p>
-            </div>
-
-            {(rfi as any).response_due_date && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Response Due</p>
-                <p className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {new Date((rfi as any).response_due_date).toLocaleDateString()}
-                </p>
-              </div>
-            )}
-
-            {(rfi as any).drawing_reference && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Drawing Reference</p>
-                <p>{(rfi as any).drawing_reference}</p>
-              </div>
-            )}
-
-            {(rfi as any).cost_impact !== null && (rfi as any).cost_impact !== undefined && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Cost Impact</p>
-                <p>${(rfi as any).cost_impact.toLocaleString()}</p>
-              </div>
-            )}
+            <p className="text-muted-foreground">{(rfi as any).title}</p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
+            <Button variant="outline" size="sm">
+              <Forward className="h-4 w-4 mr-2" />
+              Forward
+            </Button>
+            <Button size="sm" onClick={() => setShowResponseForm(true)}>
+              <Reply className="h-4 w-4 mr-2" />
+              Respond
+            </Button>
+          </div>
+        </div>
 
-      {/* Responses */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Responses ({sortedResponses?.length || 0})</CardTitle>
-          <CardDescription>Discussion thread for this RFI</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {sortedResponses && sortedResponses.length > 0 ? (
-            sortedResponses.map((response: any) => (
-              <div
-                key={response.id}
-                className={`rounded-lg border p-4 ${
-                  response.is_official_answer ? 'border-green-200 bg-green-50' : ''
-                }`}
-              >
-                <div className="mb-2 flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold">
-                      {response.author?.full_name || response.author?.email || 'Unknown'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(response.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  {response.is_official_answer && (
-                    <Badge className="bg-green-600">Official Answer</Badge>
-                  )}
-                </div>
-                <p className="whitespace-pre-wrap">{response.content}</p>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground">No responses yet.</p>
-          )}
+        {/* RFI Thread */}
+        <Card>
+          <CardHeader>
+            <CardTitle>RFI Thread</CardTitle>
+            <CardDescription>Conversation history for this RFI</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            {/* Original Question */}
+            <RFIMessage message={originalMessage} isOriginalQuestion={true} />
 
-          {(rfi as any).status !== 'closed' && (rfi as any).status !== 'cancelled' && (
-            <div className="pt-4">
+            {/* Responses */}
+            {sortedResponses && sortedResponses.length > 0 ? (
+              sortedResponses.map((response: any) => (
+                <RFIMessage key={response.id} message={response} />
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No responses yet. Be the first to respond.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Response Form */}
+        {(rfi as any).status !== 'closed' && (rfi as any).status !== 'cancelled' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Add Response</CardTitle>
+              <CardDescription>Provide an answer or additional information</CardDescription>
+            </CardHeader>
+            <CardContent>
               {showResponseForm ? (
-                <div className="rounded-lg border p-4">
-                  <ResponseForm
-                    rfiId={rfiId}
-                    onSuccess={() => {
-                      setShowResponseForm(false)
-                      queryClient.invalidateQueries({ queryKey: ['rfi', rfiId] })
-                    }}
-                    onCancel={() => setShowResponseForm(false)}
-                  />
-                </div>
+                <ResponseForm
+                  rfiId={rfiId}
+                  onSuccess={() => {
+                    setShowResponseForm(false)
+                    queryClient.invalidateQueries({ queryKey: ['rfi', rfiId] })
+                  }}
+                  onCancel={() => setShowResponseForm(false)}
+                />
               ) : (
                 <Button
                   className="w-full"
                   variant="outline"
                   onClick={() => setShowResponseForm(true)}
                 >
+                  <Reply className="h-4 w-4 mr-2" />
                   Add Response
                 </Button>
               )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
-      {/* Attachments */}
-      {(rfi as any).attachments && (rfi as any).attachments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Attachments ({(rfi as any).attachments.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(rfi as any).attachments.map((attachment: any) => (
-                <div
-                  key={attachment.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{attachment.file_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {(attachment.file_size / 1024).toFixed(1)} KB • Uploaded by{' '}
-                        {attachment.uploaded_by?.full_name || 'Unknown'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    Download
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Sidebar */}
+      <aside className="w-80 border-l p-6 space-y-6 bg-muted/10">
+        <RFISidebar rfi={rfi as any} />
+      </aside>
     </div>
   )
 }

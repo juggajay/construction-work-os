@@ -66,8 +66,8 @@ async function main() {
 
   const migrations = [
     {
-      file: 'supabase/migrations/20251025162555_add_project_cost_tracking.sql',
-      name: 'add_project_cost_tracking'
+      file: 'supabase/migrations/20251029032850_fix_storage_buckets_schema.sql',
+      name: 'fix_storage_buckets_schema'
     }
   ];
 
