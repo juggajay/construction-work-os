@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { DatePickerInput } from '@/components/ui/date-picker-input'
 import { createProject } from '@/lib/actions/project'
 
 type ProjectFormProps = {
@@ -17,6 +18,8 @@ export function ProjectForm({ orgId, orgSlug }: ProjectFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -30,8 +33,8 @@ export function ProjectForm({ orgId, orgSlug }: ProjectFormProps) {
       number: formData.get('number') as string || undefined,
       address: formData.get('address') as string || undefined,
       budget: formData.get('budget') as string || undefined,
-      startDate: formData.get('startDate') as string || undefined,
-      endDate: formData.get('endDate') as string || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
       orgId,
     }
 
@@ -118,21 +121,25 @@ export function ProjectForm({ orgId, orgSlug }: ProjectFormProps) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
-              <Input
+              <DatePickerInput
                 id="startDate"
                 name="startDate"
-                type="date"
+                value={startDate}
+                onChange={setStartDate}
                 disabled={isPending}
+                placeholder="Select start date"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="endDate">End Date</Label>
-              <Input
+              <DatePickerInput
                 id="endDate"
                 name="endDate"
-                type="date"
+                value={endDate}
+                onChange={setEndDate}
                 disabled={isPending}
+                placeholder="Select end date"
               />
             </div>
           </div>

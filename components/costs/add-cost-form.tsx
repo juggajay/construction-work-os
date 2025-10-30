@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DatePickerInput } from '@/components/ui/date-picker-input'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 
@@ -142,13 +143,12 @@ export function AddCostForm({ projectId, orgSlug }: AddCostFormProps) {
         <Label htmlFor="costDate">
           Date <span className="text-red-500">*</span>
         </Label>
-        <Input
+        <DatePickerInput
           id="costDate"
-          type="date"
-          required
+          name="costDate"
           value={formData.costDate}
-          onChange={(e) => setFormData({ ...formData, costDate: e.target.value })}
-          max={new Date().toISOString().split('T')[0]}
+          onChange={(value) => setFormData({ ...formData, costDate: value })}
+          placeholder="Select date"
         />
       </div>
 

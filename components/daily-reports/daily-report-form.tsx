@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { createDailyReport } from '@/lib/actions/daily-reports';
 import { WeatherWidget } from './weather-widget';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -135,14 +136,14 @@ export function DailyReportForm({
 
         <div>
           <Label htmlFor="reportDate">Report Date</Label>
-          <Input
+          <DatePickerInput
             id="reportDate"
-            type="date"
+            name="reportDate"
             value={formData.reportDate}
-            onChange={(e) =>
-              setFormData({ ...formData, reportDate: e.target.value })
+            onChange={(value) =>
+              setFormData({ ...formData, reportDate: value })
             }
-            required
+            placeholder="Select date"
           />
         </div>
       </div>

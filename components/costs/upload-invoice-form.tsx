@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DatePickerInput } from '@/components/ui/date-picker-input'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, Loader2, FileText, Sparkles } from 'lucide-react'
 
@@ -218,11 +219,12 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="invoiceDate">Invoice Date</Label>
-          <Input
+          <DatePickerInput
             id="invoiceDate"
-            type="date"
+            name="invoiceDate"
             value={formData.invoiceDate}
-            onChange={(e) => setFormData({ ...formData, invoiceDate: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, invoiceDate: value })}
+            placeholder="Select invoice date"
           />
         </div>
 

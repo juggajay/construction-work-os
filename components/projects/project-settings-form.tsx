@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DatePickerInput } from '@/components/ui/date-picker-input'
 import { useToast } from '@/hooks/use-toast'
 
 interface ProjectSettingsFormProps {
@@ -146,21 +147,23 @@ export function ProjectSettingsForm({ orgSlug, project }: ProjectSettingsFormPro
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="startDate">Start Date</Label>
-          <Input
+          <DatePickerInput
             id="startDate"
-            type="date"
+            name="startDate"
             value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, startDate: value })}
+            placeholder="Select start date"
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="endDate">End Date</Label>
-          <Input
+          <DatePickerInput
             id="endDate"
-            type="date"
+            name="endDate"
             value={formData.endDate}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, endDate: value })}
+            placeholder="Select end date"
           />
         </div>
       </div>

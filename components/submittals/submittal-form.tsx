@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatePickerInput } from '@/components/ui/date-picker-input';
 import { createSubmittal } from '@/lib/actions/submittals';
 import { Loader2 } from 'lucide-react';
 
@@ -155,11 +156,12 @@ export function SubmittalForm({ projectId, orgSlug }: SubmittalFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="requiredOnSite">Required On Site Date</Label>
-            <Input
+            <DatePickerInput
               id="requiredOnSite"
-              type="date"
+              name="requiredOnSite"
               value={requiredOnSite}
-              onChange={(e) => setRequiredOnSite(e.target.value)}
+              onChange={(value) => setRequiredOnSite(value)}
+              placeholder="Select date"
             />
             <p className="text-xs text-muted-foreground">
               When material/equipment is needed on site
