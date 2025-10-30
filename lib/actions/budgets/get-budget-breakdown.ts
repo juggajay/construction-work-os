@@ -39,7 +39,7 @@ export async function getBudgetBreakdown(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    // Verify project access
+    // Verify project access (check project_access first, then org membership)
     const { data: access, error: accessError } = await supabase
       .from('project_access')
       .select('id')
@@ -48,8 +48,34 @@ export async function getBudgetBreakdown(
       .is('deleted_at', null)
       .maybeSingle()
 
-    if (accessError || !access) {
-      throw new UnauthorizedError('You do not have access to this project')
+    if (accessError) {
+      throw new UnauthorizedError('Failed to check project access')
+    }
+
+    // If no project access, check organization membership as fallback
+    if (!access) {
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('org_id')
+        .eq('id', projectId)
+        .is('deleted_at', null)
+        .single()
+
+      if (projectError || !project) {
+        throw new UnauthorizedError('You do not have access to this project')
+      }
+
+      const { data: orgMember, error: orgMemberError } = await supabase
+        .from('organization_members')
+        .select('id')
+        .eq('org_id', project.org_id)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .maybeSingle()
+
+      if (orgMemberError || !orgMember) {
+        throw new UnauthorizedError('You do not have access to this project')
+      }
     }
 
     // Fetch budget breakdown from materialized view

@@ -49,8 +49,7 @@ export async function SubmittalCards({ projectId, orgSlug, stage }: SubmittalCar
       current_stage,
       status,
       current_reviewer_id,
-      project:projects!inner(id, name),
-      reviewer:profiles(id, full_name, avatar_url)
+      project:projects(id, name)
     `
     )
     .eq('project_id', projectId)
@@ -104,13 +103,7 @@ export async function SubmittalCards({ projectId, orgSlug, stage }: SubmittalCar
             spec_section_title: submittal.spec_section_title,
             submittal_type: submittal.submittal_type,
             procurement_deadline: submittal.procurement_deadline,
-            current_reviewer: submittal.reviewer
-              ? {
-                  id: submittal.reviewer.id,
-                  full_name: submittal.reviewer.full_name,
-                  avatar_url: submittal.reviewer.avatar_url,
-                }
-              : null,
+            current_reviewer: null,
           }}
         />
       ))}

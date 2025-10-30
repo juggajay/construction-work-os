@@ -24,27 +24,8 @@ export const createRFI = withAction(
       throw new UnauthorizedError(ErrorMessages.AUTH_REQUIRED)
     }
 
-    // Check if user has access to this project
-    // @ts-ignore - Supabase RPC types not generated
-    const { data: projectIds } = await supabase.rpc('user_project_ids', {
-      user_uuid: user.id,
-    })
-
-    const projectIdStrings = ((projectIds as any) || []).map((p: any) => p.project_id)
-    if (!projectIds || !projectIdStrings.includes(data.projectId)) {
-      throw new ForbiddenError('You do not have access to this project')
-    }
-
-    // Check if user is project manager
-    // @ts-ignore - Supabase RPC types not generated
-    const { data: isManager } = await supabase.rpc('is_project_manager', {
-      user_uuid: user.id,
-      check_project_id: data.projectId,
-    })
-
-    if (!isManager) {
-      throw new ForbiddenError('Only project managers can create RFIs')
-    }
+    // Note: Access control is handled by RLS policies
+    // The policies check both project_access and organization membership
 
     // Generate RFI number using Postgres function
     // @ts-ignore - Supabase RPC types not generated

@@ -39,7 +39,7 @@ export async function updateCost(
       return { success: false, error: 'Cost entry not found' }
     }
 
-    // Verify project access (manager or supervisor)
+    // Verify project access (manager or supervisor OR org member)
     const { data: access, error: accessError } = await supabase
       .from('project_access')
       .select('role')
@@ -48,7 +48,35 @@ export async function updateCost(
       .is('deleted_at', null)
       .single()
 
-    if (accessError || !access || !['manager', 'supervisor'].includes(access.role)) {
+    // If no project_access record, check organization membership as fallback
+    if (accessError?.code === 'PGRST116' || !access) {
+      // Get project's organization
+      const { data: projectOrg, error: projectOrgError } = await supabase
+        .from('projects')
+        .select('org_id')
+        .eq('id', cost.project_id)
+        .is('deleted_at', null)
+        .single()
+
+      if (projectOrgError || !projectOrg) {
+        throw new UnauthorizedError('Only managers and supervisors can update costs')
+      }
+
+      // Check if user is member of the organization
+      const { data: orgMember, error: orgMemberError } = await supabase
+        .from('organization_members')
+        .select('role')
+        .eq('org_id', projectOrg.org_id)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .single()
+
+      if (orgMemberError || !orgMember) {
+        throw new UnauthorizedError('Only managers and supervisors can update costs')
+      }
+    } else if (accessError) {
+      throw new UnauthorizedError('Only managers and supervisors can update costs')
+    } else if (!['manager', 'supervisor'].includes(access.role)) {
       throw new UnauthorizedError('Only managers and supervisors can update costs')
     }
 

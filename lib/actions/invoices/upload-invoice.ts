@@ -58,7 +58,7 @@ export async function uploadInvoice(
 
     console.log('📤 uploadInvoice: User authenticated:', user.id)
 
-    // Verify project access (manager or supervisor)
+    // Verify project access (manager or supervisor OR org member)
     const { data: access, error: accessError } = await supabase
       .from('project_access')
       .select('role')
@@ -67,12 +67,66 @@ export async function uploadInvoice(
       .is('deleted_at', null)
       .single()
 
-    if (accessError || !access || !['manager', 'supervisor'].includes(access.role)) {
-      console.error('❌ uploadInvoice: Access denied', { accessError, access })
-      throw new UnauthorizedError('Only managers and supervisors can upload invoices')
-    }
+    console.log('📤 uploadInvoice: Access query result', {
+      hasError: !!accessError,
+      errorCode: accessError?.code,
+      hasAccess: !!access,
+      role: access?.role,
+    })
 
-    console.log('📤 uploadInvoice: Access verified, role:', access.role)
+    // If no project_access record, check organization membership as fallback
+    if (accessError?.code === 'PGRST116' || !access) {
+      console.log('📤 uploadInvoice: No project access found, checking org membership...')
+
+      // Get project's organization
+      const { data: projectOrg, error: projectOrgError } = await supabase
+        .from('projects')
+        .select('org_id')
+        .eq('id', projectId)
+        .is('deleted_at', null)
+        .single()
+
+      if (projectOrgError || !projectOrg) {
+        console.error('❌ uploadInvoice: Could not fetch project organization')
+        throw new UnauthorizedError('Only managers and supervisors can upload invoices')
+      }
+
+      // Check if user is member of the organization
+      const { data: orgMember, error: orgMemberError } = await supabase
+        .from('organization_members')
+        .select('role')
+        .eq('org_id', projectOrg.org_id)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .single()
+
+      console.log('📤 uploadInvoice: Org membership result', {
+        hasError: !!orgMemberError,
+        errorMessage: orgMemberError?.message,
+        isMember: !!orgMember,
+        orgRole: orgMember?.role,
+      })
+
+      if (orgMemberError || !orgMember) {
+        console.error('❌ uploadInvoice: Access denied - not an org member')
+        throw new UnauthorizedError('Only managers and supervisors can upload invoices')
+      }
+
+      console.log('✅ uploadInvoice: Access verified via org membership, role:', orgMember.role)
+    } else if (accessError) {
+      console.error('❌ uploadInvoice: Access query error', {
+        error: accessError.message,
+      })
+      throw new UnauthorizedError('Only managers and supervisors can upload invoices')
+    } else if (!['manager', 'supervisor'].includes(access.role)) {
+      console.error('❌ uploadInvoice: Access denied - insufficient role', {
+        role: access.role,
+        requiredRoles: ['manager', 'supervisor'],
+      })
+      throw new UnauthorizedError('Only managers and supervisors can upload invoices')
+    } else {
+      console.log('✅ uploadInvoice: Access verified via project access, role:', access.role)
+    }
 
     // Upload file to storage
     const timestamp = Date.now()

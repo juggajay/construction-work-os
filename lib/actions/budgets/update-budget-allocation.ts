@@ -42,7 +42,7 @@ export async function updateBudgetAllocation(
 
     console.log('💾 updateBudgetAllocation: User authenticated:', user.id)
 
-    // Verify project access (must be manager or supervisor)
+    // Verify project access (must be manager or supervisor OR org member)
     console.log('💾 updateBudgetAllocation: Checking project access...')
     const { data: access, error: accessError } = await supabase
       .from('project_access')
@@ -60,17 +60,59 @@ export async function updateBudgetAllocation(
       role: access?.role,
     })
 
-    if (accessError || !access || !['manager', 'supervisor'].includes(access.role)) {
-      console.error('❌ updateBudgetAllocation: Access denied', {
-        accessError: accessError?.message,
-        hasAccess: !!access,
-        role: access?.role,
+    // If no project_access record, check organization membership as fallback
+    if (accessError?.code === 'PGRST116' || !access) {
+      console.log('💾 updateBudgetAllocation: No project access found, checking org membership...')
+
+      // Get project's organization
+      const { data: projectOrg, error: projectOrgError } = await supabase
+        .from('projects')
+        .select('org_id')
+        .eq('id', projectId)
+        .is('deleted_at', null)
+        .single()
+
+      if (projectOrgError || !projectOrg) {
+        console.error('❌ updateBudgetAllocation: Could not fetch project organization')
+        throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
+      }
+
+      // Check if user is member of the organization
+      const { data: orgMember, error: orgMemberError } = await supabase
+        .from('organization_members')
+        .select('role')
+        .eq('org_id', projectOrg.org_id)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .single()
+
+      console.log('💾 updateBudgetAllocation: Org membership result', {
+        hasError: !!orgMemberError,
+        errorMessage: orgMemberError?.message,
+        isMember: !!orgMember,
+        orgRole: orgMember?.role,
+      })
+
+      if (orgMemberError || !orgMember) {
+        console.error('❌ updateBudgetAllocation: Access denied - not an org member')
+        throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
+      }
+
+      console.log('✅ updateBudgetAllocation: Access verified via org membership, role:', orgMember.role)
+    } else if (accessError) {
+      console.error('❌ updateBudgetAllocation: Access query error', {
+        error: accessError.message,
+      })
+      throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
+    } else if (!['manager', 'supervisor'].includes(access.role)) {
+      console.error('❌ updateBudgetAllocation: Access denied - insufficient role', {
+        role: access.role,
         requiredRoles: ['manager', 'supervisor'],
       })
       throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
+    } else {
+      console.log('✅ updateBudgetAllocation: Access verified via project access, role:', access.role)
     }
-
-    console.log('✅ updateBudgetAllocation: Access verified, role:', access.role)
 
     // Get project total budget
     console.log('💾 updateBudgetAllocation: Fetching project budget...')

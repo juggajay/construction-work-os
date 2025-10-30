@@ -39,7 +39,7 @@ export async function deleteCost(
       return { success: false, error: 'Cost entry not found' }
     }
 
-    // Verify project access (manager only)
+    // Verify project access (manager only OR org owner)
     const { data: access, error: accessError } = await supabase
       .from('project_access')
       .select('role')
@@ -48,7 +48,35 @@ export async function deleteCost(
       .is('deleted_at', null)
       .single()
 
-    if (accessError || !access || access.role !== 'manager') {
+    // If no project_access record, check organization ownership as fallback
+    if (accessError?.code === 'PGRST116' || !access) {
+      // Get project's organization
+      const { data: projectOrg, error: projectOrgError } = await supabase
+        .from('projects')
+        .select('org_id')
+        .eq('id', cost.project_id)
+        .is('deleted_at', null)
+        .single()
+
+      if (projectOrgError || !projectOrg) {
+        throw new UnauthorizedError('Only managers can delete costs')
+      }
+
+      // Check if user is owner of the organization
+      const { data: orgMember, error: orgMemberError } = await supabase
+        .from('organization_members')
+        .select('role')
+        .eq('org_id', projectOrg.org_id)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .single()
+
+      if (orgMemberError || !orgMember || orgMember.role !== 'owner') {
+        throw new UnauthorizedError('Only managers can delete costs')
+      }
+    } else if (accessError) {
+      throw new UnauthorizedError('Only managers can delete costs')
+    } else if (access.role !== 'manager') {
       throw new UnauthorizedError('Only managers can delete costs')
     }
 
