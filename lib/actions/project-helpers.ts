@@ -110,3 +110,82 @@ export async function getProjectMetrics(projectId: string) {
     completionPercentage,
   }
 }
+
+export async function getBatchProjectMetrics(projectIds: string[]) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new UnauthorizedError(ErrorMessages.AUTH_REQUIRED)
+  }
+
+  if (projectIds.length === 0) {
+    return {}
+  }
+
+  // Fetch all invoices for all projects in one query
+  const { data: invoices } = await supabase
+    .from('project_invoices')
+    .select('project_id, amount')
+    .in('project_id', projectIds)
+    .is('deleted_at', null)
+
+  // Fetch all RFI counts for all projects
+  const { data: rfis } = await supabase
+    .from('rfis')
+    .select('project_id')
+    .in('project_id', projectIds)
+    .is('deleted_at', null)
+
+  // Fetch all team members for all projects
+  const { data: teamMembers } = await supabase
+    .from('project_access')
+    .select('project_id')
+    .in('project_id', projectIds)
+    .is('deleted_at', null)
+
+  // Fetch all project budgets
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('id, budget')
+    .in('id', projectIds)
+
+  // Build metrics map
+  const metricsMap: Record<string, {
+    totalSpent: number
+    rfiCount: number
+    teamSize: number
+    completionPercentage: number
+  }> = {}
+
+  for (const projectId of projectIds) {
+    // Calculate total spent for this project
+    const projectInvoices = invoices?.filter(inv => inv.project_id === projectId) || []
+    const totalSpent = projectInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0)
+
+    // Count RFIs for this project
+    const rfiCount = rfis?.filter(rfi => rfi.project_id === projectId).length || 0
+
+    // Count team members for this project
+    const teamSize = teamMembers?.filter(member => member.project_id === projectId).length || 0
+
+    // Calculate completion percentage
+    const project = projects?.find(p => p.id === projectId)
+    let completionPercentage = 0
+    if (project?.budget && project.budget > 0) {
+      completionPercentage = Math.min(Math.round((totalSpent / project.budget) * 100), 100)
+    }
+
+    metricsMap[projectId] = {
+      totalSpent,
+      rfiCount,
+      teamSize,
+      completionPercentage,
+    }
+  }
+
+  return metricsMap
+}

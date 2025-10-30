@@ -1,5 +1,5 @@
 import { getOrganizationBySlug } from '@/lib/actions/organization-helpers'
-import { getOrganizationProjects } from '@/lib/actions/project-helpers'
+import { getOrganizationProjects, getBatchProjectMetrics } from '@/lib/actions/project-helpers'
 import { notFound } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +29,10 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
 
   const projects = await getOrganizationProjects((org as any).id)
 
+  // Fetch metrics for all projects in batch
+  const projectIds = projects.map((p: any) => p.id)
+  const metricsMap = await getBatchProjectMetrics(projectIds)
+
   // Transform projects to ProjectCardData format
   const projectsData: ProjectCardData[] = projects.map((project: any) => {
     // Calculate days remaining if dates are available
@@ -49,6 +53,22 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
       health = 'delayed'
     }
 
+    // Get actual metrics for this project
+    const metrics = metricsMap[project.id] || {
+      totalSpent: 0,
+      rfiCount: 0,
+      teamSize: 0,
+      completionPercentage: 0,
+    }
+
+    // Calculate budget variance
+    const budgetInMillions = project.budget ? project.budget / 1000000 : 0
+    const spentInMillions = metrics.totalSpent / 1000000
+    const budgetVariance = budgetInMillions > 0
+      ? Math.abs(Math.round(((spentInMillions - budgetInMillions) / budgetInMillions) * 100))
+      : 0
+    const budgetStatus: 'under' | 'over' = spentInMillions > budgetInMillions ? 'over' : 'under'
+
     return {
       id: project.id,
       name: project.name,
@@ -56,13 +76,13 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
       address: project.address || undefined,
       status: project.status || 'active',
       health,
-      completion: Math.floor(Math.random() * 100), // TODO: Replace with actual completion data
-      budget: project.budget ? project.budget / 1000000 : undefined,
-      budgetVariance: Math.floor(Math.random() * 15),
-      budgetStatus: Math.random() > 0.5 ? 'under' : 'over',
+      completion: metrics.completionPercentage,
+      budget: budgetInMillions > 0 ? budgetInMillions : undefined,
+      budgetVariance,
+      budgetStatus,
       daysRemaining,
       scheduleStatus: daysRemaining && daysRemaining > 30 ? 'on-track' : daysRemaining && daysRemaining < 0 ? 'behind' : 'on-track',
-      team: [], // TODO: Fetch team members
+      team: [], // Team members are not displayed in cards currently
     }
   })
 
