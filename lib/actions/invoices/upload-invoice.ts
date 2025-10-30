@@ -115,7 +115,7 @@ export async function uploadInvoice(
       console.log('✅ uploadInvoice: Access verified via org membership, role:', orgMember.role)
     } else if (accessError) {
       console.error('❌ uploadInvoice: Access query error', {
-        error: accessError.message,
+        error: accessError,
       })
       throw new UnauthorizedError('Only managers and supervisors can upload invoices')
     } else if (!['manager', 'supervisor'].includes(access.role)) {

@@ -51,6 +51,8 @@ interface RFITableRow {
 interface RFITableProps {
   rfis: RFITableRow[]
   isLoading?: boolean
+  showProject?: boolean
+  onRowClick?: (rfiId: string) => void
 }
 
 function getDaysOpen(submittedAt: string | null): number {
@@ -75,14 +77,18 @@ function getInitials(name: string | null, email: string): string {
   return email.slice(0, 2).toUpperCase()
 }
 
-export function RFITable({ rfis, isLoading = false }: RFITableProps) {
+export function RFITable({ rfis, isLoading = false, showProject = true, onRowClick }: RFITableProps) {
   const router = useRouter()
   const params = useParams()
   const projectId = params.projectId as string
   const orgSlug = params.orgSlug as string
 
   const handleRowClick = (rfiId: string) => {
-    router.push(`/${orgSlug}/projects/${projectId}/rfis/${rfiId}`)
+    if (onRowClick) {
+      onRowClick(rfiId)
+    } else {
+      router.push(`/${orgSlug}/projects/${projectId}/rfis/${rfiId}`)
+    }
   }
 
   if (isLoading) {

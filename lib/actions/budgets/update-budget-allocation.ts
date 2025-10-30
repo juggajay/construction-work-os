@@ -101,7 +101,7 @@ export async function updateBudgetAllocation(
       console.log('✅ updateBudgetAllocation: Access verified via org membership, role:', orgMember.role)
     } else if (accessError) {
       console.error('❌ updateBudgetAllocation: Access query error', {
-        error: accessError.message,
+        error: accessError,
       })
       throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
     } else if (!['manager', 'supervisor'].includes(access.role)) {
