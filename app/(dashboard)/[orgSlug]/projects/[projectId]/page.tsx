@@ -148,9 +148,43 @@ export default async function ProjectPage({
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div className="container mx-auto p-6">
+        {/* Project Details */}
         <Card>
+          <CardHeader>
+            <CardTitle>Project Details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Location</p>
+                <p className="text-sm text-muted-foreground">
+                  {project.address || 'No address set'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Timeline</p>
+                <p className="text-sm text-muted-foreground">
+                  {project.start_date && project.end_date ? (
+                    <>
+                      {new Date(project.start_date).toLocaleDateString()} -{' '}
+                      {new Date(project.end_date).toLocaleDateString()}
+                    </>
+                  ) : (
+                    'Not set'
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card className="mt-6">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
@@ -186,40 +220,6 @@ export default async function ProjectPage({
                   <span>Daily Reports</span>
                 </Link>
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Project Details */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Project Details</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Location</p>
-                <p className="text-sm text-muted-foreground">
-                  {project.address || 'No address set'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Timeline</p>
-                <p className="text-sm text-muted-foreground">
-                  {project.start_date && project.end_date ? (
-                    <>
-                      {new Date(project.start_date).toLocaleDateString()} -{' '}
-                      {new Date(project.end_date).toLocaleDateString()}
-                    </>
-                  ) : (
-                    'Not set'
-                  )}
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>
