@@ -120,7 +120,7 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               title: 'Analytics',
               icon: TrendingUp,
               href: `/${orgSlug}/analytics`,
-              disabled: true,
+              disabled: false,
               badge: null,
             },
             {
