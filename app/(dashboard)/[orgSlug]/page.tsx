@@ -4,46 +4,10 @@ import { getCurrentUser } from '@/lib/actions/auth'
 import { getOrganizationKPIs, getProjectAnalytics } from '@/lib/actions/analytics'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { Plus, Calendar } from 'lucide-react'
 import { KPICard } from '@/components/analytics/kpi-card'
 import { StatCard } from '@/components/analytics/stat-card'
-
-// Simple loading component that doesn't depend on external components
-const SimpleCardLoader = () => (
-  <Card>
-    <CardContent className="p-6">
-      <div className="animate-pulse space-y-3">
-        <div className="h-4 bg-neutral-200 rounded w-3/4" />
-        <div className="h-4 bg-neutral-200 rounded w-1/2" />
-        <div className="h-4 bg-neutral-200 rounded w-5/6" />
-      </div>
-    </CardContent>
-  </Card>
-)
-
-// Lazy load below-the-fold components for better initial load performance
-const ProjectHealthChart = dynamic(
-  () => import('@/components/dashboard/project-health-chart').then(m => ({ default: m.ProjectHealthChart })),
-  { loading: () => <div className="h-64"><SimpleCardLoader /></div>, ssr: false }
-)
-
-const UrgentActionsList = dynamic(
-  () => import('@/components/dashboard/urgent-actions-list').then(m => ({ default: m.UrgentActionsList })),
-  { loading: () => <SimpleCardLoader />, ssr: false }
-)
-
-const ActivityFeed = dynamic(
-  () => import('@/components/dashboard/activity-feed').then(m => ({ default: m.ActivityFeed })),
-  { loading: () => <SimpleCardLoader />, ssr: false }
-)
-
-const UpcomingSchedule = dynamic(
-  () => import('@/components/dashboard/upcoming-schedule').then(m => ({ default: m.UpcomingSchedule })),
-  { loading: () => <SimpleCardLoader />, ssr: false }
-)
 
 export default async function OrganizationPage({
   params,
@@ -192,35 +156,6 @@ export default async function OrganizationPage({
             { label: 'Avg Completion', value: `${(analytics?.averageCompletion ?? 0).toFixed(0)}%` },
           ]}
         />
-      </div>
-
-      {/* Project Health Overview */}
-      <div className="grid gap-4 lg:gap-6 lg:grid-cols-7 px-4 lg:px-0">
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Project Health</CardTitle>
-            <CardDescription>Real-time status across all projects</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ProjectHealthChart />
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Urgent Actions</CardTitle>
-            <CardDescription>Items requiring immediate attention</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UrgentActionsList />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Activity Feed & Schedule */}
-      <div className="grid gap-4 lg:gap-6 lg:grid-cols-2 px-4 lg:px-0">
-        <ActivityFeed />
-        <UpcomingSchedule />
       </div>
     </div>
   )
