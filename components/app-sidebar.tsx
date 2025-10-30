@@ -105,9 +105,9 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
               badge: null,
             },
             {
-              title: 'Punch List',
+              title: 'Snag List',
               icon: Wrench,
-              href: `/${orgSlug}/punch-list`,
+              href: `/${orgSlug}/snag-list`,
               disabled: true,
               badge: null,
             },

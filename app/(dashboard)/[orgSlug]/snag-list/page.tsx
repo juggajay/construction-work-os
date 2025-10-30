@@ -1,12 +1,12 @@
 /**
- * Organization-Level Punch List Page
+ * Organization-Level Snag List Page
  *
- * Displays all punch list items across all projects in the organization
+ * Displays all snag list items across all projects in the organization
  */
 
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -27,19 +27,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Search, ListChecks, AlertCircle, CheckCircle2, Building2, Clock } from 'lucide-react'
+import { Search, ListChecks, AlertCircle, CheckCircle2, Building2, Clock, Upload, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 
-export default function OrganizationPunchListPage() {
+export default function OrganizationSnagListPage() {
   const params = useParams()
   const router = useRouter()
   const orgSlug = params.orgSlug as string
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [projectFilter, setProjectFilter] = useState<string>('all')
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   // Fetch organization ID
   const { data: org } = useQuery({
@@ -76,11 +89,11 @@ export default function OrganizationPunchListPage() {
     enabled: !!org?.id,
   })
 
-  // Placeholder data - will be replaced with actual database query once punch_items table is created
-  const { data: punchItems, isLoading } = useQuery({
-    queryKey: ['org-punch-items', org?.id, statusFilter, projectFilter],
+  // Placeholder data - will be replaced with actual database query once snag_items table is created
+  const { data: snagItems, isLoading } = useQuery({
+    queryKey: ['org-snag-items', org?.id, statusFilter, projectFilter],
     queryFn: async () => {
-      // TODO: Implement once punch_items table is created
+      // TODO: Implement once snag_items table is created
       return []
     },
     enabled: !!org?.id && !!projects,
@@ -94,10 +107,11 @@ export default function OrganizationPunchListPage() {
       completed: 0,
       overdue: 0,
     }
-  }, [punchItems])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Client-side search filtering
-  const filteredItems = punchItems?.filter((item: any) => {
+  const filteredItems = snagItems?.filter((item: any) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -108,7 +122,40 @@ export default function OrganizationPunchListPage() {
   })
 
   const handleRowClick = (itemId: string, projectId: string) => {
-    router.push(`/${orgSlug}/projects/${projectId}/punch-list/${itemId}`)
+    router.push(`/${orgSlug}/projects/${projectId}/snag-list/${itemId}`)
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+    }
+  }
+
+  const handleUpload = async () => {
+    if (!selectedFile) return
+
+    setIsUploading(true)
+    try {
+      // TODO: Implement actual upload logic when snag_items table is created
+      // This would typically involve:
+      // 1. Uploading the file to Supabase Storage
+      // 2. Parsing the file (CSV, Excel, etc.)
+      // 3. Creating snag items in the database
+
+      await new Promise(resolve => setTimeout(resolve, 1500)) // Simulated delay
+
+      // Reset state
+      setSelectedFile(null)
+      setUploadDialogOpen(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
@@ -116,13 +163,74 @@ export default function OrganizationPunchListPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Punch List</h1>
+          <h1 className="text-3xl font-bold">Snag List</h1>
           <p className="text-muted-foreground">Track deficiencies and completion items across projects</p>
         </div>
-        <Button variant="outline" size="sm">
-          <Building2 className="h-4 w-4 mr-2" />
-          {projects?.length || 0} Projects
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Building2 className="h-4 w-4 mr-2" />
+            {projects?.length || 0} Projects
+          </Button>
+          <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Snag List
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upload Snag List</DialogTitle>
+                <DialogDescription>
+                  Upload a CSV or Excel file containing snag list items. The file should include columns for
+                  description, location, priority, and due date.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Select Project</label>
+                  <Select defaultValue="all">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects?.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">File</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,.xlsx,.xls"
+                      onChange={handleFileSelect}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  {selectedFile && (
+                    <p className="text-xs text-muted-foreground">
+                      Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                    </p>
+                  )}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+                  {isUploading ? 'Uploading...' : 'Upload'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Metrics */}
@@ -176,19 +284,19 @@ export default function OrganizationPunchListPage() {
         </Card>
       </div>
 
-      {/* Punch List Items */}
+      {/* Snag List Items */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Punch List Items</CardTitle>
+              <CardTitle>Snag List Items</CardTitle>
               <CardDescription>All deficiencies and completion items across all projects</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search punch items..."
+                  placeholder="Search snag items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -250,9 +358,9 @@ export default function OrganizationPunchListPage() {
                         <ListChecks className="h-12 w-12 text-muted-foreground" />
                       </div>
                       <div className="space-y-2">
-                        <p className="text-lg font-medium">Punch List Coming Soon</p>
+                        <p className="text-lg font-medium">Snag List Coming Soon</p>
                         <p className="text-sm text-muted-foreground max-w-md">
-                          The punch list feature is currently under development. You'll be able to track
+                          The snag list feature is currently under development. You&apos;ll be able to track
                           deficiencies and completion items across all your projects here.
                         </p>
                       </div>
