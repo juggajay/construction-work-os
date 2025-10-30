@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConstructionBadge } from '@/components/ui/construction-badge'
 import Link from 'next/link'
 import {
@@ -146,129 +145,82 @@ export default async function ProjectPage({
         </div>
       </div>
 
-      {/* Tabbed Content */}
-      <Tabs defaultValue="overview" className="flex-1">
-        <div className="border-b">
-          <div className="container mx-auto">
-            <TabsList className="h-12 bg-transparent rounded-none border-0 p-0">
-              <TabsTrigger
-                value="overview"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="rfis"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                RFIs
-              </TabsTrigger>
-              <TabsTrigger
-                value="submittals"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                Submittals
-              </TabsTrigger>
-              <TabsTrigger
-                value="changes"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                Changes
-              </TabsTrigger>
-              <TabsTrigger
-                value="schedule"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                Schedule
-              </TabsTrigger>
-              <TabsTrigger
-                value="budget"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                Budget
-              </TabsTrigger>
-              <TabsTrigger
-                value="documents"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                Documents
-              </TabsTrigger>
-              <TabsTrigger
-                value="team"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-              >
-                Team
-              </TabsTrigger>
-            </TabsList>
-          </div>
-        </div>
-
-        <div className="container mx-auto p-6">
-          <TabsContent value="overview" className="mt-0">
-            <ProjectOverview project={project} orgSlug={orgSlug} projectId={projectId} />
-          </TabsContent>
-
-          <TabsContent value="rfis" className="mt-0">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">RFI content will be displayed here</p>
-              <Button asChild>
-                <Link href={`/${orgSlug}/projects/${projectId}/rfis`}>View All RFIs</Link>
+      {/* Quick Actions */}
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              <Button variant="outline" className="h-24 flex-col" asChild>
+                <Link href={`/${orgSlug}/projects/${projectId}/costs`}>
+                  <DollarSign className="mb-2 h-6 w-6" />
+                  <span>Costs</span>
+                </Link>
               </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="submittals" className="mt-0">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">Submittal content will be displayed here</p>
-              <Button asChild>
+              <Button variant="outline" className="h-24 flex-col" asChild>
+                <Link href={`/${orgSlug}/projects/${projectId}/rfis`}>
+                  <FileText className="mb-2 h-6 w-6" />
+                  <span>RFIs</span>
+                </Link>
+              </Button>
+              <Button variant="outline" className="h-24 flex-col" asChild>
                 <Link href={`/${orgSlug}/projects/${projectId}/submittals`}>
-                  View All Submittals
+                  <FileText className="mb-2 h-6 w-6" />
+                  <span>Submittals</span>
                 </Link>
               </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="changes" className="mt-0">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                Change orders content will be displayed here
-              </p>
-              <Button asChild>
+              <Button variant="outline" className="h-24 flex-col" asChild>
                 <Link href={`/${orgSlug}/projects/${projectId}/change-orders`}>
-                  View All Change Orders
+                  <FileText className="mb-2 h-6 w-6" />
+                  <span>Change Orders</span>
+                </Link>
+              </Button>
+              <Button variant="outline" className="h-24 flex-col" asChild>
+                <Link href={`/${orgSlug}/projects/${projectId}/daily-reports`}>
+                  <Clock className="mb-2 h-6 w-6" />
+                  <span>Daily Reports</span>
                 </Link>
               </Button>
             </div>
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="schedule" className="mt-0">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Schedule content will be displayed here</p>
+        {/* Project Details */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Project Details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Location</p>
+                <p className="text-sm text-muted-foreground">
+                  {project.address || 'No address set'}
+                </p>
+              </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="budget" className="mt-0">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">Budget content will be displayed here</p>
-              <Button asChild>
-                <Link href={`/${orgSlug}/projects/${projectId}/costs`}>View Costs</Link>
-              </Button>
+            <div className="flex items-start gap-3">
+              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Timeline</p>
+                <p className="text-sm text-muted-foreground">
+                  {project.start_date && project.end_date ? (
+                    <>
+                      {new Date(project.start_date).toLocaleDateString()} -{' '}
+                      {new Date(project.end_date).toLocaleDateString()}
+                    </>
+                  ) : (
+                    'Not set'
+                  )}
+                </p>
+              </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-0">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Documents content will be displayed here</p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="team" className="mt-0">
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Team content will be displayed here</p>
-            </div>
-          </TabsContent>
-        </div>
-      </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
@@ -297,96 +249,6 @@ function MetricItem({
           {badge}
         </Badge>
       )}
-    </div>
-  )
-}
-
-// ProjectOverview Component
-function ProjectOverview({
-  project,
-  orgSlug,
-  projectId,
-}: {
-  project: Project
-  orgSlug: string
-  projectId: string
-}) {
-  return (
-    <div className="space-y-6">
-      {/* Project Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Project Details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="text-sm font-medium">Location</p>
-              <p className="text-sm text-muted-foreground">
-                {project.address || 'No address set'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="text-sm font-medium">Timeline</p>
-              <p className="text-sm text-muted-foreground">
-                {project.start_date && project.end_date ? (
-                  <>
-                    {new Date(project.start_date).toLocaleDateString()} -{' '}
-                    {new Date(project.end_date).toLocaleDateString()}
-                  </>
-                ) : (
-                  'Not set'
-                )}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            <Button variant="outline" className="h-24 flex-col" asChild>
-              <Link href={`/${orgSlug}/projects/${projectId}/costs`}>
-                <DollarSign className="mb-2 h-6 w-6" />
-                <span>Costs</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-24 flex-col" asChild>
-              <Link href={`/${orgSlug}/projects/${projectId}/rfis`}>
-                <FileText className="mb-2 h-6 w-6" />
-                <span>RFIs</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-24 flex-col" asChild>
-              <Link href={`/${orgSlug}/projects/${projectId}/submittals`}>
-                <FileText className="mb-2 h-6 w-6" />
-                <span>Submittals</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-24 flex-col" asChild>
-              <Link href={`/${orgSlug}/projects/${projectId}/change-orders`}>
-                <FileText className="mb-2 h-6 w-6" />
-                <span>Change Orders</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-24 flex-col" asChild>
-              <Link href={`/${orgSlug}/projects/${projectId}/daily-reports`}>
-                <Clock className="mb-2 h-6 w-6" />
-                <span>Daily Reports</span>
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
