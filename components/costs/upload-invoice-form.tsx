@@ -40,6 +40,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
   const [isParsing, setIsParsing] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [parsedData, setParsedData] = useState<any>(null)
@@ -48,10 +49,8 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  // Process file (used by both file input and drag-drop)
+  const processFile = async (file: File) => {
     setSelectedFile(file)
     setParsedData(null)
     setAiMetadata(null)
@@ -133,6 +132,73 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     } finally {
       setIsParsing(false)
     }
+  }
+
+  // File input handler
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await processFile(file)
+  }
+
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isParsing) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Only set dragging to false if we're leaving the drop zone entirely
+    const target = e.currentTarget as HTMLElement
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (!target.contains(relatedTarget)) {
+      setIsDragging(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    if (isParsing) return
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.heic']
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    if (!validTypes.includes(fileExtension)) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a PDF, JPG, PNG, or HEIC file',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    // Validate file size (25MB)
+    if (file.size > 25 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Maximum file size is 25MB',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    await processFile(file)
   }
 
   const handleConfirm = async () => {
@@ -268,9 +334,25 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
 
   return (
     <>
-      {/* Simple Upload Button */}
-      <div className="flex flex-col items-center justify-center border-2 border-dashed border-neutral-300 rounded-lg p-12 hover:border-neutral-400 transition-colors">
-        <div className="flex flex-col items-center gap-4">
+      {/* Drag and Drop Upload Area */}
+      <div
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        className={`
+          flex flex-col items-center justify-center
+          border-2 border-dashed rounded-lg p-12
+          transition-all duration-200 cursor-pointer
+          ${isDragging
+            ? 'border-blue-500 bg-blue-50 scale-105'
+            : 'border-neutral-300 hover:border-neutral-400'
+          }
+          ${isParsing ? 'cursor-not-allowed opacity-75' : ''}
+        `}
+        onClick={() => !isParsing && fileInputRef.current?.click()}
+      >
+        <div className="flex flex-col items-center gap-4 pointer-events-none">
           {isParsing ? (
             <>
               <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
@@ -279,25 +361,38 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
             </>
           ) : (
             <>
-              <Upload className="h-12 w-12 text-neutral-400" />
+              <Upload className={`h-12 w-12 transition-colors ${isDragging ? 'text-blue-500' : 'text-neutral-400'}`} />
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-neutral-900">Upload Invoice</h3>
+                <h3 className="text-lg font-semibold text-neutral-900">
+                  {isDragging ? 'Drop invoice here' : 'Upload Invoice'}
+                </h3>
                 <p className="text-sm text-neutral-500 mt-1">
-                  AI will automatically extract amount and details
+                  {isDragging
+                    ? 'Release to upload and extract data'
+                    : 'Drag and drop or click to browse'
+                  }
                 </p>
               </div>
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isParsing}
-                size="lg"
-                className="mt-2"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Choose Invoice File
-              </Button>
-              <p className="text-xs text-neutral-400 mt-2">
-                Supports PDF, JPG, PNG, HEIC (max 25MB)
-              </p>
+              {!isDragging && (
+                <>
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      fileInputRef.current?.click()
+                    }}
+                    disabled={isParsing}
+                    size="lg"
+                    className="mt-2 pointer-events-auto"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Choose Invoice File
+                  </Button>
+                  <p className="text-xs text-neutral-400 mt-2">
+                    Supports PDF, JPG, PNG, HEIC (max 25MB)
+                  </p>
+                </>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"
