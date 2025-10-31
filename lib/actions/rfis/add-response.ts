@@ -54,7 +54,6 @@ export const addResponse = withAction(
     }
 
     // Check if user has access to this project
-    // @ts-ignore - Supabase RPC types not generated
     const { data: projectIds } = await supabase.rpc('user_project_ids', {
       user_uuid: user.id,
     })
@@ -75,7 +74,6 @@ export const addResponse = withAction(
     // Insert response
     const { data: response, error: insertError } = await supabase
       .from('rfi_responses')
-      // @ts-ignore - RFI types recently added
       .insert({
         rfi_id: data.rfiId,
         author_id: user.id,
@@ -96,8 +94,7 @@ export const addResponse = withAction(
     if (data.isOfficialAnswer) {
       await supabase
         .from('rfis')
-        // @ts-ignore - RFI types recently added
-        .update({
+          .update({
           status: 'answered',
           answered_at: new Date().toISOString(),
         })

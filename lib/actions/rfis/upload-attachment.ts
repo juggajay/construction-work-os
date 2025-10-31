@@ -38,7 +38,6 @@ export const uploadAttachment = withAction(
     }
 
     // Check if user has access to this project
-    // @ts-ignore - Supabase RPC types not generated
     const { data: projectIds } = await supabase.rpc('user_project_ids', {
       user_uuid: user.id,
     })
@@ -51,7 +50,6 @@ export const uploadAttachment = withAction(
     // Insert attachment metadata
     const { data: attachment, error: insertError } = await supabase
       .from('rfi_attachments')
-      // @ts-ignore - RFI types recently added
       .insert({
         rfi_id: data.rfiId,
         response_id: data.responseId,

@@ -1992,6 +1992,26 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
+      search_budget_line_items: {
+        Args: {
+          p_project_id: string
+          p_search_query: string
+          p_category?: Database["public"]["Enums"]["project_budget_category"]
+          p_min_amount?: number
+          p_max_amount?: number
+        }
+        Returns: {
+          line_item_id: string
+          budget_category: Database["public"]["Enums"]["project_budget_category"]
+          description: string
+          quantity: number | null
+          unit_of_measure: string | null
+          unit_price: number | null
+          line_total: number
+          quote_file_path: string | null
+          relevance_rank: number
+        }[]
+      }
       user_org_ids: {
         Args: { user_uuid?: string }
         Returns: {

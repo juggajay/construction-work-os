@@ -63,13 +63,12 @@ export async function searchLineItems(
     })
 
     // Call the database search function
-    // @ts-ignore - Custom RPC function not in generated types yet
     const { data, error } = await supabase.rpc('search_budget_line_items', {
       p_project_id: projectId,
       p_search_query: query,
-      p_category: category || null,
-      p_min_amount: minAmount || null,
-      p_max_amount: maxAmount || null,
+      p_category: category || undefined,
+      p_min_amount: minAmount || undefined,
+      p_max_amount: maxAmount || undefined,
     })
 
     if (error) {

@@ -46,7 +46,6 @@ export const updateRFI = withAction(
     // Check if user is creator or project manager
     const isCreator = (existingRFI as any).created_by === user.id
 
-    // @ts-ignore - Supabase RPC types not generated
     const { data: isManager } = await supabase.rpc('is_project_manager', {
       user_uuid: user.id,
       check_project_id: (existingRFI as any).project_id,
@@ -69,7 +68,6 @@ export const updateRFI = withAction(
 
     const { data: rfi, error: updateError } = await supabase
       .from('rfis')
-      // @ts-ignore - RFI types recently added
       .update(updateData)
       .eq('id', data.rfiId)
       .select()

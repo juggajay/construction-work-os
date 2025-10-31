@@ -54,7 +54,6 @@ export const assignRFI = withAction(
     }
 
     // Check if user is project manager
-    // @ts-ignore - Supabase RPC types not generated
     const { data: isManager } = await supabase.rpc('is_project_manager', {
       user_uuid: user.id,
       check_project_id: (existingRFI as any).project_id,
@@ -67,7 +66,6 @@ export const assignRFI = withAction(
     // Update assignment
     const { data: rfi, error: updateError } = await supabase
       .from('rfis')
-      // @ts-ignore - RFI types recently added
       .update({
         assigned_to_id: data.assignedToId || null,
         assigned_to_org: data.assignedToOrg || null,

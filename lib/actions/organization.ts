@@ -61,7 +61,6 @@ export const createOrganization = withAction(
 
     // Create organization using Postgres function
     // This bypasses RLS issues with Server Actions in production
-    // @ts-ignore - RPC function not in generated types
     const { data: orgData, error: orgError } = await supabase.rpc('create_organization_with_member', {
       p_name: data.name,
       p_slug: data.slug,
@@ -113,7 +112,6 @@ export async function updateOrganization(
     }
 
     // Check if user is admin
-    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -126,7 +124,6 @@ export async function updateOrganization(
     // Update organization
     const { data: organization, error } = await supabase
       .from('organizations')
-      // @ts-ignore - Supabase types not generated
       .update({
         name: validatedData.name,
         settings: validatedData.settings,
@@ -172,7 +169,6 @@ export async function inviteMember(
     }
 
     // Check if user is admin
-    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -220,7 +216,6 @@ export async function inviteMember(
     // Create invitation
     const { data: member, error } = await supabase
       .from('organization_members')
-      // @ts-ignore - Supabase types not generated
       .insert({
         org_id: orgId,
         user_id: user_id,
@@ -278,7 +273,6 @@ export async function updateMemberRole(
     }
 
     // Check if user is admin
-    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -313,7 +307,6 @@ export async function updateMemberRole(
     // Update role
     const { error } = await supabase
       .from('organization_members')
-      // @ts-ignore - Supabase types not generated
       .update({ role: validatedData.role })
       .eq('id', validatedData.memberId)
 
@@ -362,7 +355,6 @@ export async function removeMember(
     }
 
     // Check if user is admin
-    // @ts-ignore - Supabase RPC types not generated
     const { data: isAdmin } = await supabase.rpc('is_org_admin', {
       user_uuid: user.id,
       check_org_id: orgId,
@@ -407,7 +399,6 @@ export async function removeMember(
     // Soft delete member
     const { error } = await supabase
       .from('organization_members')
-      // @ts-ignore - Supabase types not generated
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', validatedData.memberId)
 
@@ -455,7 +446,6 @@ export const acceptInvitation = withAction(
     // Update membership to set joined_at
     const { error } = await supabase
       .from('organization_members')
-      // @ts-ignore - Supabase types not generated
       .update({ joined_at: new Date().toISOString() })
       .eq('org_id', data.orgId)
       .eq('user_id', user.id)

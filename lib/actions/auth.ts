@@ -241,7 +241,6 @@ export const updateProfile = withAction(
     // Update profile in database
     const { error: profileError } = await supabase
       .from('profiles')
-      // @ts-ignore - Supabase types not generated
       .update({
         full_name: data.fullName,
         phone: data.phone,

@@ -78,7 +78,6 @@ export const submitRFI = withAction(
 
     const { data: rfi, error: updateError } = await supabase
       .from('rfis')
-      // @ts-ignore - RFI types recently added
       .update(updateData)
       .eq('id', data.rfiId)
       .select(`

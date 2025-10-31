@@ -28,7 +28,6 @@ export const createRFI = withAction(
     // The policies check both project_access and organization membership
 
     // Generate RFI number using Postgres function
-    // @ts-ignore - Supabase RPC types not generated
     const { data: rfiNumber, error: numberError } = await supabase.rpc('next_rfi_number', {
       p_project_id: data.projectId,
     })
@@ -43,7 +42,6 @@ export const createRFI = withAction(
     // Insert RFI
     const { data: rfi, error: insertError } = await supabase
       .from('rfis')
-      // @ts-ignore - RFI types recently added, may not be in generated types
       .insert({
         project_id: data.projectId,
         number: rfiNumber,
