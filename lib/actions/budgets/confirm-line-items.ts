@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import type { ParsedLineItem } from '@/lib/utils/parse-quote'
+import { logger } from '@/lib/utils/logger'
 
 export interface LineItemInput {
   description: string
@@ -33,10 +34,12 @@ export async function confirmLineItems(
   input: ConfirmLineItemsInput
 ): Promise<ActionResponse<{ lineItemIds: string[] }>> {
   try {
-    console.log('✅ confirmLineItems: Starting confirmation')
-    console.log('   Quote ID:', input.quoteId)
-    console.log('   Budget ID:', input.budgetId)
-    console.log('   Line items:', input.lineItems.length)
+    logger.debug('Starting line items confirmation', {
+      action: 'confirmLineItems',
+      quoteId: input.quoteId,
+      budgetId: input.budgetId,
+      lineItemsCount: input.lineItems.length,
+    })
 
     const { quoteId, budgetId, lineItems, corrections } = input
 
@@ -54,7 +57,10 @@ export async function confirmLineItems(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('✅ confirmLineItems: User authenticated:', user.id)
+    logger.debug('User authenticated', {
+      action: 'confirmLineItems',
+      userId: user.id,
+    })
 
     // Verify budget exists and get project_id
     const { data: budget, error: budgetError } = await supabase
@@ -65,11 +71,18 @@ export async function confirmLineItems(
       .single()
 
     if (budgetError || !budget) {
-      console.error('❌ confirmLineItems: Budget not found:', budgetError)
+      logger.error('Budget not found', budgetError || new Error('Budget not found'), {
+        action: 'confirmLineItems',
+        budgetId,
+      })
       return { success: false, error: 'Budget not found' }
     }
 
-    console.log('✅ confirmLineItems: Budget found, project:', budget.project_id)
+    logger.debug('Budget found', {
+      action: 'confirmLineItems',
+      projectId: budget.project_id,
+      category: budget.category,
+    })
 
     // Verify project access (manager or supervisor)
     const { data: access, error: accessError } = await supabase
@@ -81,11 +94,18 @@ export async function confirmLineItems(
       .single()
 
     if (accessError || !access || !['manager', 'supervisor'].includes(access.role)) {
-      console.error('❌ confirmLineItems: Access denied')
+      logger.error('Access denied - insufficient permissions', accessError || new Error('Access denied'), {
+        action: 'confirmLineItems',
+        projectId: budget.project_id,
+        role: access?.role,
+      })
       throw new UnauthorizedError('Only managers and supervisors can confirm line items')
     }
 
-    console.log('✅ confirmLineItems: Access verified, role:', access.role)
+    logger.debug('Access verified', {
+      action: 'confirmLineItems',
+      role: access.role,
+    })
 
     // Verify quote exists
     const { data: quote, error: quoteError } = await supabase
@@ -96,13 +116,20 @@ export async function confirmLineItems(
       .single()
 
     if (quoteError || !quote) {
-      console.error('❌ confirmLineItems: Quote not found:', quoteError)
+      logger.error('Quote not found', quoteError || new Error('Quote not found'), {
+        action: 'confirmLineItems',
+        quoteId,
+      })
       return { success: false, error: 'Quote not found' }
     }
 
     // Verify quote belongs to same project as budget
     if (quote.project_id !== budget.project_id) {
-      console.error('❌ confirmLineItems: Quote/budget project mismatch')
+      logger.error('Quote/budget project mismatch', new Error('Project mismatch'), {
+        action: 'confirmLineItems',
+        quoteProjectId: quote.project_id,
+        budgetProjectId: budget.project_id,
+      })
       return { success: false, error: 'Quote and budget must belong to same project' }
     }
 
@@ -121,7 +148,10 @@ export async function confirmLineItems(
       created_by: user.id,
     }))
 
-    console.log('✅ confirmLineItems: Inserting line items...')
+    logger.debug('Inserting line items', {
+      action: 'confirmLineItems',
+      count: lineItemsToInsert.length,
+    })
 
     // Bulk insert line items
     const { data: insertedItems, error: insertError } = await supabase
@@ -130,11 +160,17 @@ export async function confirmLineItems(
       .select('id')
 
     if (insertError) {
-      console.error('❌ confirmLineItems: Insert failed:', insertError)
+      logger.error('Line items insertion failed', insertError, {
+        action: 'confirmLineItems',
+        count: lineItemsToInsert.length,
+      })
       return { success: false, error: `Failed to save line items: ${insertError.message}` }
     }
 
-    console.log('✅ confirmLineItems: Line items inserted:', insertedItems.length)
+    logger.info('Line items inserted successfully', {
+      action: 'confirmLineItems',
+      insertedCount: insertedItems.length,
+    })
 
     // Mark quote as AI parsed
     const { error: updateQuoteError } = await supabase
@@ -143,14 +179,23 @@ export async function confirmLineItems(
       .eq('id', quoteId)
 
     if (updateQuoteError) {
-      console.error('⚠️  confirmLineItems: Failed to update quote ai_parsed flag:', updateQuoteError)
+      logger.warn('Failed to update quote ai_parsed flag', {
+        action: 'confirmLineItems',
+        quoteId,
+        error: updateQuoteError.message,
+      })
       // Don't fail the whole operation
     }
 
-    console.log('✅ confirmLineItems: Quote marked as parsed')
+    logger.info('Quote marked as parsed', {
+      action: 'confirmLineItems',
+      quoteId,
+    })
 
     // Refresh materialized view (happens automatically via trigger, but log it)
-    console.log('🔄 confirmLineItems: Materialized view will refresh automatically via trigger')
+    logger.debug('Materialized view will refresh automatically via trigger', {
+      action: 'confirmLineItems',
+    })
 
     return {
       success: true,
@@ -159,7 +204,9 @@ export async function confirmLineItems(
       },
     }
   } catch (error) {
-    console.error('❌ confirmLineItems: Error:', error)
+    logger.error('Error during line items confirmation', error as Error, {
+      action: 'confirmLineItems',
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to confirm line items',
