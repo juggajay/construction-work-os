@@ -1,6 +1,7 @@
 import { getProjectById } from '@/lib/actions/project-helpers'
 import { getBudgetBreakdown } from '@/lib/actions/budgets'
 import { getBurnRateForecast } from '@/lib/actions/budgets'
+import { getProjectInvoices } from '@/lib/actions/invoices'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { DollarSign, TrendingUp, AlertTriangle, CheckCircle2, Plus } from 'lucide-react'
 import { LineItemSearch } from '@/components/costs/line-item-search'
+import { InvoiceList } from '@/components/costs/invoice-list'
 
 export default async function CostsPage({
   params,
@@ -30,6 +32,10 @@ export default async function CostsPage({
   // Fetch burn rate forecast
   const forecastResult = await getBurnRateForecast(projectId)
   const forecast = forecastResult.success ? forecastResult.data : null
+
+  // Fetch project invoices
+  const invoicesResult = await getProjectInvoices(projectId)
+  const invoices = invoicesResult.success ? invoicesResult.data : []
 
   // Calculate totals
   const totalBudget = project.budget || 0 // Original project budget from creation
@@ -164,7 +170,7 @@ export default async function CostsPage({
       )}
 
       {/* Budget Breakdown */}
-      <Card>
+      <Card className="mb-8">
         <CardHeader>
           <CardTitle>Budget Breakdown by Category</CardTitle>
           <CardDescription>Track spending across labor, materials, equipment, and other</CardDescription>
@@ -210,6 +216,11 @@ export default async function CostsPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Invoice List */}
+      <div className="mb-8">
+        <InvoiceList invoices={invoices} projectId={projectId} />
+      </div>
 
       {/* Line Item Search */}
       <LineItemSearch projectId={projectId} />

@@ -36,6 +36,9 @@ export async function uploadInvoice(
     const aiConfidence = aiConfidenceStr ? parseFloat(aiConfidenceStr) : null
     const aiRawResponse = aiRawResponseStr ? JSON.parse(aiRawResponseStr) : null
 
+    // Status parameter for auto-approval (optional, defaults to 'pending')
+    const status = (formData.get('status') as 'pending' | 'approved' | 'rejected' | 'paid') || 'pending'
+
     logger.debug('Extracted form data', {
       action: 'uploadInvoice',
       projectId,
@@ -207,6 +210,7 @@ export async function uploadInvoice(
       projectId,
       category,
       amount,
+      status,
     })
     const { data: invoice, error: invoiceError } = await supabase
       .from('project_invoices')
@@ -225,6 +229,7 @@ export async function uploadInvoice(
         ai_parsed: aiParsed,
         ai_confidence: aiConfidence,
         ai_raw_response: aiRawResponse,
+        status: status,
         uploaded_by: user.id,
       })
       .select('id')
@@ -246,6 +251,8 @@ export async function uploadInvoice(
       projectId,
       category,
       amount,
+      status,
+      autoApproved: status === 'approved',
     })
     return { success: true, data: { id: invoice.id } }
   } catch (error) {
