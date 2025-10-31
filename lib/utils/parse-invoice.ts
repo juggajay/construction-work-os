@@ -38,10 +38,11 @@ async function convertPdfToImage(pdfBuffer: Buffer): Promise<{ buffer: Buffer; m
     const context = canvas.getContext('2d')
 
     // Render PDF page to canvas
-    // Type assertion needed because node-canvas types don't fully match browser CanvasRenderingContext2D
+    // Type assertion needed because node-canvas types don't fully match pdfjs-dist expectations
     await page.render({
       canvasContext: context as any,
       viewport: viewport,
+      canvas: canvas as any,
     }).promise
 
     // Convert canvas to PNG buffer
