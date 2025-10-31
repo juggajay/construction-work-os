@@ -5,6 +5,7 @@
 
 import OpenAI from 'openai'
 import type { Database } from '@/lib/types/supabase'
+import { logger } from '@/lib/utils/logger'
 
 type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
@@ -52,9 +53,11 @@ export async function parseQuoteWithAI(
   mimeType: string
 ): Promise<ParsedQuoteData> {
   try {
-    console.log('🤖 parseQuoteWithAI: Starting AI extraction')
-    console.log('   File size:', fileBuffer.length, 'bytes')
-    console.log('   MIME type:', mimeType)
+    logger.debug('Starting AI extraction', {
+      action: 'parseQuoteWithAI',
+      fileSize: fileBuffer.length,
+      mimeType,
+    })
 
     // Convert buffer to base64
     const base64Image = fileBuffer.toString('base64')
@@ -143,16 +146,21 @@ Be thorough - extract ALL line items, even if formatting is inconsistent across 
       throw new Error('No response from OpenAI')
     }
 
-    console.log('🤖 parseQuoteWithAI: Received response from OpenAI')
+    logger.debug('Received response from OpenAI', {
+      action: 'parseQuoteWithAI',
+      responseLength: content.length,
+    })
 
     // Parse the JSON response
     const parsed = JSON.parse(content) as ParsedQuoteData
 
-    console.log('🤖 parseQuoteWithAI: Parsed response')
-    console.log('   Vendor:', parsed.vendor)
-    console.log('   Line items:', parsed.line_items?.length || 0)
-    console.log('   Total amount:', parsed.total_amount)
-    console.log('   Confidence:', parsed.confidence)
+    logger.debug('Parsed OpenAI response', {
+      action: 'parseQuoteWithAI',
+      vendor: parsed.vendor,
+      lineItemsCount: parsed.line_items?.length || 0,
+      totalAmount: parsed.total_amount,
+      confidence: parsed.confidence,
+    })
 
     // Validate and sanitize the data
     const today = new Date().toISOString().split('T')[0] as string
@@ -181,17 +189,29 @@ Be thorough - extract ALL line items, even if formatting is inconsistent across 
         const calculated = item.quantity * item.unit_price
         // If line_total is significantly different from calculation, use calculated value
         if (Math.abs(calculated - item.line_total) > 0.01) {
-          console.log(`⚠️  Line ${item.line_number}: Recalculated line_total from ${item.line_total} to ${calculated}`)
+          logger.debug('Recalculated line_total', {
+            action: 'parseQuoteWithAI',
+            lineNumber: item.line_number,
+            oldTotal: item.line_total,
+            newTotal: calculated,
+          })
           return { ...item, line_total: calculated }
         }
       }
       return item
     })
 
-    console.log('✅ parseQuoteWithAI: Extraction complete')
+    logger.info('Quote extraction complete', {
+      action: 'parseQuoteWithAI',
+      lineItemsCount: sanitized.line_items.length,
+      totalAmount: sanitized.total_amount,
+      confidence: sanitized.confidence,
+    })
     return sanitized
   } catch (error) {
-    console.error('❌ parseQuoteWithAI: Error:', error)
+    logger.error('Error during quote parsing', error as Error, {
+      action: 'parseQuoteWithAI',
+    })
     throw new Error(
       error instanceof Error
         ? error.message
