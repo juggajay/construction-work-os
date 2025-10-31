@@ -32,21 +32,32 @@ export async function updateBudgetAllocation(
     })
 
     const supabase = await createClient()
-    console.log('💾 updateBudgetAllocation: Supabase client created')
+    logger.debug('Supabase client created', {
+      action: 'updateBudgetAllocation',
+    })
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     if (!user) {
-      console.error('❌ updateBudgetAllocation: No user found')
+      logger.error('No user found', new Error('Authentication required'), {
+        action: 'updateBudgetAllocation',
+      })
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('💾 updateBudgetAllocation: User authenticated:', user.id)
+    logger.debug('User authenticated', {
+      action: 'updateBudgetAllocation',
+      userId: user.id,
+    })
 
     // Verify project access (must be manager or supervisor OR org member)
-    console.log('💾 updateBudgetAllocation: Checking project access...')
+    logger.debug('Checking project access', {
+      action: 'updateBudgetAllocation',
+      projectId,
+      userId: user.id,
+    })
     const { data: access, error: accessError } = await supabase
       .from('project_access')
       .select('role')
@@ -55,9 +66,9 @@ export async function updateBudgetAllocation(
       .is('deleted_at', null)
       .single()
 
-    console.log('💾 updateBudgetAllocation: Access query result', {
+    logger.debug('Access query result', {
+      action: 'updateBudgetAllocation',
       hasError: !!accessError,
-      errorMessage: accessError?.message,
       errorCode: accessError?.code,
       hasAccess: !!access,
       role: access?.role,
@@ -65,7 +76,10 @@ export async function updateBudgetAllocation(
 
     // If no project_access record, check organization membership as fallback
     if (accessError?.code === 'PGRST116' || !access) {
-      console.log('💾 updateBudgetAllocation: No project access found, checking org membership...')
+      logger.debug('No project access found, checking org membership', {
+        action: 'updateBudgetAllocation',
+        projectId,
+      })
 
       // Get project's organization
       const { data: projectOrg, error: projectOrgError } = await supabase
@@ -76,7 +90,10 @@ export async function updateBudgetAllocation(
         .single()
 
       if (projectOrgError || !projectOrg) {
-        console.error('❌ updateBudgetAllocation: Could not fetch project organization')
+        logger.error('Could not fetch project organization', projectOrgError || new Error('Project not found'), {
+          action: 'updateBudgetAllocation',
+          projectId,
+        })
         throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
       }
 
@@ -89,36 +106,50 @@ export async function updateBudgetAllocation(
         .is('deleted_at', null)
         .single()
 
-      console.log('💾 updateBudgetAllocation: Org membership result', {
+      logger.debug('Org membership result', {
+        action: 'updateBudgetAllocation',
         hasError: !!orgMemberError,
-        errorMessage: orgMemberError?.message,
         isMember: !!orgMember,
         orgRole: orgMember?.role,
       })
 
       if (orgMemberError || !orgMember) {
-        console.error('❌ updateBudgetAllocation: Access denied - not an org member')
+        logger.error('Access denied - not an org member', orgMemberError || new Error('Not authorized'), {
+          action: 'updateBudgetAllocation',
+          projectId,
+          userId: user.id,
+        })
         throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
       }
 
-      console.log('✅ updateBudgetAllocation: Access verified via org membership, role:', orgMember.role)
+      logger.info('Access verified via org membership', {
+        action: 'updateBudgetAllocation',
+        role: orgMember.role,
+      })
     } else if (accessError) {
-      console.error('❌ updateBudgetAllocation: Access query error', {
-        error: accessError,
+      logger.error('Access query error', accessError, {
+        action: 'updateBudgetAllocation',
       })
       throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
     } else if (!['manager', 'supervisor'].includes(access.role)) {
-      console.error('❌ updateBudgetAllocation: Access denied - insufficient role', {
+      logger.error('Access denied - insufficient role', new Error('Insufficient permissions'), {
+        action: 'updateBudgetAllocation',
         role: access.role,
         requiredRoles: ['manager', 'supervisor'],
       })
       throw new UnauthorizedError('Only project managers and supervisors can update budget allocations')
     } else {
-      console.log('✅ updateBudgetAllocation: Access verified via project access, role:', access.role)
+      logger.info('Access verified via project access', {
+        action: 'updateBudgetAllocation',
+        role: access.role,
+      })
     }
 
     // Get project total budget
-    console.log('💾 updateBudgetAllocation: Fetching project budget...')
+    logger.debug('Fetching project budget', {
+      action: 'updateBudgetAllocation',
+      projectId,
+    })
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('budget')
@@ -127,29 +158,36 @@ export async function updateBudgetAllocation(
       .single()
 
     if (projectError || !project) {
-      console.error('❌ updateBudgetAllocation: Project not found', {
-        projectError: projectError?.message,
+      logger.error('Project not found', projectError || new Error('Project not found'), {
+        action: 'updateBudgetAllocation',
+        projectId,
       })
       return { success: false, error: 'Project not found' }
     }
 
-    console.log('💾 updateBudgetAllocation: Project found', {
+    logger.debug('Project found', {
+      action: 'updateBudgetAllocation',
       hasBudget: !!project.budget,
       budget: project.budget,
     })
 
     // Validate: Sum of allocations must not exceed total budget
     const totalAllocated = allocations.reduce((sum, alloc) => sum + alloc.amount, 0)
-    console.log('💾 updateBudgetAllocation: Validating total allocation', {
+    logger.debug('Validating total allocation', {
+      action: 'updateBudgetAllocation',
       totalAllocated,
       projectBudget: project.budget,
       isOverBudget: project.budget ? totalAllocated > project.budget : false,
     })
 
     if (!project.budget) {
-      console.warn('⚠️ updateBudgetAllocation: No project budget set, skipping budget validation')
+      logger.warn('No project budget set, skipping budget validation', {
+        action: 'updateBudgetAllocation',
+        projectId,
+      })
     } else if (totalAllocated > project.budget) {
-      console.error('❌ updateBudgetAllocation: Over budget', {
+      logger.error('Total allocation exceeds budget', new Error('Over budget'), {
+        action: 'updateBudgetAllocation',
         totalAllocated,
         projectBudget: project.budget,
         difference: totalAllocated - project.budget,
@@ -160,17 +198,26 @@ export async function updateBudgetAllocation(
       }
     }
 
-    console.log('💾 updateBudgetAllocation: Budget validation passed')
+    logger.debug('Budget validation passed', {
+      action: 'updateBudgetAllocation',
+    })
 
     // Update or create budget allocations
-    console.log('💾 updateBudgetAllocation: Processing allocations...')
+    logger.debug('Processing allocations', {
+      action: 'updateBudgetAllocation',
+      allocationCount: allocations.length,
+    })
     let updatedCount = 0
     let createdCount = 0
     let historyCount = 0
 
     for (const allocation of allocations) {
       const { category, amount } = allocation
-      console.log(`💾 updateBudgetAllocation: Processing ${category}: $${amount}`)
+      logger.debug('Processing allocation', {
+        action: 'updateBudgetAllocation',
+        category,
+        amount,
+      })
 
       // Check if allocation exists
       const { data: existing, error: existingError } = await supabase
@@ -182,14 +229,17 @@ export async function updateBudgetAllocation(
         .single()
 
       if (existingError && existingError.code !== 'PGRST116') {
-        console.error(`❌ updateBudgetAllocation: Error checking existing allocation for ${category}`, {
-          error: existingError.message,
+        logger.error('Error checking existing allocation', existingError, {
+          action: 'updateBudgetAllocation',
+          category,
         })
         return { success: false, error: `Failed to check existing ${category} budget: ${existingError.message}` }
       }
 
       if (existing) {
-        console.log(`💾 updateBudgetAllocation: Updating existing ${category} allocation`, {
+        logger.debug('Updating existing allocation', {
+          action: 'updateBudgetAllocation',
+          category,
           oldAmount: existing.allocated_amount,
           newAmount: amount,
         })
@@ -204,18 +254,25 @@ export async function updateBudgetAllocation(
           .eq('id', existing.id)
 
         if (updateError) {
-          console.error(`❌ updateBudgetAllocation: Failed to update ${category}`, {
-            error: updateError.message,
+          logger.error('Failed to update allocation', updateError, {
+            action: 'updateBudgetAllocation',
+            category,
           })
           return { success: false, error: `Failed to update ${category} budget: ${updateError.message}` }
         }
 
         updatedCount++
-        console.log(`✅ updateBudgetAllocation: Updated ${category} allocation`)
+        logger.debug('Updated allocation', {
+          action: 'updateBudgetAllocation',
+          category,
+        })
 
         // Track in budget history if amount changed
         if (existing.allocated_amount !== amount) {
-          console.log(`💾 updateBudgetAllocation: Recording budget history for ${category}`)
+          logger.debug('Recording budget history', {
+            action: 'updateBudgetAllocation',
+            category,
+          })
           const { error: historyError } = await supabase.from('project_budget_history').insert({
             project_budget_id: existing.id,
             old_amount: existing.allocated_amount,
@@ -225,17 +282,24 @@ export async function updateBudgetAllocation(
           })
 
           if (historyError) {
-            console.error(`❌ updateBudgetAllocation: Failed to record history for ${category}`, {
-              error: historyError.message,
+            logger.error('Failed to record history', historyError, {
+              action: 'updateBudgetAllocation',
+              category,
             })
             return { success: false, error: `Failed to record budget history for ${category}: ${historyError.message}` }
           }
 
           historyCount++
-          console.log(`✅ updateBudgetAllocation: Recorded history for ${category}`)
+          logger.debug('Recorded history', {
+            action: 'updateBudgetAllocation',
+            category,
+          })
         }
       } else {
-        console.log(`💾 updateBudgetAllocation: Creating new ${category} allocation`)
+        logger.debug('Creating new allocation', {
+          action: 'updateBudgetAllocation',
+          category,
+        })
 
         // Create new allocation
         const { error: insertError } = await supabase.from('project_budgets').insert({
@@ -245,29 +309,36 @@ export async function updateBudgetAllocation(
         })
 
         if (insertError) {
-          console.error(`❌ updateBudgetAllocation: Failed to create ${category}`, {
-            error: insertError.message,
+          logger.error('Failed to create allocation', insertError, {
+            action: 'updateBudgetAllocation',
+            category,
           })
           return { success: false, error: `Failed to create ${category} budget: ${insertError.message}` }
         }
 
         createdCount++
-        console.log(`✅ updateBudgetAllocation: Created ${category} allocation`)
+        logger.debug('Created allocation', {
+          action: 'updateBudgetAllocation',
+          category,
+        })
       }
     }
 
-    console.log('✅ updateBudgetAllocation: All allocations processed successfully', {
+    logger.info('All allocations processed successfully', {
+      action: 'updateBudgetAllocation',
       updatedCount,
       createdCount,
       historyCount,
     })
 
-    console.log('✅ updateBudgetAllocation: Budget allocation update completed successfully')
+    logger.info('Budget allocation update completed successfully', {
+      action: 'updateBudgetAllocation',
+      projectId,
+    })
     return { success: true, data: undefined }
   } catch (error) {
-    console.error('❌ updateBudgetAllocation: Unexpected error', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+    logger.error('Unexpected error during budget allocation update', error as Error, {
+      action: 'updateBudgetAllocation',
     })
     return {
       success: false,
