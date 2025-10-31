@@ -48,7 +48,16 @@ export default function LandingPage() {
   // Track visitor engagement for ethical scarcity
   const [timeOnPage, setTimeOnPage] = useState(0)
   const [showExitIntent, setShowExitIntent] = useState(false)
+  const [exitIntentDismissed, setExitIntentDismissed] = useState(false)
   const [email, setEmail] = useState('')
+
+  // Check if exit intent was previously dismissed
+  useEffect(() => {
+    const dismissed = localStorage.getItem('exitIntentDismissed')
+    if (dismissed === 'true') {
+      setExitIntentDismissed(true)
+    }
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => setTimeOnPage(prev => prev + 1), 1000)
@@ -58,13 +67,13 @@ export default function LandingPage() {
   // Exit intent detection
   useEffect(() => {
     const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !showExitIntent && timeOnPage > 10) {
+      if (e.clientY <= 0 && !showExitIntent && !exitIntentDismissed && timeOnPage > 10) {
         setShowExitIntent(true)
       }
     }
     document.addEventListener('mouseleave', handleMouseLeave)
     return () => document.removeEventListener('mouseleave', handleMouseLeave)
-  }, [timeOnPage, showExitIntent])
+  }, [timeOnPage, showExitIntent, exitIntentDismissed])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -80,6 +89,12 @@ export default function LandingPage() {
     setEmail(newEmail)
     setEmailError('')
     setSubmitError('')
+  }, [])
+
+  const handleDismissModal = useCallback(() => {
+    setShowExitIntent(false)
+    setExitIntentDismissed(true)
+    localStorage.setItem('exitIntentDismissed', 'true')
   }, [])
 
   const handleEmailCapture = useCallback(async (e: React.FormEvent) => {
@@ -119,8 +134,8 @@ export default function LandingPage() {
         throw new Error(data.error || 'Failed to submit email')
       }
 
-      // Success - close modal
-      setShowExitIntent(false)
+      // Success - close modal and mark as dismissed
+      handleDismissModal()
       setEmail('')
     } catch (error) {
       setSubmitError(
@@ -129,7 +144,7 @@ export default function LandingPage() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [email, validateEmail])
+  }, [email, validateEmail, handleDismissModal])
 
   return (
     <div className="min-h-screen bg-background">
@@ -703,7 +718,7 @@ export default function LandingPage() {
           <Card className="max-w-md w-full">
             <CardHeader className="relative">
               <button
-                onClick={() => setShowExitIntent(false)}
+                onClick={handleDismissModal}
                 className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
                 aria-label="Close dialog"
               >
@@ -748,7 +763,7 @@ export default function LandingPage() {
                 </Button>
               </form>
               <button
-                onClick={() => setShowExitIntent(false)}
+                onClick={handleDismissModal}
                 className="text-sm text-muted-foreground mt-4 w-full text-center hover:underline"
                 disabled={isSubmitting}
               >
