@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
     // Convert canvas to PNG buffer
     const imageBuffer = canvas.toBuffer('image/png')
 
-    // Return the image as a response
-    return new NextResponse(imageBuffer, {
+    // Return the image as a response (convert Buffer to Uint8Array for NextResponse)
+    return new NextResponse(new Uint8Array(imageBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'image/png',
