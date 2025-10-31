@@ -8,8 +8,10 @@ type AppHeaderProps = {
 }
 
 export async function AppHeader({ currentOrgSlug }: AppHeaderProps) {
-  const user = await getCurrentUser()
+  const userResult = await getCurrentUser()
   const orgs = await getUserOrganizations()
+
+  const user = userResult.success ? userResult.data : null
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white">

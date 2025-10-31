@@ -54,22 +54,7 @@ export function BudgetSearchBar({ projectId }: BudgetSearchBarProps) {
   const [hasSearched, setHasSearched] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
 
-  // Debounced search
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([])
-      setSearchCount(0)
-      setHasSearched(false)
-      return
-    }
-
-    const timer = setTimeout(() => {
-      performSearch()
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [query, category, minAmount, maxAmount])
-
+  // Search function with dependencies
   const performSearch = useCallback(() => {
     if (!query.trim()) return
 
@@ -94,7 +79,23 @@ export function BudgetSearchBar({ projectId }: BudgetSearchBarProps) {
         setSearchCount(0)
       }
     })
-  }, [projectId, query, category, minAmount, maxAmount])
+  }, [projectId, query, category, minAmount, maxAmount, startTransition])
+
+  // Debounced search
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      setSearchCount(0)
+      setHasSearched(false)
+      return
+    }
+
+    const timer = setTimeout(() => {
+      performSearch()
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [query, category, minAmount, maxAmount, performSearch])
 
   const clearSearch = () => {
     setQuery('')

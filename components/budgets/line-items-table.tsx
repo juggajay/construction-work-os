@@ -6,7 +6,7 @@
  * OpenSpec Change: enhance-budget-allocations-with-quotes-and-ai
  */
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -80,11 +80,7 @@ export function LineItemsTable({
     line_total: '',
   })
 
-  useEffect(() => {
-    loadLineItems()
-  }, [budgetId])
-
-  const loadLineItems = async () => {
+  const loadLineItems = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -97,7 +93,11 @@ export function LineItemsTable({
     }
 
     setLoading(false)
-  }
+  }, [budgetId])
+
+  useEffect(() => {
+    loadLineItems()
+  }, [loadLineItems])
 
   const startEdit = (item: LineItem) => {
     setEditingId(item.id)

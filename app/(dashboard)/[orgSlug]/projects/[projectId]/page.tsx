@@ -28,14 +28,24 @@ export default async function ProjectPage({
   const { orgSlug, projectId } = await params
   const projectResult = await getProjectById(projectId)
 
-  if (!projectResult) {
+  if (!projectResult.success) {
     redirect(`/${orgSlug}`)
   }
 
-  const project = projectResult as Project
+  const project = projectResult.data.project as Project
 
   // Fetch real metrics from database
-  const metrics = await getProjectMetrics(projectId)
+  const metricsResult = await getProjectMetrics(projectId)
+
+  // Use metrics if available, otherwise use safe defaults
+  const metrics = metricsResult.success
+    ? metricsResult.data
+    : {
+        totalSpent: 0,
+        rfiCount: 0,
+        teamSize: 0,
+        completionPercentage: 0,
+      }
 
   // Calculate metrics
   const budget = project.budget ? project.budget / 1000000 : 0

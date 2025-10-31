@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import type { Database } from '@/lib/types/supabase'
+import { logger } from '@/lib/utils/logger'
 
 type LineItem = Database['public']['Tables']['budget_line_items']['Row']
 
@@ -55,7 +56,11 @@ export async function getLineItems(
       .order('line_number', { ascending: true })
 
     if (error) {
-      console.error('❌ getLineItems: Query failed:', error)
+      logger.error('Failed to fetch line items', new Error(error.message), {
+        action: 'getLineItems',
+        budgetId,
+        userId: user.id,
+      })
       return { success: false, error: error.message }
     }
 
@@ -64,7 +69,10 @@ export async function getLineItems(
       data: { lineItems: lineItems || [] },
     }
   } catch (error) {
-    console.error('❌ getLineItems: Error:', error)
+    logger.error('Error in getLineItems', error as Error, {
+      action: 'getLineItems',
+      budgetId: input.budgetId,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch line items',

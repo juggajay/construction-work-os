@@ -8,6 +8,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
+import { logger } from '@/lib/utils/logger'
 
 export interface AddManualLineItemInput {
   budgetId: string
@@ -49,7 +50,11 @@ export async function addManualLineItem(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('➕ addManualLineItem: Adding manual line item to budget:', budgetId)
+    logger.debug('Adding manual line item to budget', {
+      action: 'addManualLineItem',
+      budgetId,
+      userId: user.id,
+    })
 
     // Get the next line number for this budget
     const { data: existingItems } = await supabase
@@ -83,18 +88,31 @@ export async function addManualLineItem(
       .single()
 
     if (error) {
-      console.error('❌ addManualLineItem: Insert failed:', error)
+      logger.error('Failed to add manual line item', new Error(error.message), {
+        action: 'addManualLineItem',
+        budgetId,
+        userId: user.id,
+      })
       return { success: false, error: error.message }
     }
 
-    console.log('✅ addManualLineItem: Manual line item added successfully')
+    logger.info('Manual line item added successfully', {
+      action: 'addManualLineItem',
+      lineItemId: data.id,
+      budgetId,
+      lineNumber: nextLineNumber,
+      userId: user.id,
+    })
 
     return {
       success: true,
       data: { id: data.id },
     }
   } catch (error) {
-    console.error('❌ addManualLineItem: Error:', error)
+    logger.error('Error in addManualLineItem', error as Error, {
+      action: 'addManualLineItem',
+      budgetId: input.budgetId,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to add manual line item',

@@ -16,7 +16,7 @@ export default async function OrganizationPage({
 }) {
   const { orgSlug } = await params
   const orgResult = await getOrganizationBySlug(orgSlug)
-  const user = await getCurrentUser()
+  const userResult = await getCurrentUser()
 
   if (!orgResult) {
     redirect('/dashboard')
@@ -24,7 +24,8 @@ export default async function OrganizationPage({
 
   // After the redirect check, we know org is defined
   const org = orgResult as any
-  const projects = (await getOrganizationProjects(org.id)) as any[]
+  const projectsResult = await getOrganizationProjects(org.id)
+  const projects = projectsResult.success ? projectsResult.data.projects : []
 
   // Get analytics data
   const kpisResult = await getOrganizationKPIs(org.id)
@@ -34,6 +35,7 @@ export default async function OrganizationPage({
   const analytics = analyticsResult.success && analyticsResult.data ? analyticsResult.data : null
 
   // Get user's first name for welcome message
+  const user = userResult.success ? userResult.data : null
   const userName = user?.email?.split('@')[0] || 'User'
   const displayName = userName.charAt(0).toUpperCase() + userName.slice(1)
 

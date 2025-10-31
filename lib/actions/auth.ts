@@ -263,27 +263,45 @@ export const updateProfile = withAction(
 // GET CURRENT USER
 // ============================================================================
 
-export async function getCurrentUser() {
-  const supabase = await createClient()
+export async function getCurrentUser(): Promise<ActionResponse<{
+  id: string
+  email: string
+  profile: any
+}>> {
+  try {
+    const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user) {
-    return null
-  }
+    if (!user) {
+      return { success: false, error: 'Not authenticated' }
+    }
 
-  // Fetch profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+    // Fetch profile
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
 
-  return {
-    id: user.id,
-    email: user.email ?? '',
-    profile,
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return {
+      success: true,
+      data: {
+        id: user.id,
+        email: user.email ?? '',
+        profile,
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get current user',
+    }
   }
 }

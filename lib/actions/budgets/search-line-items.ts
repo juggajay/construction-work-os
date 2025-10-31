@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import type { Database } from '@/lib/types/supabase'
+import { logger } from '@/lib/utils/logger'
 
 type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
@@ -52,10 +53,14 @@ export async function searchLineItems(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('🔍 searchLineItems: Searching for:', query)
-    console.log('   Project:', projectId)
-    console.log('   Category filter:', category || 'all')
-    console.log('   Amount range:', minAmount, '-', maxAmount)
+    logger.debug('Searching line items', {
+      action: 'searchLineItems',
+      projectId,
+      query,
+      category: category || 'all',
+      minAmount,
+      maxAmount,
+    })
 
     // Call the database search function
     // @ts-ignore - Custom RPC function not in generated types yet
@@ -68,13 +73,20 @@ export async function searchLineItems(
     })
 
     if (error) {
-      console.error('❌ searchLineItems: Search failed:', error)
+      logger.error('Failed to search line items', new Error(error.message), {
+        action: 'searchLineItems',
+        projectId,
+        userId: user.id,
+      })
       return { success: false, error: error.message }
     }
 
     const results = (data || []) as unknown as SearchLineItemResult[]
 
-    console.log('✅ searchLineItems: Found', results.length, 'results')
+    logger.debug('Line items search completed', {
+      action: 'searchLineItems',
+      resultCount: results.length,
+    })
 
     return {
       success: true,
@@ -84,7 +96,10 @@ export async function searchLineItems(
       },
     }
   } catch (error) {
-    console.error('❌ searchLineItems: Error:', error)
+    logger.error('Error in searchLineItems', error as Error, {
+      action: 'searchLineItems',
+      projectId: input.projectId,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to search line items',

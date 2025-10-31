@@ -8,19 +8,22 @@ import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import { updateBudgetAllocationSchema, type UpdateBudgetAllocationInput } from '@/lib/schemas'
+import { logger } from '@/lib/utils/logger'
 
 export async function updateBudgetAllocation(
   input: UpdateBudgetAllocationInput
 ): Promise<ActionResponse<void>> {
-  console.log('💾 updateBudgetAllocation: Starting budget allocation update')
+  logger.debug('Starting budget allocation update', {
+    action: 'updateBudgetAllocation',
+  })
 
   try {
     // Validate input
-    console.log('💾 updateBudgetAllocation: Validating input...')
     const validatedInput = updateBudgetAllocationSchema.parse(input)
     const { projectId, allocations, reason } = validatedInput
 
-    console.log('💾 updateBudgetAllocation: Input validated', {
+    logger.debug('Input validated', {
+      action: 'updateBudgetAllocation',
       projectId,
       allocationCount: allocations.length,
       categories: allocations.map(a => a.category),

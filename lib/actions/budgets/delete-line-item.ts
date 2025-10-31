@@ -8,6 +8,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
+import { logger } from '@/lib/utils/logger'
 
 export interface DeleteLineItemInput {
   lineItemId: string
@@ -33,7 +34,11 @@ export async function deleteLineItem(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('🗑️  deleteLineItem: Soft deleting line item:', lineItemId)
+    logger.debug('Soft deleting line item', {
+      action: 'deleteLineItem',
+      lineItemId,
+      userId: user.id,
+    })
 
     // Soft delete by setting deleted_at timestamp
     const { data, error } = await supabase
@@ -46,18 +51,29 @@ export async function deleteLineItem(
       .single()
 
     if (error) {
-      console.error('❌ deleteLineItem: Delete failed:', error)
+      logger.error('Failed to delete line item', new Error(error.message), {
+        action: 'deleteLineItem',
+        lineItemId,
+        userId: user.id,
+      })
       return { success: false, error: error.message }
     }
 
-    console.log('✅ deleteLineItem: Line item soft deleted successfully')
+    logger.info('Line item soft deleted successfully', {
+      action: 'deleteLineItem',
+      lineItemId: data.id,
+      userId: user.id,
+    })
 
     return {
       success: true,
       data: { id: data.id },
     }
   } catch (error) {
-    console.error('❌ deleteLineItem: Error:', error)
+    logger.error('Error in deleteLineItem', error as Error, {
+      action: 'deleteLineItem',
+      lineItemId: input.lineItemId,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete line item',

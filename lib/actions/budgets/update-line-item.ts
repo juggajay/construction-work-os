@@ -8,6 +8,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
+import { logger } from '@/lib/utils/logger'
 
 export interface UpdateLineItemInput {
   lineItemId: string
@@ -38,7 +39,11 @@ export async function updateLineItem(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('✏️ updateLineItem: Updating line item:', lineItemId)
+    logger.debug('Updating line item', {
+      action: 'updateLineItem',
+      lineItemId,
+      userId: user.id,
+    })
 
     // Validate calculation if quantity and unit_price are provided
     if (
@@ -49,7 +54,12 @@ export async function updateLineItem(
     ) {
       const calculated = updates.quantity * updates.unit_price
       if (updates.line_total && Math.abs(calculated - updates.line_total) > 0.01) {
-        console.warn('⚠️  Line total mismatch, using calculated value:', calculated)
+        logger.warn('Line total mismatch, using calculated value', {
+          action: 'updateLineItem',
+          lineItemId,
+          provided: updates.line_total,
+          calculated,
+        })
         updates.line_total = calculated
       } else if (!updates.line_total) {
         updates.line_total = calculated
@@ -68,18 +78,29 @@ export async function updateLineItem(
       .single()
 
     if (error) {
-      console.error('❌ updateLineItem: Update failed:', error)
+      logger.error('Failed to update line item', new Error(error.message), {
+        action: 'updateLineItem',
+        lineItemId,
+        userId: user.id,
+      })
       return { success: false, error: error.message }
     }
 
-    console.log('✅ updateLineItem: Line item updated successfully')
+    logger.info('Line item updated successfully', {
+      action: 'updateLineItem',
+      lineItemId: data.id,
+      userId: user.id,
+    })
 
     return {
       success: true,
       data: { id: data.id },
     }
   } catch (error) {
-    console.error('❌ updateLineItem: Error:', error)
+    logger.error('Error in updateLineItem', error as Error, {
+      action: 'updateLineItem',
+      lineItemId: input.lineItemId,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update line item',

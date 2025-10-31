@@ -27,11 +27,18 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
     notFound()
   }
 
-  const projects = await getOrganizationProjects((org as any).id)
+  const projectsResult = await getOrganizationProjects((org as any).id)
+
+  if (!projectsResult.success) {
+    notFound()
+  }
+
+  const projects = projectsResult.data.projects
 
   // Fetch metrics for all projects in batch
   const projectIds = projects.map((p: any) => p.id)
-  const metricsMap = await getBatchProjectMetrics(projectIds)
+  const metricsResult = await getBatchProjectMetrics(projectIds)
+  const metricsMap = metricsResult.success ? metricsResult.data : {}
 
   // Transform projects to ProjectCardData format
   const projectsData: ProjectCardData[] = projects.map((project: any) => {
