@@ -3,6 +3,8 @@
  */
 
 import OpenAI from 'openai'
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
+import { Canvas } from 'canvas'
 
 export interface ParsedInvoiceData {
   vendorName: string
@@ -21,6 +23,39 @@ export interface ParsedInvoiceData {
   rawResponse?: any // Full OpenAI response for audit
 }
 
+async function convertPdfToImage(pdfBuffer: Buffer): Promise<{ buffer: Buffer; mimeType: string }> {
+  try {
+    // Load PDF
+    const pdf = await getDocument({ data: pdfBuffer }).promise
+    const page = await pdf.getPage(1) // Get first page
+
+    // Set scale for better quality
+    const scale = 2.0
+    const viewport = page.getViewport({ scale })
+
+    // Create canvas
+    const canvas = new Canvas(viewport.width, viewport.height)
+    const context = canvas.getContext('2d')
+
+    // Render PDF page to canvas
+    await page.render({
+      canvasContext: context,
+      viewport: viewport,
+    }).promise
+
+    // Convert canvas to PNG buffer
+    const imageBuffer = canvas.toBuffer('image/png')
+
+    return {
+      buffer: imageBuffer,
+      mimeType: 'image/png',
+    }
+  } catch (error) {
+    console.error('Error converting PDF to image:', error)
+    throw new Error('Failed to convert PDF to image for processing')
+  }
+}
+
 export async function parseInvoiceWithAI(fileBuffer: Buffer, mimeType: string): Promise<ParsedInvoiceData> {
   try {
     // Check for API key at runtime
@@ -33,9 +68,21 @@ export async function parseInvoiceWithAI(fileBuffer: Buffer, mimeType: string): 
       apiKey: process.env.OPENAI_API_KEY,
     })
 
+    // Convert PDF to image if needed
+    let processBuffer = fileBuffer
+    let processMimeType = mimeType
+
+    if (mimeType === 'application/pdf') {
+      console.log('Converting PDF to image for Vision API...')
+      const converted = await convertPdfToImage(fileBuffer)
+      processBuffer = converted.buffer
+      processMimeType = converted.mimeType
+      console.log('PDF converted to image successfully')
+    }
+
     // Convert buffer to base64
-    const base64Image = fileBuffer.toString('base64')
-    const dataUrl = `data:${mimeType};base64,${base64Image}`
+    const base64Image = processBuffer.toString('base64')
+    const dataUrl = `data:${processMimeType};base64,${base64Image}`
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o', // Latest model with vision capabilities

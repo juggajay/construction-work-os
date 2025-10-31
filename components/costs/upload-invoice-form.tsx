@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { parseInvoiceWithAIAction } from '@/lib/actions/invoices'
 import { uploadInvoice } from '@/lib/actions/invoices'
@@ -49,6 +49,23 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
 
+  // Prevent default drag behavior on the entire page
+  useEffect(() => {
+    const preventDefaults = (e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    // Prevent file from opening in browser when dropped outside drop zone
+    window.addEventListener('dragover', preventDefaults)
+    window.addEventListener('drop', preventDefaults)
+
+    return () => {
+      window.removeEventListener('dragover', preventDefaults)
+      window.removeEventListener('drop', preventDefaults)
+    }
+  }, [])
+
   // Process file (used by both file input and drag-drop)
   const processFile = async (file: File) => {
     setSelectedFile(file)
@@ -64,7 +81,12 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     })
 
     try {
-      const result = await parseInvoiceWithAIAction({ projectId, file })
+      // Create FormData for server action
+      const formData = new FormData()
+      formData.append('projectId', projectId)
+      formData.append('file', file)
+
+      const result = await parseInvoiceWithAIAction(formData)
 
       if (result.success && result.data) {
         setParsedData(result.data)
@@ -113,14 +135,18 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
         setSelectedFile(null)
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       logger.error('Unexpected error during AI parsing', error as Error, {
         action: 'upload-invoice-form',
         projectId,
+        errorDetails: errorMessage,
       })
+
+      console.error('Full error details:', error)
 
       toast({
         title: 'Error',
-        description: 'Failed to parse invoice. Please try again.',
+        description: errorMessage || 'Failed to parse invoice. Please try again.',
         variant: 'destructive',
       })
 
@@ -171,14 +197,20 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     e.stopPropagation()
     setIsDragging(false)
 
+    console.log('DROP EVENT FIRED', { isParsing })
+
     if (isParsing) return
 
     const file = e.dataTransfer.files?.[0]
+    console.log('File from drop:', file)
+
     if (!file) return
 
     // Validate file type
     const validTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.heic']
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    console.log('File extension:', fileExtension, 'Valid:', validTypes.includes(fileExtension))
+
     if (!validTypes.includes(fileExtension)) {
       toast({
         title: 'Invalid file type',
@@ -198,6 +230,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       return
     }
 
+    console.log('About to process file:', file.name)
     await processFile(file)
   }
 

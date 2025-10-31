@@ -9,16 +9,12 @@ import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import { parseInvoiceWithAI, type ParsedInvoiceData } from '@/lib/utils/parse-invoice'
 
-export interface ParseInvoiceInput {
-  projectId: string
-  file: File
-}
-
 export async function parseInvoiceWithAIAction(
-  input: ParseInvoiceInput
+  formData: FormData
 ): Promise<ActionResponse<ParsedInvoiceData>> {
   try {
-    const { projectId, file } = input
+    const projectId = formData.get('projectId') as string
+    const file = formData.get('file') as File
 
     if (!file || !projectId) {
       return { success: false, error: 'Missing required fields' }
