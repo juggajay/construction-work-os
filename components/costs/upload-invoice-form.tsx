@@ -81,63 +81,32 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     })
 
     try {
-      // Convert PDF to image if needed
-      let fileToProcess = file
+      // TEMPORARY: PDF support disabled due to serverless compatibility
+      // TODO: Implement browser-based PDF rendering or use external service
       if (file.type === 'application/pdf') {
-        logger.debug('Converting PDF to image...', {
+        logger.warn('PDF upload attempted but not supported', {
           action: 'upload-invoice-form',
           fileName: file.name,
         })
 
-        try {
-          // Call PDF-to-image API
-          const pdfFormData = new FormData()
-          pdfFormData.append('file', file)
+        toast({
+          title: 'PDF Not Supported',
+          description: 'Please upload an image file (JPG, PNG, HEIC) instead. PDF support coming soon.',
+          variant: 'destructive',
+        })
 
-          const response = await fetch('/api/pdf-to-image', {
-            method: 'POST',
-            body: pdfFormData,
-          })
-
-          if (!response.ok) {
-            throw new Error(`PDF conversion failed: ${response.statusText}`)
-          }
-
-          // Convert response to Blob and then to File
-          const imageBlob = await response.blob()
-          const imageName = file.name.replace(/\.pdf$/i, '.png')
-          fileToProcess = new File([imageBlob], imageName, { type: 'image/png' })
-
-          logger.debug('PDF converted to image successfully', {
-            action: 'upload-invoice-form',
-            originalName: file.name,
-            convertedName: imageName,
-          })
-        } catch (pdfError) {
-          logger.error('PDF conversion failed', pdfError as Error, {
-            action: 'upload-invoice-form',
-            fileName: file.name,
-          })
-
-          toast({
-            title: 'PDF Conversion Failed',
-            description: 'Could not convert PDF to image. Please try uploading an image file (JPG, PNG) instead.',
-            variant: 'destructive',
-          })
-
-          setIsParsing(false)
-          if (fileInputRef.current) {
-            fileInputRef.current.value = ''
-          }
-          setSelectedFile(null)
-          return
+        setIsParsing(false)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
         }
+        setSelectedFile(null)
+        return
       }
 
       // Create FormData for server action
       const formData = new FormData()
       formData.append('projectId', projectId)
-      formData.append('file', fileToProcess)
+      formData.append('file', file)
 
       const result = await parseInvoiceWithAIAction(formData)
 
@@ -256,14 +225,14 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
 
     if (!file) return
 
-    // Validate file type
-    const validTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.heic']
+    // Validate file type (PDF temporarily disabled)
+    const validTypes = ['.jpg', '.jpeg', '.png', '.heic']
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
 
     if (!validTypes.includes(fileExtension)) {
       toast({
         title: 'Invalid file type',
-        description: 'Please upload a PDF, JPG, PNG, or HEIC file',
+        description: 'Please upload a JPG, PNG, or HEIC file (PDF support coming soon)',
         variant: 'destructive',
       })
       return
@@ -470,14 +439,14 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
                     Choose Invoice File
                   </Button>
                   <p className="text-xs text-neutral-400 mt-2">
-                    Supports PDF, JPG, PNG, HEIC (max 25MB)
+                    Supports JPG, PNG, HEIC (max 25MB) • PDF coming soon
                   </p>
                 </>
               )}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.heic"
+                accept=".jpg,.jpeg,.png,.heic"
                 onChange={handleFileSelect}
                 className="hidden"
                 disabled={isParsing}
