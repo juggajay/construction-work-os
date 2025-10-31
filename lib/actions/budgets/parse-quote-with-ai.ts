@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import { parseQuoteWithAI, type ParsedQuoteData } from '@/lib/utils/parse-quote'
+import { logger } from '@/lib/utils/logger'
 
 export interface ParseQuoteInput {
   quoteId: string
@@ -19,7 +20,10 @@ export async function parseQuoteWithAIAction(
   input: ParseQuoteInput
 ): Promise<ActionResponse<ParsedQuoteData>> {
   try {
-    console.log('🤖 parseQuoteWithAIAction: Starting parse for quote:', input.quoteId)
+    logger.debug('Starting AI quote parse', {
+      action: 'parseQuoteWithAIAction',
+      quoteId: input.quoteId,
+    })
 
     const { quoteId } = input
 
@@ -37,7 +41,10 @@ export async function parseQuoteWithAIAction(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('🤖 parseQuoteWithAIAction: User authenticated:', user.id)
+    logger.debug('User authenticated', {
+      action: 'parseQuoteWithAIAction',
+      userId: user.id,
+    })
 
     // Fetch quote record to get file path and verify access
     const { data: quote, error: quoteError } = await supabase
@@ -48,11 +55,18 @@ export async function parseQuoteWithAIAction(
       .single()
 
     if (quoteError || !quote) {
-      console.error('❌ parseQuoteWithAIAction: Quote not found:', quoteError)
+      logger.error('Quote not found', quoteError || new Error('Quote not found'), {
+        action: 'parseQuoteWithAIAction',
+        quoteId,
+      })
       return { success: false, error: 'Quote not found' }
     }
 
-    console.log('🤖 parseQuoteWithAIAction: Quote found:', quote.id)
+    logger.debug('Quote found', {
+      action: 'parseQuoteWithAIAction',
+      quoteId: quote.id,
+      projectId: quote.project_id,
+    })
 
     // Verify project access
     const { data: access, error: accessError } = await supabase
@@ -64,36 +78,59 @@ export async function parseQuoteWithAIAction(
       .single()
 
     if (accessError || !access) {
-      console.error('❌ parseQuoteWithAIAction: Access denied')
+      logger.error('Access denied to project', accessError || new Error('No access'), {
+        action: 'parseQuoteWithAIAction',
+        projectId: quote.project_id,
+        userId: user.id,
+      })
       throw new UnauthorizedError('You do not have access to this project')
     }
 
-    console.log('🤖 parseQuoteWithAIAction: Access verified, role:', access.role)
+    logger.debug('Access verified', {
+      action: 'parseQuoteWithAIAction',
+      role: access.role,
+    })
 
     // Download file from storage
-    console.log('🤖 parseQuoteWithAIAction: Downloading file from storage:', quote.file_path)
+    logger.debug('Downloading file from storage', {
+      action: 'parseQuoteWithAIAction',
+      filePath: quote.file_path,
+    })
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('project-quotes')
       .download(quote.file_path)
 
     if (downloadError || !fileData) {
-      console.error('❌ parseQuoteWithAIAction: File download failed:', downloadError)
+      logger.error('File download failed', downloadError || new Error('Download failed'), {
+        action: 'parseQuoteWithAIAction',
+        filePath: quote.file_path,
+      })
       return { success: false, error: 'Failed to download quote file' }
     }
 
-    console.log('✅ parseQuoteWithAIAction: File downloaded, size:', fileData.size)
+    logger.debug('File downloaded successfully', {
+      action: 'parseQuoteWithAIAction',
+      fileSize: fileData.size,
+    })
 
     // Convert blob to buffer
     const arrayBuffer = await fileData.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
     // Parse quote with OpenAI Vision API
-    console.log('🤖 parseQuoteWithAIAction: Sending to AI for parsing...')
+    logger.debug('Sending to AI for parsing', {
+      action: 'parseQuoteWithAIAction',
+      mimeType: quote.mime_type,
+      fileSize: buffer.length,
+    })
     const parsedData = await parseQuoteWithAI(buffer, quote.mime_type)
 
-    console.log('✅ parseQuoteWithAIAction: AI parsing complete')
-    console.log('   Line items extracted:', parsedData.line_items.length)
-    console.log('   Overall confidence:', parsedData.confidence)
+    logger.info('AI parsing complete', {
+      action: 'parseQuoteWithAIAction',
+      lineItemsExtracted: parsedData.line_items.length,
+      confidence: parsedData.confidence,
+      vendor: parsedData.vendor,
+    })
 
     // Update quote record with AI metadata (but don't save line items yet - that happens in confirm step)
     const { error: updateError } = await supabase
@@ -109,15 +146,24 @@ export async function parseQuoteWithAIAction(
       .eq('id', quoteId)
 
     if (updateError) {
-      console.error('⚠️  parseQuoteWithAIAction: Failed to update quote metadata:', updateError)
+      logger.warn('Failed to update quote metadata', {
+        action: 'parseQuoteWithAIAction',
+        quoteId,
+        error: updateError.message,
+      })
       // Don't fail the whole operation - just log the error
     }
 
-    console.log('✅ parseQuoteWithAIAction: Quote metadata updated')
+    logger.info('Quote metadata updated successfully', {
+      action: 'parseQuoteWithAIAction',
+      quoteId,
+    })
 
     return { success: true, data: parsedData }
   } catch (error) {
-    console.error('❌ parseQuoteWithAIAction: Error:', error)
+    logger.error('Error during AI quote parsing', error as Error, {
+      action: 'parseQuoteWithAIAction',
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to parse quote',
