@@ -52,7 +52,7 @@ export async function parseInvoiceWithAIAction(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    // Verify project access
+    // Verify project access (manager or supervisor OR org member)
     const { data: access, error: accessError } = await supabase
       .from('project_access')
       .select('role')
@@ -61,7 +61,33 @@ export async function parseInvoiceWithAIAction(
       .is('deleted_at', null)
       .single()
 
-    if (accessError || !access) {
+    // If no project_access record, check organization membership as fallback
+    if (accessError?.code === 'PGRST116' || !access) {
+      // Get project's organization
+      const { data: projectOrg, error: projectOrgError } = await supabase
+        .from('projects')
+        .select('org_id')
+        .eq('id', projectId)
+        .is('deleted_at', null)
+        .single()
+
+      if (projectOrgError || !projectOrg) {
+        throw new UnauthorizedError('You do not have access to this project')
+      }
+
+      // Check if user is member of the organization
+      const { data: orgMember, error: orgMemberError } = await supabase
+        .from('organization_members')
+        .select('role')
+        .eq('org_id', projectOrg.org_id)
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .single()
+
+      if (orgMemberError || !orgMember) {
+        throw new UnauthorizedError('You do not have access to this project')
+      }
+    } else if (accessError) {
       throw new UnauthorizedError('You do not have access to this project')
     }
 
