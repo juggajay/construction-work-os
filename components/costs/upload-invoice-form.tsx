@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DatePickerInput } from '@/components/ui/date-picker-input'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, Loader2, FileText, Sparkles } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface UploadInvoiceFormProps {
   projectId: string
@@ -106,7 +107,12 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     }
 
     setIsUploading(true)
-    console.log('📤 Form: Starting invoice upload...')
+    logger.debug('Starting invoice upload', {
+      action: 'upload-invoice-form',
+      projectId,
+      category: formData.category,
+      fileName: selectedFile.name,
+    })
 
     try {
       // Create FormData to send file
@@ -120,24 +126,44 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       data.append('amount', amount.toString())
       data.append('description', formData.description || '')
 
-      console.log('📤 Form: Calling uploadInvoice server action...')
+      logger.debug('Calling uploadInvoice server action', {
+        action: 'upload-invoice-form',
+        projectId,
+      })
       const result = await uploadInvoice(data)
-      console.log('📤 Form: Server action response:', result)
+      logger.debug('Server action response received', {
+        action: 'upload-invoice-form',
+        success: result.success,
+      })
 
       if (result.success) {
-        console.log('✅ Form: Upload successful, navigating to costs page')
+        logger.info('Invoice upload successful', {
+          action: 'upload-invoice-form',
+          projectId,
+          category: formData.category,
+        })
         toast({ title: 'Success', description: 'Invoice uploaded successfully' })
         router.push(`/${orgSlug}/projects/${projectId}/costs`)
         router.refresh()
       } else {
-        console.error('❌ Form: Upload failed:', result.error)
+        logger.error('Invoice upload failed', new Error(result.error || 'Unknown error'), {
+          action: 'upload-invoice-form',
+          projectId,
+          error: result.error,
+        })
         toast({ title: 'Error', description: result.error || 'Failed to upload invoice', variant: 'destructive' })
       }
     } catch (error) {
-      console.error('❌ Form: Unexpected error:', error)
+      logger.error('Unexpected error during invoice upload', error as Error, {
+        action: 'upload-invoice-form',
+        projectId,
+      })
       toast({ title: 'Error', description: 'An unexpected error occurred', variant: 'destructive' })
     } finally {
-      console.log('📤 Form: Upload process finished')
+      logger.debug('Invoice upload process finished', {
+        action: 'upload-invoice-form',
+        projectId,
+      })
       setIsUploading(false)
     }
   }
