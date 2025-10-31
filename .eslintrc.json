@@ -14,7 +14,7 @@
   ],
   "rules": {
     // Prevent console.log usage - use logger instead
-    // Set to "warn" during migration, escalate to "error" after logger migration complete
+    // Migration: 101 console.log violations fixed, console.error/warn migration pending
     "no-console": [
       "warn",
       {
