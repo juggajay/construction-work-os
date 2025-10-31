@@ -5,14 +5,19 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import type { ActionResponse, ChangeOrderUpdate } from '@/lib/types'
+import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError, ForbiddenError } from '@/lib/utils/errors'
+import { updateChangeOrderSchema, type UpdateChangeOrderInput } from '@/lib/schemas'
+import { ZodError } from 'zod'
 
 export async function updateChangeOrder(
-  id: string,
-  updates: Partial<ChangeOrderUpdate>
+  input: unknown
 ): Promise<ActionResponse<void>> {
   try {
+    // Validate input
+    const validatedInput = updateChangeOrderSchema.parse(input)
+    const { changeOrderId, ...updates } = validatedInput
+
     const supabase = await createClient()
 
     const {
@@ -27,7 +32,7 @@ export async function updateChangeOrder(
     const { data: co } = await supabase
       .from('change_orders')
       .select('status, created_by')
-      .eq('id', id)
+      .eq('id', changeOrderId)
       .single()
 
     if (!co) {
@@ -41,7 +46,7 @@ export async function updateChangeOrder(
     const { error } = await supabase
       .from('change_orders')
       .update(updates)
-      .eq('id', id)
+      .eq('id', changeOrderId)
 
     if (error) {
       return { success: false, error: error.message }
@@ -49,6 +54,15 @@ export async function updateChangeOrder(
 
     return { success: true, data: undefined }
   } catch (error) {
+    // Handle Zod validation errors
+    if (error instanceof ZodError) {
+      const errorMessage = error.issues.map(issue => issue.message).join(', ')
+      return {
+        success: false,
+        error: `Validation failed: ${errorMessage}`,
+      }
+    }
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update change order',

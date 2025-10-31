@@ -66,8 +66,37 @@ async function main() {
 
   const migrations = [
     {
-      file: 'supabase/migrations/20251029032850_fix_storage_buckets_schema.sql',
-      name: 'fix_storage_buckets_schema'
+      file: 'supabase/migrations/20251030000001_fix_project_budgets_rls.sql',
+      name: 'fix_project_budgets_rls'
+    },
+    {
+      file: 'supabase/migrations/20251030000002_fix_project_invoices_rls.sql',
+      name: 'fix_project_invoices_rls'
+    },
+    {
+      file: 'supabase/migrations/20251030000004_fix_project_costs_rls.sql',
+      name: 'fix_project_costs_rls'
+    },
+    {
+      file: 'supabase/migrations/20251030000005_add_storage_bucket_columns.sql',
+      name: 'add_storage_bucket_columns'
+    },
+    {
+      file: 'supabase/migrations/20251030000004_ensure_storage_bucket_exists.sql',
+      name: 'ensure_storage_bucket_exists'
+    },
+    {
+      file: 'supabase/migrations/20251030000003_fix_storage_invoices_rls.sql',
+      name: 'fix_storage_invoices_rls'
+    },
+    // NEW: Performance optimization migrations
+    {
+      file: 'supabase/migrations/20251101000000_optimize_project_metrics.sql',
+      name: 'optimize_project_metrics'
+    },
+    {
+      file: 'supabase/migrations/20251101000001_add_performance_indexes.sql',
+      name: 'add_performance_indexes'
     }
   ];
 

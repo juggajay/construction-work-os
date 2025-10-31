@@ -6,6 +6,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Download, Printer } from 'lucide-react';
 import { DailyReportStatusBadge } from '@/components/daily-reports/daily-report-status-badge';
@@ -259,13 +260,16 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {reportData.attachments.map((attachment: any) => (
               <div key={attachment.id} className="group relative aspect-square rounded-lg overflow-hidden border">
-                <img
+                <Image
                   src={`/api/storage/daily-report-photos/${attachment.storage_path}`}
                   alt={attachment.caption || 'Daily report photo'}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover group-hover:scale-105 transition-transform"
+                  priority={false}
                 />
                 {attachment.caption && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2">
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2 z-10">
                     {attachment.caption}
                   </div>
                 )}
