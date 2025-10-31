@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { QuickStatsCard } from './quick-stats-card';
+import { logger } from '@/lib/utils/logger';
 import {
   Users,
   Cloud,
@@ -41,11 +42,13 @@ export function DailyReportMobile({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Submit logic will be implemented based on existing daily report actions
-    console.log('Submitting daily report...', {
+    logger.debug('Daily report form submitted', {
+      action: 'DailyReportMobile.handleSubmit',
       projectId,
-      workPerformed,
+      hasWorkPerformed: !!workPerformed,
       hasIncidents,
       toolboxTalk,
+      crewCount,
     });
   };
 
