@@ -35,6 +35,7 @@ export async function updateSession(request: NextRequest) {
 
   // Public routes that don't require authentication
   const publicRoutes = [
+    '/', // Landing page
     '/login',
     '/signup',
     '/magic-link',
@@ -46,25 +47,18 @@ export async function updateSession(request: NextRequest) {
 
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
 
-  // Redirect authenticated users away from auth pages
-  if (isPublicRoute && user) {
+  // Redirect authenticated users away from auth pages (but allow landing page)
+  if (isPublicRoute && user && pathname !== '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
-  // Redirect unauthenticated users to login (except for public routes and root)
-  if (!isPublicRoute && !user && pathname !== '/') {
+  // Redirect unauthenticated users to login (except for public routes)
+  if (!isPublicRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
-    return NextResponse.redirect(url)
-  }
-
-  // Redirect root to login or dashboard
-  if (pathname === '/') {
-    const url = request.nextUrl.clone()
-    url.pathname = user ? '/dashboard' : '/login'
     return NextResponse.redirect(url)
   }
 
