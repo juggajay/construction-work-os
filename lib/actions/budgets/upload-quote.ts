@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import type { Database } from '@/lib/types/supabase'
+import { logger } from '@/lib/utils/logger'
 
 type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
@@ -21,12 +22,15 @@ export interface UploadQuoteInput {
 export async function uploadQuote(
   input: UploadQuoteInput
 ): Promise<ActionResponse<{ quoteId: string; filePath: string }>> {
-  console.log('📤 uploadQuote: Starting upload process')
+  logger.debug('Starting quote upload process', {
+    action: 'uploadQuote',
+  })
 
   try {
     const { projectId, category, file } = input
 
-    console.log('📤 uploadQuote: Input data:', {
+    logger.debug('Quote upload input data', {
+      action: 'uploadQuote',
       projectId,
       category,
       fileName: file.name,
@@ -36,14 +40,22 @@ export async function uploadQuote(
 
     // Validate required fields
     if (!file || !projectId) {
-      console.error('❌ uploadQuote: Missing required fields')
+      logger.error('Missing required fields', new Error('Validation failed'), {
+        action: 'uploadQuote',
+        hasFile: !!file,
+        hasProjectId: !!projectId,
+      })
       return { success: false, error: 'Missing required fields' }
     }
 
     // Validate file type (PDF, PNG, JPG, HEIC)
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic', 'image/jpg']
     if (!allowedTypes.includes(file.type.toLowerCase())) {
-      console.error('❌ uploadQuote: Invalid file type:', file.type)
+      logger.error('Invalid file type', new Error('Invalid file type'), {
+        action: 'uploadQuote',
+        fileType: file.type,
+        allowedTypes,
+      })
       return {
         success: false,
         error: 'Invalid file type. Please upload PDF, JPEG, PNG, or HEIC.',
@@ -53,7 +65,11 @@ export async function uploadQuote(
     // Validate file size (max 25MB)
     const maxSize = 26214400 // 25MB in bytes
     if (file.size > maxSize) {
-      console.error('❌ uploadQuote: File size exceeds limit:', file.size)
+      logger.error('File size exceeds limit', new Error('File too large'), {
+        action: 'uploadQuote',
+        fileSize: file.size,
+        maxSize,
+      })
       return {
         success: false,
         error: 'File size exceeds 25MB limit. Please upload a smaller file.',
@@ -61,18 +77,25 @@ export async function uploadQuote(
     }
 
     const supabase = await createClient()
-    console.log('📤 uploadQuote: Supabase client created')
+    logger.debug('Supabase client created', {
+      action: 'uploadQuote',
+    })
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     if (!user) {
-      console.error('❌ uploadQuote: No user found')
+      logger.error('No user found', new Error('Authentication required'), {
+        action: 'uploadQuote',
+      })
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('📤 uploadQuote: User authenticated:', user.id)
+    logger.debug('User authenticated', {
+      action: 'uploadQuote',
+      userId: user.id,
+    })
 
     // Verify project access (manager or supervisor)
     const { data: access, error: accessError } = await supabase
@@ -84,11 +107,18 @@ export async function uploadQuote(
       .single()
 
     if (accessError || !access || !['manager', 'supervisor'].includes(access.role)) {
-      console.error('❌ uploadQuote: Access denied', { accessError, access })
+      logger.error('Access denied', accessError || new Error('Insufficient permissions'), {
+        action: 'uploadQuote',
+        projectId,
+        role: access?.role,
+      })
       throw new UnauthorizedError('Only managers and supervisors can upload quotes')
     }
 
-    console.log('📤 uploadQuote: Access verified, role:', access.role)
+    logger.debug('Access verified', {
+      action: 'uploadQuote',
+      role: access.role,
+    })
 
     // Generate quote ID first (for consistent file path)
     const quoteId = crypto.randomUUID()
@@ -99,7 +129,11 @@ export async function uploadQuote(
     const fileName = `${timestamp}-${sanitizedFileName}`
     const filePath = `${projectId}/${quoteId}/${fileName}`
 
-    console.log('📤 uploadQuote: Uploading file to storage:', filePath)
+    logger.debug('Uploading file to storage', {
+      action: 'uploadQuote',
+      filePath,
+      fileSize: file.size,
+    })
 
     const { error: uploadError } = await supabase.storage
       .from('project-quotes')
@@ -109,14 +143,25 @@ export async function uploadQuote(
       })
 
     if (uploadError) {
-      console.error('❌ uploadQuote: File upload failed:', uploadError)
+      logger.error('File upload to storage failed', uploadError, {
+        action: 'uploadQuote',
+        filePath,
+      })
       return { success: false, error: `Failed to upload file: ${uploadError.message}` }
     }
 
-    console.log('✅ uploadQuote: File uploaded successfully')
+    logger.debug('File uploaded successfully to storage', {
+      action: 'uploadQuote',
+      filePath,
+    })
 
     // Create quote record (AI parsing happens later in separate step)
-    console.log('📤 uploadQuote: Creating quote record in database')
+    logger.debug('Creating quote record in database', {
+      action: 'uploadQuote',
+      quoteId,
+      projectId,
+      category,
+    })
     const insertData: any = {
       id: quoteId,
       project_id: projectId,
@@ -135,13 +180,21 @@ export async function uploadQuote(
       .single()
 
     if (quoteError) {
-      console.error('❌ uploadQuote: Database insertion failed:', quoteError)
+      logger.error('Database insertion failed', quoteError, {
+        action: 'uploadQuote',
+        quoteId,
+      })
       // Clean up uploaded file on error
       await supabase.storage.from('project-quotes').remove([filePath])
       return { success: false, error: quoteError.message }
     }
 
-    console.log('✅ uploadQuote: Quote record created successfully, ID:', quote.id)
+    logger.info('Quote uploaded successfully', {
+      action: 'uploadQuote',
+      quoteId: quote.id,
+      projectId,
+      fileName: file.name,
+    })
 
     return {
       success: true,
@@ -151,7 +204,9 @@ export async function uploadQuote(
       },
     }
   } catch (error) {
-    console.error('❌ uploadQuote: Unexpected error:', error)
+    logger.error('Unexpected error during quote upload', error as Error, {
+      action: 'uploadQuote',
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to upload quote',
