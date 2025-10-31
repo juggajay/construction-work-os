@@ -5,6 +5,7 @@
  */
 
 import { WeatherData } from './open-meteo-client';
+import { logger } from '@/lib/utils/logger';
 
 interface CacheEntry {
   data: WeatherData;
@@ -134,7 +135,10 @@ if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     const cleaned = cleanupExpiredEntries();
     if (cleaned > 0) {
-      console.log(`[Weather Cache] Cleaned up ${cleaned} expired entries`);
+      logger.debug('Weather cache cleanup completed', {
+        action: 'weather-cache-cleanup',
+        cleanedCount: cleaned,
+      });
     }
   }, 60 * 60 * 1000); // 1 hour
 }

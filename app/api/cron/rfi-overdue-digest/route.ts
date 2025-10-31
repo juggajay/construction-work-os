@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/server'
 import { sendRFIOverdueEmail } from '@/lib/email/send-rfi-overdue'
 import { isOverdue } from '@/lib/rfis/sla-calculations'
 import type { OverdueRFI } from '@/lib/email/templates/rfi-overdue'
+import { logger } from '@/lib/utils/logger'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -66,7 +67,9 @@ export async function GET(request: NextRequest) {
       .is('deleted_at', null)
 
     if (fetchError) {
-      console.error('Failed to fetch overdue RFIs:', fetchError)
+      logger.error('Failed to fetch overdue RFIs', fetchError, {
+        action: 'rfi-overdue-digest',
+      })
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
@@ -117,7 +120,10 @@ export async function GET(request: NextRequest) {
     for (const [assigneeId, assigneeRfis] of rfisByAssignee.entries()) {
       const assignee = (assigneeRfis[0] as any).assigned_to
       if (!assignee || !assignee.email) {
-        console.warn(`No email found for assignee ${assigneeId}`)
+        logger.warn('No email found for assignee', {
+          action: 'rfi-overdue-digest',
+          assigneeId,
+        })
         continue
       }
 
@@ -158,9 +164,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Log results
-    console.log(`RFI overdue digest: ${emailsSent} emails sent, ${errors.length} errors`)
+    logger.info('RFI overdue digest completed', {
+      action: 'rfi-overdue-digest',
+      emailsSent,
+      errorCount: errors.length,
+      overdueCount: actuallyOverdue.length,
+    })
     if (errors.length > 0) {
-      console.error('Errors:', errors)
+      logger.error('RFI overdue digest encountered errors', new Error('Digest errors'), {
+        action: 'rfi-overdue-digest',
+        errors,
+      })
     }
 
     return NextResponse.json({
@@ -171,7 +185,9 @@ export async function GET(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
     })
   } catch (error) {
-    console.error('RFI overdue digest cron error:', error)
+    logger.error('RFI overdue digest cron error', error as Error, {
+      action: 'rfi-overdue-digest',
+    })
     return NextResponse.json(
       {
         error: 'Internal server error',
