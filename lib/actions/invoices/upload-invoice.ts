@@ -8,13 +8,16 @@ import { createClient } from '@/lib/supabase/server'
 import type { ActionResponse } from '@/lib/types'
 import { UnauthorizedError } from '@/lib/utils/errors'
 import type { Database } from '@/lib/types/supabase'
+import { logger } from '@/lib/utils/logger'
 
 type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
 export async function uploadInvoice(
   formData: FormData
 ): Promise<ActionResponse<{ id: string }>> {
-  console.log('📤 uploadInvoice: Starting upload process')
+  logger.debug('Starting invoice upload process', {
+    action: 'uploadInvoice',
+  })
   try {
     const projectId = formData.get('projectId') as string
     const category = formData.get('category') as BudgetCategory
@@ -25,38 +28,51 @@ export async function uploadInvoice(
     const amountStr = formData.get('amount') as string
     const description = formData.get('description') as string | null
 
-    console.log('📤 uploadInvoice: Extracted data:', {
+    logger.debug('Extracted form data', {
+      action: 'uploadInvoice',
       projectId,
       category,
       fileName: file?.name,
       fileSize: file?.size,
       fileType: file?.type,
-      vendorName,
-      invoiceNumber,
-      invoiceDate,
-      amountStr,
+      hasVendorName: !!vendorName,
+      hasInvoiceNumber: !!invoiceNumber,
+      amount: amountStr,
     })
 
     const amount = parseFloat(amountStr)
 
     if (!file || !projectId || !category || !amount || isNaN(amount)) {
-      console.error('❌ uploadInvoice: Missing required fields')
+      logger.error('Missing required fields', new Error('Validation failed'), {
+        action: 'uploadInvoice',
+        hasFile: !!file,
+        hasProjectId: !!projectId,
+        hasCategory: !!category,
+        hasAmount: !!amount,
+      })
       return { success: false, error: 'Missing required fields' }
     }
 
     const supabase = await createClient()
-    console.log('📤 uploadInvoice: Supabase client created')
+    logger.debug('Supabase client created', {
+      action: 'uploadInvoice',
+    })
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     if (!user) {
-      console.error('❌ uploadInvoice: No user found')
+      logger.error('No user found', new Error('Authentication required'), {
+        action: 'uploadInvoice',
+      })
       throw new UnauthorizedError('You must be logged in')
     }
 
-    console.log('📤 uploadInvoice: User authenticated:', user.id)
+    logger.debug('User authenticated', {
+      action: 'uploadInvoice',
+      userId: user.id,
+    })
 
     // Verify project access (manager or supervisor OR org member)
     const { data: access, error: accessError } = await supabase
@@ -67,7 +83,8 @@ export async function uploadInvoice(
       .is('deleted_at', null)
       .single()
 
-    console.log('📤 uploadInvoice: Access query result', {
+    logger.debug('Access query result', {
+      action: 'uploadInvoice',
       hasError: !!accessError,
       errorCode: accessError?.code,
       hasAccess: !!access,
@@ -76,7 +93,10 @@ export async function uploadInvoice(
 
     // If no project_access record, check organization membership as fallback
     if (accessError?.code === 'PGRST116' || !access) {
-      console.log('📤 uploadInvoice: No project access found, checking org membership...')
+      logger.debug('No project access found, checking org membership', {
+        action: 'uploadInvoice',
+        projectId,
+      })
 
       // Get project's organization
       const { data: projectOrg, error: projectOrgError } = await supabase
@@ -87,7 +107,10 @@ export async function uploadInvoice(
         .single()
 
       if (projectOrgError || !projectOrg) {
-        console.error('❌ uploadInvoice: Could not fetch project organization')
+        logger.error('Could not fetch project organization', projectOrgError || new Error('Project not found'), {
+          action: 'uploadInvoice',
+          projectId,
+        })
         throw new UnauthorizedError('Only managers and supervisors can upload invoices')
       }
 
@@ -100,32 +123,43 @@ export async function uploadInvoice(
         .is('deleted_at', null)
         .single()
 
-      console.log('📤 uploadInvoice: Org membership result', {
+      logger.debug('Org membership result', {
+        action: 'uploadInvoice',
         hasError: !!orgMemberError,
-        errorMessage: orgMemberError?.message,
         isMember: !!orgMember,
         orgRole: orgMember?.role,
       })
 
       if (orgMemberError || !orgMember) {
-        console.error('❌ uploadInvoice: Access denied - not an org member')
+        logger.error('Access denied - not an org member', orgMemberError || new Error('Not authorized'), {
+          action: 'uploadInvoice',
+          projectId,
+          userId: user.id,
+        })
         throw new UnauthorizedError('Only managers and supervisors can upload invoices')
       }
 
-      console.log('✅ uploadInvoice: Access verified via org membership, role:', orgMember.role)
+      logger.info('Access verified via org membership', {
+        action: 'uploadInvoice',
+        role: orgMember.role,
+      })
     } else if (accessError) {
-      console.error('❌ uploadInvoice: Access query error', {
-        error: accessError,
+      logger.error('Access query error', accessError, {
+        action: 'uploadInvoice',
       })
       throw new UnauthorizedError('Only managers and supervisors can upload invoices')
     } else if (!['manager', 'supervisor'].includes(access.role)) {
-      console.error('❌ uploadInvoice: Access denied - insufficient role', {
+      logger.error('Access denied - insufficient role', new Error('Insufficient permissions'), {
+        action: 'uploadInvoice',
         role: access.role,
         requiredRoles: ['manager', 'supervisor'],
       })
       throw new UnauthorizedError('Only managers and supervisors can upload invoices')
     } else {
-      console.log('✅ uploadInvoice: Access verified via project access, role:', access.role)
+      logger.info('Access verified via project access', {
+        action: 'uploadInvoice',
+        role: access.role,
+      })
     }
 
     // Upload file to storage
@@ -133,21 +167,36 @@ export async function uploadInvoice(
     const fileName = `${timestamp}-${file.name}`
     const filePath = `${projectId}/invoices/${fileName}`
 
-    console.log('📤 uploadInvoice: Uploading file to storage:', filePath)
+    logger.debug('Uploading file to storage', {
+      action: 'uploadInvoice',
+      filePath,
+      fileSize: file.size,
+    })
 
     const { error: uploadError } = await supabase.storage
       .from('project-invoices')
       .upload(filePath, file)
 
     if (uploadError) {
-      console.error('❌ uploadInvoice: File upload failed:', uploadError)
+      logger.error('File upload to storage failed', uploadError, {
+        action: 'uploadInvoice',
+        filePath,
+      })
       return { success: false, error: `Failed to upload file: ${uploadError.message}` }
     }
 
-    console.log('✅ uploadInvoice: File uploaded successfully')
+    logger.debug('File uploaded successfully to storage', {
+      action: 'uploadInvoice',
+      filePath,
+    })
 
     // Create invoice record
-    console.log('📤 uploadInvoice: Creating invoice record in database')
+    logger.debug('Creating invoice record in database', {
+      action: 'uploadInvoice',
+      projectId,
+      category,
+      amount,
+    })
     const { data: invoice, error: invoiceError } = await supabase
       .from('project_invoices')
       .insert({
@@ -169,16 +218,27 @@ export async function uploadInvoice(
       .single()
 
     if (invoiceError) {
-      console.error('❌ uploadInvoice: Database insertion failed:', invoiceError)
+      logger.error('Database insertion failed', invoiceError, {
+        action: 'uploadInvoice',
+        projectId,
+      })
       // Clean up uploaded file on error
       await supabase.storage.from('project-invoices').remove([filePath])
       return { success: false, error: invoiceError.message }
     }
 
-    console.log('✅ uploadInvoice: Invoice created successfully, ID:', invoice.id)
+    logger.info('Invoice uploaded successfully', {
+      action: 'uploadInvoice',
+      invoiceId: invoice.id,
+      projectId,
+      category,
+      amount,
+    })
     return { success: true, data: { id: invoice.id } }
   } catch (error) {
-    console.error('❌ uploadInvoice: Unexpected error:', error)
+    logger.error('Unexpected error during invoice upload', error as Error, {
+      action: 'uploadInvoice',
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to upload invoice',
