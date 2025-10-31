@@ -33,7 +33,7 @@ export { uploadAttachment } from './upload-attachment'
 export { deleteAttachment } from './delete-attachment'
 
 // Type Exports
-export type { CreateChangeOrderInput } from './create-change-order'
+export type { CreateChangeOrderInput, UpdateChangeOrderInput } from '@/lib/schemas'
 export type { GetChangeOrdersFilters } from './get-change-orders'
 export type { ChangeOrderDetails } from './get-change-order-by-id'
 export type { AddLineItemInput } from './add-line-item'
