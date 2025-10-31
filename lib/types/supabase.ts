@@ -2004,6 +2004,25 @@ export type Database = {
           project_id: string
         }[]
       }
+      get_project_metrics: {
+        Args: { project_uuid: string }
+        Returns: {
+          total_spent: number
+          rfi_count: number
+          team_size: number
+          completion_percentage: number
+        }[]
+      }
+      get_batch_project_metrics: {
+        Args: { project_ids: string[] }
+        Returns: {
+          project_id: string
+          total_spent: number
+          rfi_count: number
+          team_size: number
+          completion_percentage: number
+        }[]
+      }
     }
     Enums: {
       approval_stage: "gc_review" | "owner_approval" | "architect_approval"
