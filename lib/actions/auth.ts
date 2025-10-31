@@ -100,9 +100,12 @@ export const login = withAction(loginSchema, async (data: LoginInput): Promise<A
     }
   }
 
-  // Redirect to dashboard after successful login
-  // Using redirect() ensures cookies are properly set
-  redirect('/dashboard')
+  // Return success - client will handle redirect
+  // This avoids NEXT_REDIRECT errors with useTransition
+  return {
+    success: true,
+    data: undefined,
+  }
 })
 
 // ============================================================================

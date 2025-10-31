@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { login } from '@/lib/actions/auth'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -25,9 +27,11 @@ export default function LoginPage() {
     startTransition(async () => {
       const result = await login(data)
 
-      // If we get a result back, it means there was an error
-      // (successful login redirects and never returns)
-      if (result && !result.success) {
+      if (result.success) {
+        // Successful login - redirect to dashboard
+        router.push('/dashboard')
+      } else {
+        // Show error message
         setError(result.error || 'Failed to sign in')
       }
     })
