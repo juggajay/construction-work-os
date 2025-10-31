@@ -133,6 +133,34 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* NAVIGATION HEADER */}
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" aria-hidden="true" />
+            <span className="font-bold text-lg">Construction Work OS</span>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-6">
+            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
+              Pricing
+            </a>
+            <a href="#faq" className="text-sm font-medium hover:text-primary transition-colors">
+              FAQ
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" asChild>
+              <Link href="/login">Log In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/signup">Start Free Trial</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
       {/* HERO SECTION - Authority, Social Proof, Commitment */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-950 dark:to-neutral-900">
         {/* Background Pattern */}
