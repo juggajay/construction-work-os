@@ -35,7 +35,6 @@ export async function updateSession(request: NextRequest) {
 
   // Public routes that don't require authentication
   const publicRoutes = [
-    '/', // Landing page
     '/login',
     '/signup',
     '/magic-link',
@@ -45,7 +44,8 @@ export async function updateSession(request: NextRequest) {
     '/auth/callback',
   ]
 
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
+  // Check if current path is public (exact match for root, startsWith for others)
+  const isPublicRoute = pathname === '/' || publicRoutes.some((route) => pathname.startsWith(route))
 
   // Redirect authenticated users away from auth pages (but allow landing page)
   if (isPublicRoute && user && pathname !== '/') {
