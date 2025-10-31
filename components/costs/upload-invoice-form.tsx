@@ -81,10 +81,63 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     })
 
     try {
+      // Convert PDF to image if needed
+      let fileToProcess = file
+      if (file.type === 'application/pdf') {
+        logger.debug('Converting PDF to image...', {
+          action: 'upload-invoice-form',
+          fileName: file.name,
+        })
+
+        try {
+          // Call PDF-to-image API
+          const pdfFormData = new FormData()
+          pdfFormData.append('file', file)
+
+          const response = await fetch('/api/pdf-to-image', {
+            method: 'POST',
+            body: pdfFormData,
+          })
+
+          if (!response.ok) {
+            throw new Error(`PDF conversion failed: ${response.statusText}`)
+          }
+
+          // Convert response to Blob and then to File
+          const imageBlob = await response.blob()
+          const imageName = file.name.replace(/\.pdf$/i, '.png')
+          fileToProcess = new File([imageBlob], imageName, { type: 'image/png' })
+
+          logger.debug('PDF converted to image successfully', {
+            action: 'upload-invoice-form',
+            originalName: file.name,
+            convertedName: imageName,
+          })
+        } catch (pdfError) {
+          logger.error('PDF conversion failed', pdfError as Error, {
+            action: 'upload-invoice-form',
+            fileName: file.name,
+          })
+
+          toast({
+            title: 'PDF Conversion Failed',
+            description: 'Could not convert PDF to image. Please try uploading an image file (JPG, PNG) instead.',
+            variant: 'destructive',
+          })
+
+          setIsParsing(false)
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
+          setSelectedFile(null)
+          return
+        }
+      }
+
       // Create FormData for server action
       const formData = new FormData()
       formData.append('projectId', projectId)
-      formData.append('file', file)
+      formData.append('file', fileToProcess)
 
       const result = await parseInvoiceWithAIAction(formData)
 
@@ -197,19 +250,15 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     e.stopPropagation()
     setIsDragging(false)
 
-    console.log('DROP EVENT FIRED', { isParsing })
-
     if (isParsing) return
 
     const file = e.dataTransfer.files?.[0]
-    console.log('File from drop:', file)
 
     if (!file) return
 
     // Validate file type
     const validTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.heic']
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
-    console.log('File extension:', fileExtension, 'Valid:', validTypes.includes(fileExtension))
 
     if (!validTypes.includes(fileExtension)) {
       toast({
@@ -230,7 +279,6 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       return
     }
 
-    console.log('About to process file:', file.name)
     await processFile(file)
   }
 

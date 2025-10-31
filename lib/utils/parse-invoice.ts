@@ -1,10 +1,11 @@
 /**
  * Parse invoice using OpenAI Vision API
+ *
+ * Note: Only supports image files (JPEG, PNG, HEIC)
+ * PDFs must be converted to images before calling this function
  */
 
 import OpenAI from 'openai'
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
-import { Canvas } from 'canvas'
 
 export interface ParsedInvoiceData {
   vendorName: string
@@ -23,41 +24,6 @@ export interface ParsedInvoiceData {
   rawResponse?: any // Full OpenAI response for audit
 }
 
-async function convertPdfToImage(pdfBuffer: Buffer): Promise<{ buffer: Buffer; mimeType: string }> {
-  try {
-    // Load PDF
-    const pdf = await getDocument({ data: pdfBuffer }).promise
-    const page = await pdf.getPage(1) // Get first page
-
-    // Set scale for better quality
-    const scale = 2.0
-    const viewport = page.getViewport({ scale })
-
-    // Create canvas
-    const canvas = new Canvas(viewport.width, viewport.height)
-    const context = canvas.getContext('2d')
-
-    // Render PDF page to canvas
-    // Type assertion needed because node-canvas types don't fully match pdfjs-dist expectations
-    await page.render({
-      canvasContext: context as any,
-      viewport: viewport,
-      canvas: canvas as any,
-    }).promise
-
-    // Convert canvas to PNG buffer
-    const imageBuffer = canvas.toBuffer('image/png')
-
-    return {
-      buffer: imageBuffer,
-      mimeType: 'image/png',
-    }
-  } catch (error) {
-    console.error('Error converting PDF to image:', error)
-    throw new Error('Failed to convert PDF to image for processing')
-  }
-}
-
 export async function parseInvoiceWithAI(fileBuffer: Buffer, mimeType: string): Promise<ParsedInvoiceData> {
   try {
     // Check for API key at runtime
@@ -65,26 +31,20 @@ export async function parseInvoiceWithAI(fileBuffer: Buffer, mimeType: string): 
       throw new Error('OPENAI_API_KEY environment variable is not set')
     }
 
+    // Validate that we're receiving an image
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/heic']
+    if (!allowedMimeTypes.includes(mimeType)) {
+      throw new Error(`Invalid MIME type: ${mimeType}. Only images are supported. PDFs must be converted first.`)
+    }
+
     // Initialize OpenAI client
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })
 
-    // Convert PDF to image if needed
-    let processBuffer = fileBuffer
-    let processMimeType = mimeType
-
-    if (mimeType === 'application/pdf') {
-      console.log('Converting PDF to image for Vision API...')
-      const converted = await convertPdfToImage(fileBuffer)
-      processBuffer = converted.buffer
-      processMimeType = converted.mimeType
-      console.log('PDF converted to image successfully')
-    }
-
     // Convert buffer to base64
-    const base64Image = processBuffer.toString('base64')
-    const dataUrl = `data:${processMimeType};base64,${base64Image}`
+    const base64Image = fileBuffer.toString('base64')
+    const dataUrl = `data:${mimeType};base64,${base64Image}`
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o', // Latest model with vision capabilities
