@@ -25,6 +25,7 @@ import {
 import type { ActionResponse, ActionSuccess } from '@/lib/types'
 import { withAction, success, revalidateProfile } from '@/lib/utils/server-actions'
 import { ErrorMessages, UnauthorizedError } from '@/lib/utils/errors'
+import { logger } from '@/lib/utils/logger'
 
 // ============================================================================
 // SIGNUP
@@ -46,6 +47,10 @@ export const signup = withAction(signupSchema, async (data: SignupInput): Promis
   })
 
   if (signupError) {
+    logger.error('Signup failed', signupError, {
+      action: 'signup',
+      email: data.email,
+    })
     return {
       success: false,
       error: signupError.message,
@@ -53,23 +58,25 @@ export const signup = withAction(signupSchema, async (data: SignupInput): Promis
   }
 
   if (!authData.user) {
+    logger.error('Signup succeeded but no user returned', new Error('Missing user'), {
+      action: 'signup',
+      email: data.email,
+    })
     return {
       success: false,
       error: ErrorMessages.UNEXPECTED_ERROR,
     }
   }
 
-  // Create profile record
-  // @ts-ignore - Supabase types not generated
-  const { error: profileError } = await supabase.from('profiles').insert({
-    id: authData.user.id,
-    full_name: data.fullName,
-  })
+  // Profile is automatically created by database trigger
+  // See: supabase/migrations/20250123000000_auto_create_profile.sql
+  // The trigger handles profile creation with full_name from auth.users.raw_user_meta_data
 
-  if (profileError) {
-    // Log error but don't fail - profile can be created later
-    console.error('Failed to create profile:', profileError)
-  }
+  logger.info('User signup successful', {
+    action: 'signup',
+    userId: authData.user.id,
+    email: data.email,
+  })
 
   return success(undefined)
 })
