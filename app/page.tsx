@@ -53,9 +53,16 @@ export default function LandingPage() {
 
   // Check if exit intent was previously dismissed
   useEffect(() => {
-    const dismissed = localStorage.getItem('exitIntentDismissed')
-    if (dismissed === 'true') {
-      setExitIntentDismissed(true)
+    try {
+      if (typeof window !== 'undefined') {
+        const dismissed = localStorage.getItem('exitIntentDismissed')
+        if (dismissed === 'true') {
+          setExitIntentDismissed(true)
+        }
+      }
+    } catch (error) {
+      // localStorage might be disabled, allow modal to show
+      console.error('Error reading localStorage:', error)
     }
   }, [])
 
@@ -94,7 +101,14 @@ export default function LandingPage() {
   const handleDismissModal = useCallback(() => {
     setShowExitIntent(false)
     setExitIntentDismissed(true)
-    localStorage.setItem('exitIntentDismissed', 'true')
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('exitIntentDismissed', 'true')
+      }
+    } catch (error) {
+      // localStorage might be disabled, continue anyway
+      console.error('Error writing to localStorage:', error)
+    }
   }, [])
 
   const handleEmailCapture = useCallback(async (e: React.FormEvent) => {
