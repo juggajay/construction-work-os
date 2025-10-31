@@ -24,6 +24,9 @@ export interface ParsedInvoiceData {
     unitPrice?: number
     amount: number
   }>
+  // AI metadata
+  confidence?: number // 0-1 score
+  rawResponse?: any // Full OpenAI response for audit
 }
 
 export async function parseInvoiceWithAI(fileBuffer: Buffer, mimeType: string): Promise<ParsedInvoiceData> {
@@ -93,8 +96,21 @@ If you cannot find a field, use reasonable defaults:
     // Parse the JSON response
     const parsed = JSON.parse(content) as ParsedInvoiceData
 
-    // Validate and sanitize the data
+    // Calculate confidence score based on field completeness
+    let confidence = 1.0
     const today = new Date().toISOString().split('T')[0] as string
+
+    // Reduce confidence for missing/default fields
+    if (!parsed.vendorName || parsed.vendorName === 'Unknown Vendor') confidence -= 0.2
+    if (!parsed.invoiceNumber || parsed.invoiceNumber === 'N/A') confidence -= 0.15
+    if (!parsed.invoiceDate || !validateDate(parsed.invoiceDate)) confidence -= 0.15
+    if (!parsed.amount || parsed.amount === 0) confidence -= 0.3
+    if (!parsed.description) confidence -= 0.1
+    if (!parsed.lineItems || parsed.lineItems.length === 0) confidence -= 0.1
+
+    // Ensure confidence stays in 0-1 range
+    confidence = Math.max(0, Math.min(1, confidence))
+
     return {
       vendorName: parsed.vendorName || 'Unknown Vendor',
       invoiceNumber: parsed.invoiceNumber || 'N/A',
@@ -102,6 +118,8 @@ If you cannot find a field, use reasonable defaults:
       amount: Number(parsed.amount) || 0,
       description: parsed.description || 'No description available',
       lineItems: parsed.lineItems || [],
+      confidence,
+      rawResponse: response, // Store full OpenAI response for audit
     }
   } catch (error) {
     console.error('Error parsing invoice with AI:', error)

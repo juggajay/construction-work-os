@@ -28,6 +28,14 @@ export async function uploadInvoice(
     const amountStr = formData.get('amount') as string
     const description = formData.get('description') as string | null
 
+    // AI extraction metadata (optional)
+    const aiParsed = formData.get('aiParsed') === 'true'
+    const aiConfidenceStr = formData.get('aiConfidence') as string | null
+    const aiRawResponseStr = formData.get('aiRawResponse') as string | null
+
+    const aiConfidence = aiConfidenceStr ? parseFloat(aiConfidenceStr) : null
+    const aiRawResponse = aiRawResponseStr ? JSON.parse(aiRawResponseStr) : null
+
     logger.debug('Extracted form data', {
       action: 'uploadInvoice',
       projectId,
@@ -38,6 +46,9 @@ export async function uploadInvoice(
       hasVendorName: !!vendorName,
       hasInvoiceNumber: !!invoiceNumber,
       amount: amountStr,
+      aiParsed,
+      aiConfidence,
+      hasAiRawResponse: !!aiRawResponse,
     })
 
     const amount = parseFloat(amountStr)
@@ -211,7 +222,9 @@ export async function uploadInvoice(
         invoice_date: invoiceDate || null,
         amount,
         description: description || null,
-        ai_parsed: false, // Manual entry for now
+        ai_parsed: aiParsed,
+        ai_confidence: aiConfidence,
+        ai_raw_response: aiRawResponse,
         uploaded_by: user.id,
       })
       .select('id')

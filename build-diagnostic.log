@@ -1,0 +1,279 @@
+
+> construction-work-os@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.33
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./app/(auth)/login/page.tsx
+13:9  Warning: 'router' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(auth)/signup/page.tsx
+13:9  Warning: 'router' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/dashboard/page.tsx
+4:15  Warning: 'Organization' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/analytics/page.tsx
+2:54  Warning: 'Clock' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+9:11  Warning: 'orgSlug' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/daily-reports/page.tsx
+33:10  Warning: 'cn' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/page.tsx
+28:9  Warning: 'projects' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/projects/loading.tsx
+5:10  Warning: 'SkeletonList' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/projects/new/page.tsx
+4:15  Warning: 'Organization' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/projects/[projectId]/change-orders/page.tsx
+31:24  Warning: 'DollarSign' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/projects/[projectId]/change-orders/[changeOrderId]/page.tsx
+9:10  Warning: 'useState' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+33:3  Warning: 'AlertCircle' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+36:3  Warning: 'User' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/projects/[projectId]/rfis/page.tsx
+22:10  Warning: 'RFIStatusBadge' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+22:31  Warning: 'RFIStatus' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+25:68  Warning: 'Filter' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+36:25  Warning: 'setOverdueFilter' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+185:9  Warning: 'handleRowClick' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/projects/[projectId]/rfis/[rfiId]/page.tsx
+21:10  Warning: 'Separator' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+105:9  Warning: 'ballInCourt' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/rfis/page.tsx
+22:10  Warning: 'RFIStatusBadge' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+22:31  Warning: 'RFIStatus' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+25:10  Warning: 'Plus' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+25:68  Warning: 'Filter' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+35:25  Warning: 'setOverdueFilter' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/snag-list/page.tsx
+39:10  Warning: 'Badge' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+40:83  Warning: 'Plus' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+42:10  Warning: 'cn' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+114:9  Warning: 'filteredItems' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+124:9  Warning: 'handleRowClick' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/submittals/page.tsx
+19:8  Warning: 'Link' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/(dashboard)/[orgSlug]/team/org-team-client.tsx
+57:3  Warning: 'orgSlug' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/email-capture/__tests__/route.test.ts
+117:13  Warning: 'data' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/page.tsx
+25:3  Warning: 'Zap' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/app-sidebar.tsx
+7:3  Warning: 'FolderKanban' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/budgets/line-items-table.tsx
+62:3  Warning: 'category' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+372:23  Warning: 'isAI' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/budgets/quote-review-interface.tsx
+12:10  Warning: 'Label' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+22:39  Warning: 'Edit2' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/change-orders/change-order-form.tsx
+15:8  Warning: 'CreateChangeOrderInput' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/costs/add-cost-form.tsx
+91:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/costs/upload-invoice-form.tsx
+14:10  Warning: 'Upload' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+79:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/daily-reports/daily-report-form.tsx
+51:3  Warning: 'previousReport' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/daily-reports/daily-report-mobile.tsx
+33:3  Warning: 'orgSlug' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+39:21  Warning: 'setCrewCount' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+40:19  Warning: 'setWeather' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/dashboard/upcoming-schedule.tsx
+6:20  Warning: 'Clock' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/landing/__tests__/faq-section.test.tsx
+223:15  Warning: 'container' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/landing/__tests__/testimonial-carousel.test.tsx
+7:37  Warning: 'waitFor' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/mobile/mobile-header.tsx
+16:39  Warning: 'showBack' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/projects/budget-allocation-form.tsx
+242:17  Warning: 'hasAllocation' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/projects/project-settings-form.tsx
+24:39  Warning: 'orgSlug' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+70:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/rfis/file-upload.tsx
+86:21  Warning: 'uploadData' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/rfis/rfi-table.tsx
+80:53  Warning: 'showProject' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/submittals/submittal-card.tsx
+13:10  Warning: 'formatDistanceToNow' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/team/team-member-grid.tsx
+4:48  Warning: 'Certification' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+17:3  Warning: 'Briefcase' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/ui/calendar.tsx
+4:10  Warning: 'ChevronLeft' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+4:23  Warning: 'ChevronRight' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/auth.ts
+25:31  Warning: 'ActionSuccess' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/budgets/confirm-line-items.ts
+12:15  Warning: 'ParsedLineItem' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/change-orders/create-change-order.ts
+10:40  Warning: 'CreateChangeOrderInput' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/change-orders/update-change-order.ts
+9:29  Warning: 'ForbiddenError' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+10:40  Warning: 'UpdateChangeOrderInput' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/change-orders/update-line-item.ts
+8:31  Warning: 'ChangeOrderLineItemUpdate' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/daily-reports/copy-from-previous.ts
+43:42  Warning: 'fetchError' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/daily-reports/create-daily-report.ts
+7:3  Warning: 'WeatherAPIError' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/rfis/create-rfi.ts
+11:44  Warning: 'ForbiddenError' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/team-members.ts
+35:6  Warning: 'OrgMemberRow' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+51:6  Warning: 'ProjectAccessRow' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/actions/__tests__/multi-tenant-isolation.test.ts
+12:3  Warning: 'mockSuccessResponse' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+13:3  Warning: 'mockErrorResponse' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/email/send-rfi-assignment.ts
+9:18  Warning: 'fromEmail' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+10:38  Warning: 'RFIAssignmentEmailData' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/email/send-rfi-overdue.ts
+10:18  Warning: 'fromEmail' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+11:35  Warning: 'RFIOverdueEmailData' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/email/send-rfi-response.ts
+9:18  Warning: 'fromEmail' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+10:36  Warning: 'RFIResponseEmailData' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/email/templates/rfi-assignment.tsx
+111:9  Warning: 'div' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+112:9  Warning: 'textNode' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/export/pdf-generator.ts
+8:10  Warning: 'formatDistanceToNow' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/test-utils/setup.ts
+1:10  Warning: 'expect' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/test-utils/supabase-mock.ts
+15:18  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/testing/orchestrator.ts
+14:3  Warning: 'TestStatus' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+270:38  Warning: 'test' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+293:5  Warning: 'attempt' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+296:11  Warning: 'context' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/utils/parse-quote.ts
+166:11  Warning: 'today' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+SENDGRID_API_KEY not set - email functionality will be disabled
+   Generating static pages (0/14) ...
+   Generating static pages (3/14) 
+   Generating static pages (6/14) 
+   Generating static pages (10/14) 
+ ✓ Generating static pages (14/14)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                          Size     First Load JS
+┌ ○ /                                                                9.71 kB         121 kB
+├ ○ /_not-found                                                      880 B          88.5 kB
+├ ƒ /[orgSlug]                                                       2.7 kB          107 kB
+├ ƒ /[orgSlug]/analytics                                             178 B          87.8 kB
+├ ƒ /[orgSlug]/change-orders                                         5.55 kB         190 kB
+├ ƒ /[orgSlug]/daily-reports                                         5.4 kB          190 kB
+├ ƒ /[orgSlug]/projects                                              6.88 kB         118 kB
+├ ƒ /[orgSlug]/projects/[projectId]                                  197 B          96.5 kB
+├ ƒ /[orgSlug]/projects/[projectId]/change-orders                    5.34 kB         190 kB
+├ ƒ /[orgSlug]/projects/[projectId]/change-orders/[changeOrderId]    11 kB           164 kB
+├ ƒ /[orgSlug]/projects/[projectId]/change-orders/new                3.44 kB         168 kB
+├ ƒ /[orgSlug]/projects/[projectId]/costs                            4.81 kB         109 kB
+├ ƒ /[orgSlug]/projects/[projectId]/costs/add-cost                   4.74 kB         167 kB
+├ ƒ /[orgSlug]/projects/[projectId]/costs/upload-invoice             6.45 kB         169 kB
+├ ƒ /[orgSlug]/projects/[projectId]/daily-reports                    197 B          96.5 kB
+├ ƒ /[orgSlug]/projects/[projectId]/daily-reports/[reportId]         5.36 kB         102 kB
+├ ƒ /[orgSlug]/projects/[projectId]/daily-reports/mobile             4.75 kB         110 kB
+├ ƒ /[orgSlug]/projects/[projectId]/daily-reports/new                5.8 kB          168 kB
+├ ƒ /[orgSlug]/projects/[projectId]/rfis                             2.03 kB         192 kB
+├ ƒ /[orgSlug]/projects/[projectId]/rfis/[rfiId]                     13.9 kB         208 kB
+├ ƒ /[orgSlug]/projects/[projectId]/rfis/new                         2.82 kB         168 kB
+├ ƒ /[orgSlug]/projects/[projectId]/settings                         13.7 kB         176 kB
+├ ƒ /[orgSlug]/projects/[projectId]/submittals                       5.4 kB          110 kB
+├ ƒ /[orgSlug]/projects/[projectId]/submittals/[submittalId]         197 B          96.5 kB
+├ ƒ /[orgSlug]/projects/[projectId]/submittals/[submittalId]/review  4.92 kB         154 kB
+├ ƒ /[orgSlug]/projects/[projectId]/submittals/analytics             197 B          96.5 kB
+├ ƒ /[orgSlug]/projects/[projectId]/submittals/new                   5.14 kB         172 kB
+├ ƒ /[orgSlug]/projects/new                                          3.77 kB         150 kB
+├ ƒ /[orgSlug]/rfis                                                  2.46 kB         192 kB
+├ ƒ /[orgSlug]/snag-list                                             8.68 kB         193 kB
+├ ƒ /[orgSlug]/submittals                                            178 B          87.8 kB
+├ ƒ /[orgSlug]/team                                                  13 kB           143 kB
+├ ƒ /api/cron/rfi-overdue-digest                                     0 B                0 B
+├ ƒ /api/email-capture                                               0 B                0 B
+├ ƒ /auth/callback                                                   0 B                0 B
+├ ƒ /confirm                                                         197 B          96.5 kB
+├ ƒ /dashboard                                                       178 B          87.8 kB
+├ ○ /forgot-password                                                 3.86 kB         108 kB
+├ ○ /login                                                           4.13 kB         108 kB
+├ ○ /magic-link                                                      3.83 kB         108 kB
+├ ○ /orgs/new                                                        3.92 kB        99.3 kB
+├ ○ /reset-password                                                  4 kB            108 kB
+└ ○ /signup                                                          4.19 kB         108 kB
++ First Load JS shared by all                                        87.6 kB
+  ├ chunks/2117-983455c345f5c56f.js                                  31.9 kB
+  ├ chunks/fd9d1056-83c2e2ce3b99ea8e.js                              53.6 kB
+  └ other shared chunks (total)                                      2.05 kB
+
+
+ƒ Middleware                                                         73 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

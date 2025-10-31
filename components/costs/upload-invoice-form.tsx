@@ -33,6 +33,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
   const [isUploading, setIsUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [parsedData, setParsedData] = useState<any>(null)
+  const [aiMetadata, setAiMetadata] = useState<{ confidence?: number; rawResponse?: any } | null>(null)
 
   const [formData, setFormData] = useState({
     category: '',
@@ -57,6 +58,13 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
 
       if (result.success && result.data) {
         setParsedData(result.data)
+
+        // Store AI metadata for upload
+        setAiMetadata({
+          confidence: result.data.confidence,
+          rawResponse: result.data.rawResponse,
+        })
+
         setFormData({
           category: formData.category, // Keep selected category
           vendorName: result.data.vendorName,
@@ -125,6 +133,17 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       data.append('invoiceDate', formData.invoiceDate || '')
       data.append('amount', amount.toString())
       data.append('description', formData.description || '')
+
+      // Add AI metadata if available
+      if (aiMetadata && parsedData) {
+        data.append('aiParsed', 'true')
+        if (aiMetadata.confidence !== undefined) {
+          data.append('aiConfidence', aiMetadata.confidence.toString())
+        }
+        if (aiMetadata.rawResponse) {
+          data.append('aiRawResponse', JSON.stringify(aiMetadata.rawResponse))
+        }
+      }
 
       logger.debug('Calling uploadInvoice server action', {
         action: 'upload-invoice-form',

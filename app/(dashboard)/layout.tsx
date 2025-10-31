@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
 import { DashboardMobileLayout } from '@/components/mobile/dashboard-mobile-layout'
@@ -24,7 +25,9 @@ export default function DashboardLayout({
 
       {/* Mobile Layout - shown below lg */}
       <div className="lg:hidden">
-        <DashboardMobileLayout>{children}</DashboardMobileLayout>
+        <Suspense fallback={<div className="min-h-screen p-4">{children}</div>}>
+          <DashboardMobileLayout>{children}</DashboardMobileLayout>
+        </Suspense>
       </div>
     </>
   )
