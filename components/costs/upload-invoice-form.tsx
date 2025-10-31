@@ -164,8 +164,6 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
         errorDetails: errorMessage,
       })
 
-      console.error('Full error details:', error)
-
       toast({
         title: 'Error',
         description: errorMessage || 'Failed to parse invoice. Please try again.',

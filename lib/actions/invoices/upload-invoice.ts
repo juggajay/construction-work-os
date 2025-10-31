@@ -67,6 +67,35 @@ export async function uploadInvoice(
       return { success: false, error: 'Missing required fields' }
     }
 
+    // Validate file type (images only - PDF support disabled)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic']
+    if (!allowedTypes.includes(file.type)) {
+      logger.error('Invalid file type', new Error('File type validation failed'), {
+        action: 'uploadInvoice',
+        fileType: file.type,
+        fileName: file.name,
+      })
+      return {
+        success: false,
+        error: 'Invalid file type. Please upload a JPEG, PNG, or HEIC image file.',
+      }
+    }
+
+    // Validate file size (max 25MB)
+    const maxSize = 26214400 // 25MB in bytes
+    if (file.size > maxSize) {
+      logger.error('File size exceeds limit', new Error('File size validation failed'), {
+        action: 'uploadInvoice',
+        fileSize: file.size,
+        maxSize,
+        fileName: file.name,
+      })
+      return {
+        success: false,
+        error: 'File size exceeds 25MB limit. Please upload a smaller file.',
+      }
+    }
+
     const supabase = await createClient()
     logger.debug('Supabase client created', {
       action: 'uploadInvoice',

@@ -20,12 +20,12 @@ export async function parseInvoiceWithAIAction(
       return { success: false, error: 'Missing required fields' }
     }
 
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic']
+    // Validate file type (images only - PDF support disabled)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic']
     if (!allowedTypes.includes(file.type)) {
       return {
         success: false,
-        error: 'Invalid file type. Please upload a PDF, JPEG, PNG, or HEIC file.',
+        error: 'Invalid file type. Please upload a JPEG, PNG, or HEIC image file. PDF support coming soon.',
       }
     }
 
