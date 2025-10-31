@@ -8,6 +8,7 @@
 
 import { sgMail, fromEmail, emailConfig, isEmailEnabled } from './client'
 import { rfiAssignmentTemplate, type RFIAssignmentEmailData } from './templates/rfi-assignment'
+import { logger } from '@/lib/utils/logger'
 
 export interface SendRFIAssignmentEmailInput {
   to: string // Recipient email address
@@ -26,7 +27,11 @@ export async function sendRFIAssignmentEmail(
 ): Promise<{ success: boolean; error?: string }> {
   // Check if email is enabled
   if (!isEmailEnabled()) {
-    console.warn('Email not configured - skipping RFI assignment notification')
+    logger.warn('Email not configured - skipping RFI assignment notification', {
+      action: 'sendRFIAssignmentEmail',
+      to: input.to,
+      rfiNumber: input.rfiNumber,
+    })
     return { success: false, error: 'Email not configured' }
   }
 
@@ -47,10 +52,19 @@ export async function sendRFIAssignmentEmail(
       trackingSettings: emailConfig.trackingSettings,
     })
 
-    console.log(`RFI assignment email sent to ${to} for RFI ${input.rfiNumber}`)
+    logger.info('RFI assignment email sent successfully', {
+      action: 'sendRFIAssignmentEmail',
+      to,
+      rfiNumber: input.rfiNumber,
+      projectName: input.projectName,
+    })
     return { success: true }
   } catch (error) {
-    console.error('Failed to send RFI assignment email:', error)
+    logger.error('Failed to send RFI assignment email', error as Error, {
+      action: 'sendRFIAssignmentEmail',
+      to: input.to,
+      rfiNumber: input.rfiNumber,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

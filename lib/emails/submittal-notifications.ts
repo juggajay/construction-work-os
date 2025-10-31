@@ -7,6 +7,8 @@
  * TODO: Add environment variables for email service API keys
  */
 
+import { logger } from '@/lib/utils/logger'
+
 export interface EmailRecipient {
   email: string;
   name: string;
@@ -29,7 +31,7 @@ export async function sendSubmittalAssignedEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // TODO: Implement email sending with your provider
-    console.log('[EMAIL STUB] Submittal Assigned:', {
+    logger.debug('[EMAIL STUB] Submittal Assigned:', {
       to: recipient.email,
       subject: `Review Required: ${submittalData.submittalNumber} - ${submittalData.submittalTitle}`,
       submittal: submittalData,
@@ -48,7 +50,7 @@ export async function sendSubmittalAssignedEmail(
     // await sgMail.send(msg);
     // return { success: true };
   } catch (error) {
-    console.error('Error sending submittal assigned email:', error);
+    logger.error('Error sending submittal assigned email', error as Error);
     return { success: false, error: String(error) };
   }
 }
@@ -62,7 +64,7 @@ export async function sendSubmittalApprovedEmail(
   approverName: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[EMAIL STUB] Submittal Approved:', {
+    logger.debug('[EMAIL STUB] Submittal Approved:', {
       to: recipient.email,
       subject: `Approved: ${submittalData.submittalNumber} - ${submittalData.submittalTitle}`,
       approvedBy: approverName,
@@ -70,7 +72,7 @@ export async function sendSubmittalApprovedEmail(
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending submittal approved email:', error);
+    logger.error('Error sending submittal approved email', error as Error);
     return { success: false, error: String(error) };
   }
 }
@@ -85,7 +87,7 @@ export async function sendRevisionRequestedEmail(
   comments: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[EMAIL STUB] Revision Requested:', {
+    logger.debug('[EMAIL STUB] Revision Requested:', {
       to: recipient.email,
       subject: `Revision Required: ${submittalData.submittalNumber}`,
       reviewer: reviewerName,
@@ -94,7 +96,7 @@ export async function sendRevisionRequestedEmail(
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending revision requested email:', error);
+    logger.error('Error sending revision requested email', error as Error);
     return { success: false, error: String(error) };
   }
 }
@@ -109,7 +111,7 @@ export async function sendSubmittalRejectedEmail(
   comments: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[EMAIL STUB] Submittal Rejected:', {
+    logger.debug('[EMAIL STUB] Submittal Rejected:', {
       to: recipient.email,
       subject: `Rejected: ${submittalData.submittalNumber}`,
       reviewer: reviewerName,
@@ -118,7 +120,7 @@ export async function sendSubmittalRejectedEmail(
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending submittal rejected email:', error);
+    logger.error('Error sending submittal rejected email', error as Error);
     return { success: false, error: String(error) };
   }
 }
@@ -132,7 +134,7 @@ export async function sendReviewReminderEmail(
   daysPending: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[EMAIL STUB] Review Reminder:', {
+    logger.debug('[EMAIL STUB] Review Reminder:', {
       to: recipient.email,
       subject: `Reminder: Review Pending ${daysPending} days - ${submittalData.submittalNumber}`,
       daysPending,
@@ -140,7 +142,7 @@ export async function sendReviewReminderEmail(
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending review reminder email:', error);
+    logger.error('Error sending review reminder email', error as Error);
     return { success: false, error: String(error) };
   }
 }
@@ -158,7 +160,7 @@ export async function sendProcurementDeadlineAlert(
   }>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[EMAIL STUB] Procurement Deadline Alert:', {
+    logger.debug('[EMAIL STUB] Procurement Deadline Alert:', {
       to: recipient.email,
       subject: `Procurement Alert: ${overdueSubmittals.length} Overdue Submittals`,
       overdueCount: overdueSubmittals.length,
@@ -166,7 +168,7 @@ export async function sendProcurementDeadlineAlert(
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending procurement deadline alert:', error);
+    logger.error('Error sending procurement deadline alert', error as Error);
     return { success: false, error: String(error) };
   }
 }

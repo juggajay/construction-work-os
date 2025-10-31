@@ -9,6 +9,7 @@
 
 import { sgMail, fromEmail, emailConfig, isEmailEnabled } from './client'
 import { rfiOverdueTemplate, type RFIOverdueEmailData, type OverdueRFI } from './templates/rfi-overdue'
+import { logger } from '@/lib/utils/logger'
 
 export interface SendRFIOverdueEmailInput {
   to: string // Recipient email address
@@ -23,7 +24,11 @@ export async function sendRFIOverdueEmail(
 ): Promise<{ success: boolean; error?: string }> {
   // Check if email is enabled
   if (!isEmailEnabled()) {
-    console.warn('Email not configured - skipping RFI overdue notification')
+    logger.warn('Email not configured - skipping RFI overdue notification', {
+      action: 'sendRFIOverdueEmail',
+      to: input.to,
+      rfiCount: input.overdueRfis.length,
+    })
     return { success: false, error: 'Email not configured' }
   }
 
@@ -50,12 +55,20 @@ export async function sendRFIOverdueEmail(
     })
 
     const count = input.overdueRfis.length
-    console.log(
-      `RFI overdue ${input.isDigest ? 'digest' : 'alert'} sent to ${to} (${count} RFI${count !== 1 ? 's' : ''})`
-    )
+    logger.info('RFI overdue email sent successfully', {
+      action: 'sendRFIOverdueEmail',
+      to,
+      type: input.isDigest ? 'digest' : 'alert',
+      rfiCount: count,
+      projectName: input.projectName,
+    })
     return { success: true }
   } catch (error) {
-    console.error('Failed to send RFI overdue email:', error)
+    logger.error('Failed to send RFI overdue email', error as Error, {
+      action: 'sendRFIOverdueEmail',
+      to: input.to,
+      rfiCount: input.overdueRfis.length,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

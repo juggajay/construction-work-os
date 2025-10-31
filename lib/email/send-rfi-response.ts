@@ -8,6 +8,7 @@
 
 import { sgMail, fromEmail, emailConfig, isEmailEnabled } from './client'
 import { rfiResponseTemplate, type RFIResponseEmailData } from './templates/rfi-response'
+import { logger } from '@/lib/utils/logger'
 
 export interface SendRFIResponseEmailInput {
   to: string // Recipient email address (usually RFI creator)
@@ -25,7 +26,11 @@ export async function sendRFIResponseEmail(
 ): Promise<{ success: boolean; error?: string }> {
   // Check if email is enabled
   if (!isEmailEnabled()) {
-    console.warn('Email not configured - skipping RFI response notification')
+    logger.warn('Email not configured - skipping RFI response notification', {
+      action: 'sendRFIResponseEmail',
+      to: input.to,
+      rfiNumber: input.rfiNumber,
+    })
     return { success: false, error: 'Email not configured' }
   }
 
@@ -46,10 +51,20 @@ export async function sendRFIResponseEmail(
       trackingSettings: emailConfig.trackingSettings,
     })
 
-    console.log(`RFI response email sent to ${to} for RFI ${input.rfiNumber}`)
+    logger.info('RFI response email sent successfully', {
+      action: 'sendRFIResponseEmail',
+      to,
+      rfiNumber: input.rfiNumber,
+      isOfficialAnswer: input.isOfficialAnswer,
+      projectName: input.projectName,
+    })
     return { success: true }
   } catch (error) {
-    console.error('Failed to send RFI response email:', error)
+    logger.error('Failed to send RFI response email', error as Error, {
+      action: 'sendRFIResponseEmail',
+      to: input.to,
+      rfiNumber: input.rfiNumber,
+    })
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
