@@ -398,7 +398,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
                 </SelectContent>
               </Select>
               <p className="text-xs text-neutral-500">
-                Amount will be deducted from this category's budget
+                Amount will be deducted from this category&apos;s budget
               </p>
             </div>
 
