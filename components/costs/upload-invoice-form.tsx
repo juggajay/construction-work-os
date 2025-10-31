@@ -182,17 +182,26 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
 
   // File input handler
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔵 handleFileSelect fired', { filesLength: e.target.files?.length })
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file) {
+      console.log('🔴 No file selected')
+      return
+    }
+    console.log('🟢 File selected:', { name: file.name, type: file.type, size: file.size })
     await processFile(file)
   }
 
   // Drag and drop handlers
   const handleDragEnter = (e: React.DragEvent) => {
+    console.log('🔵 handleDragEnter fired')
     e.preventDefault()
     e.stopPropagation()
     if (!isParsing) {
+      console.log('🟢 Setting dragging to true')
       setIsDragging(true)
+    } else {
+      console.log('🔴 Blocked by isParsing')
     }
   }
 
@@ -213,15 +222,23 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
   }
 
   const handleDrop = async (e: React.DragEvent) => {
+    console.log('🔵 handleDrop fired')
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
 
-    if (isParsing) return
+    if (isParsing) {
+      console.log('🔴 Drop blocked by isParsing')
+      return
+    }
 
     const file = e.dataTransfer.files?.[0]
+    console.log('🟢 File from drop:', { name: file?.name, type: file?.type, hasFile: !!file })
 
-    if (!file) return
+    if (!file) {
+      console.log('🔴 No file in dataTransfer')
+      return
+    }
 
     // Validate file type (PDF temporarily disabled)
     const validTypes = ['.jpg', '.jpeg', '.png', '.heic']
@@ -398,7 +415,15 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
           }
           ${isParsing ? 'cursor-not-allowed opacity-75' : ''}
         `}
-        onClick={() => !isParsing && fileInputRef.current?.click()}
+        onClick={() => {
+          console.log('🔵 Container onClick fired', { isParsing, hasRef: !!fileInputRef.current })
+          if (!isParsing && fileInputRef.current) {
+            console.log('🟢 Calling fileInputRef.current.click()')
+            fileInputRef.current.click()
+          } else {
+            console.log('🔴 Click blocked:', { isParsing, hasRef: !!fileInputRef.current })
+          }
+        }}
       >
         <div className="flex flex-col items-center gap-4">
           {isParsing ? (
@@ -426,8 +451,14 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
                   <Button
                     type="button"
                     onClick={(e) => {
+                      console.log('🔵 Button onClick fired', { hasRef: !!fileInputRef.current })
                       e.stopPropagation()
-                      fileInputRef.current?.click()
+                      if (fileInputRef.current) {
+                        console.log('🟢 Calling fileInputRef.current.click() from button')
+                        fileInputRef.current.click()
+                      } else {
+                        console.log('🔴 No ref available')
+                      }
                     }}
                     disabled={isParsing}
                     size="lg"
