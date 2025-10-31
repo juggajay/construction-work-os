@@ -400,7 +400,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
         `}
         onClick={() => !isParsing && fileInputRef.current?.click()}
       >
-        <div className="flex flex-col items-center gap-4 pointer-events-none">
+        <div className="flex flex-col items-center gap-4">
           {isParsing ? (
             <>
               <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
@@ -431,7 +431,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
                     }}
                     disabled={isParsing}
                     size="lg"
-                    className="mt-2 pointer-events-auto"
+                    className="mt-2"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     Choose Invoice File
