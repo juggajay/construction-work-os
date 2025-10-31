@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,7 +9,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { login } from '@/lib/actions/auth'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -25,24 +23,12 @@ export default function LoginPage() {
     }
 
     startTransition(async () => {
-      try {
-        const result = await login(data)
+      const result = await login(data)
 
-        // If we get a result, check if it's an error
-        if (result && !result.success) {
-          setError(result.error || 'Failed to sign in')
-        }
-      } catch (error) {
-        // Redirect errors are expected and handled by Next.js
-        // Only show error if it's not a redirect
-        if (error && typeof error === 'object' && 'digest' in error) {
-          const digest = (error as { digest?: string }).digest
-          if (!digest?.startsWith('NEXT_REDIRECT')) {
-            setError('An unexpected error occurred')
-          }
-        } else {
-          setError('An unexpected error occurred')
-        }
+      // If we get a result back, it means there was an error
+      // (successful login redirects and never returns)
+      if (result && !result.success) {
+        setError(result.error || 'Failed to sign in')
       }
     })
   }
