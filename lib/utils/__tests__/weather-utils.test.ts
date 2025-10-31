@@ -22,7 +22,7 @@ describe('Weather Utils', () => {
     });
 
     it('should return default icon for unknown condition', () => {
-      // @ts-expect-error Testing invalid input
+      // @ts-expect-error - Testing invalid weather condition input to verify fallback behavior
       expect(getWeatherIcon('unknown')).toBe('☀️');
     });
   });

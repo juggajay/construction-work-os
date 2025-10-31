@@ -1,3 +1,42 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": [
+    "next/core-web-vitals"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "overrides": [
+    {
+      "files": ["lib/utils/logger.ts", "**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "lib/testing/**"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ],
+  "rules": {
+    // Prevent console.log usage - use logger instead
+    // Set to "warn" during migration, escalate to "error" after logger migration complete
+    "no-console": [
+      "warn",
+      {
+        "allow": ["error", "warn"]
+      }
+    ],
+    // Prevent @ts-ignore and @ts-nocheck - fix types properly
+    "@typescript-eslint/ban-ts-comment": [
+      "error",
+      {
+        "ts-ignore": "allow-with-description",
+        "ts-nocheck": true,
+        "minimumDescriptionLength": 50
+      }
+    ],
+    // Prevent unused variables
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  }
 }

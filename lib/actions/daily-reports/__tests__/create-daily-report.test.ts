@@ -105,7 +105,7 @@ describe('createDailyReport', () => {
 
   it('should validate required fields', async () => {
     const result = await createDailyReport({
-      // @ts-expect-error Testing missing required field
+      // @ts-expect-error - Testing validation by intentionally omitting required projectId field
       reportDate: '2024-01-15',
       latitude: 40.7128,
       longitude: -74.006,
