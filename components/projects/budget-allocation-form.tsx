@@ -13,6 +13,7 @@ import { DollarSign, ChevronDown, ChevronRight } from 'lucide-react'
 import { QuoteUploadDialog } from '@/components/budgets/quote-upload-dialog'
 import { LineItemsTable } from '@/components/budgets/line-items-table'
 import type { Database } from '@/lib/types/supabase'
+import { logger } from '@/lib/utils/logger'
 
 type BudgetCategory = Database['public']['Enums']['project_budget_category']
 
@@ -101,10 +102,14 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('💾 BudgetAllocationForm: Submit button clicked')
+    logger.debug('Budget allocation form submitted', {
+      action: 'BudgetAllocationForm.handleSubmit',
+      projectId,
+    })
 
     if (isOverBudget) {
-      console.warn('⚠️ BudgetAllocationForm: Over budget validation failed', {
+      logger.warn('Budget allocation validation failed - over budget', {
+        action: 'BudgetAllocationForm.handleSubmit',
         totalAllocated,
         totalBudget,
       })
@@ -117,7 +122,9 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
     }
 
     setIsLoading(true)
-    console.log('💾 BudgetAllocationForm: Loading state set to true')
+    logger.debug('Started budget allocation save', {
+      action: 'BudgetAllocationForm.handleSubmit',
+    })
 
     try {
       const allocationArray = CATEGORIES
@@ -127,13 +134,15 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
           amount: parseFloat(allocations[cat.value]),
         }))
 
-      console.log('💾 BudgetAllocationForm: Allocations prepared', {
+      logger.debug('Allocations prepared for save', {
+        action: 'BudgetAllocationForm.handleSubmit',
         count: allocationArray.length,
-        allocations: allocationArray,
       })
 
       if (allocationArray.length === 0) {
-        console.warn('⚠️ BudgetAllocationForm: No allocations to save')
+        logger.warn('No allocations to save', {
+          action: 'BudgetAllocationForm.handleSubmit',
+        })
         toast({
           title: 'Error',
           description: 'Please allocate budget to at least one category',
@@ -143,20 +152,26 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         return
       }
 
-      console.log('💾 BudgetAllocationForm: Calling updateBudgetAllocation action...')
+      logger.debug('Calling updateBudgetAllocation action', {
+        action: 'BudgetAllocationForm.handleSubmit',
+      })
       const result = await updateBudgetAllocation({
         projectId,
         allocations: allocationArray,
         reason: reason.trim() || undefined,
       })
 
-      console.log('💾 BudgetAllocationForm: Action returned', {
+      logger.debug('updateBudgetAllocation action returned', {
+        action: 'BudgetAllocationForm.handleSubmit',
         success: result.success,
-        hasError: !result.success && 'error' in result ? !!result.error : false,
       })
 
       if (result.success) {
-        console.log('✅ BudgetAllocationForm: Allocations saved successfully')
+        logger.info('Budget allocations saved successfully', {
+          action: 'BudgetAllocationForm.handleSubmit',
+          projectId,
+          allocationCount: allocationArray.length,
+        })
         toast({
           title: 'Success',
           description: 'Budget allocations updated successfully',
@@ -164,7 +179,8 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         setReason('')
         router.refresh()
       } else {
-        console.error('❌ BudgetAllocationForm: Save failed', {
+        logger.error('Budget allocation save failed', new Error(result.error || 'Unknown error'), {
+          action: 'BudgetAllocationForm.handleSubmit',
           error: result.error,
         })
         toast({
@@ -175,9 +191,8 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         })
       }
     } catch (error) {
-      console.error('❌ BudgetAllocationForm: Unexpected error during save', {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
+      logger.error('Unexpected error during budget allocation save', error as Error, {
+        action: 'BudgetAllocationForm.handleSubmit',
       })
       toast({
         title: 'Error',
@@ -186,7 +201,9 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         duration: 7000, // Show error longer
       })
     } finally {
-      console.log('💾 BudgetAllocationForm: Loading state set to false')
+      logger.debug('Budget allocation save process finished', {
+        action: 'BudgetAllocationForm.handleSubmit',
+      })
       setIsLoading(false)
     }
   }
