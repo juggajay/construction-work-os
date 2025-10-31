@@ -4,14 +4,6 @@
 
 import OpenAI from 'openai'
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY environment variable is not set')
-}
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 export interface ParsedInvoiceData {
   vendorName: string
   invoiceNumber: string
@@ -31,6 +23,16 @@ export interface ParsedInvoiceData {
 
 export async function parseInvoiceWithAI(fileBuffer: Buffer, mimeType: string): Promise<ParsedInvoiceData> {
   try {
+    // Check for API key at runtime
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is not set')
+    }
+
+    // Initialize OpenAI client
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+
     // Convert buffer to base64
     const base64Image = fileBuffer.toString('base64')
     const dataUrl = `data:${mimeType};base64,${base64Image}`
