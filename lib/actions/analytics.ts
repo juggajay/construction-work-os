@@ -114,7 +114,7 @@ export async function getOrganizationKPIs(
         supabase
           .from('rfis')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'open')
+          .in('status', ['submitted', 'under_review'])
           .in('project_id', projectIds)
           .is('deleted_at', null),
         supabase
