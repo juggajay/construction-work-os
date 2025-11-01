@@ -475,7 +475,7 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".jpg,.jpeg,.png,.heic"
+                accept="image/jpeg,image/png,image/heic"
                 onChange={handleFileSelect}
                 className="hidden"
                 disabled={isParsing}
