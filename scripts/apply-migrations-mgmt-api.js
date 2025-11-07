@@ -97,6 +97,27 @@ async function main() {
     {
       file: 'supabase/migrations/20251101000001_add_performance_indexes.sql',
       name: 'add_performance_indexes'
+    },
+    // NEW: Permission system migrations
+    {
+      file: 'supabase/migrations/20251107000001_create_permission_functions.sql',
+      name: 'create_permission_functions'
+    },
+    {
+      file: 'supabase/migrations/20251107000002_update_user_project_ids_function.sql',
+      name: 'update_user_project_ids_function'
+    },
+    {
+      file: 'supabase/migrations/20251107000003_add_permission_indexes.sql',
+      name: 'add_permission_indexes'
+    },
+    {
+      file: 'supabase/migrations/20251107000004_update_rls_for_permissions.sql',
+      name: 'update_rls_for_permissions'
+    },
+    {
+      file: 'supabase/migrations/20251107000005_assign_existing_users_to_projects.sql',
+      name: 'assign_existing_users_to_projects'
     }
   ];
 

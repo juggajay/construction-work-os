@@ -68,15 +68,7 @@ export async function getProjectTeam(
         trade,
         granted_by,
         granted_at,
-        user:profiles!project_access_user_id_fkey (
-          id,
-          email,
-          full_name,
-          avatar_url
-        ),
-        granted_by_user:profiles!project_access_granted_by_fkey (
-          full_name
-        )
+        created_at
       `
       )
       .eq('project_id', projectId)
@@ -87,25 +79,42 @@ export async function getProjectTeam(
       return { success: false, error: error.message }
     }
 
+    // Fetch user profiles for all team members
+    const userIds = [...new Set(data?.map((row: any) => row.user_id) || [])]
+    const grantedByIds = [...new Set(data?.filter((row: any) => row.granted_by).map((row: any) => row.granted_by) || [])]
+    const allUserIds = [...new Set([...userIds, ...grantedByIds])]
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .in('id', allUserIds)
+
+    const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
+
     // Transform to TeamMember type
-    const teamMembers: TeamMember[] = (data || []).map((row: any) => ({
-      id: row.id,
-      userId: row.user_id,
-      projectId: row.project_id,
-      role: row.role,
-      trade: row.trade,
-      grantedBy: row.granted_by,
-      grantedAt: row.granted_at,
-      user: {
-        id: row.user.id,
-        email: row.user.email,
-        fullName: row.user.full_name,
-        avatarUrl: row.user.avatar_url,
-      },
-      grantedByUser: row.granted_by_user
-        ? { fullName: row.granted_by_user.full_name }
-        : null,
-    }))
+    const teamMembers: TeamMember[] = (data || []).map((row: any) => {
+      const userProfile = profileMap.get(row.user_id)
+      const grantedByProfile = row.granted_by ? profileMap.get(row.granted_by) : null
+
+      return {
+        id: row.id,
+        userId: row.user_id,
+        projectId: row.project_id,
+        role: row.role,
+        trade: row.trade,
+        grantedBy: row.granted_by,
+        grantedAt: row.granted_at,
+        user: {
+          id: row.user_id,
+          email: userProfile?.email || 'Unknown',
+          fullName: userProfile?.full_name || null,
+          avatarUrl: userProfile?.avatar_url || null,
+        },
+        grantedByUser: grantedByProfile
+          ? { fullName: grantedByProfile.full_name }
+          : null,
+      }
+    })
 
     return { success: true, data: teamMembers }
   } catch (error) {
@@ -376,18 +385,7 @@ export async function getAvailableOrgMembers(params: {
     // Get org members who are NOT already on the project
     const { data, error } = await supabase
       .from('organization_members')
-      .select(
-        `
-        user_id,
-        role,
-        profiles!organization_members_user_id_fkey (
-          id,
-          email,
-          full_name,
-          avatar_url
-        )
-      `
-      )
+      .select('user_id, role')
       .eq('org_id', orgId)
       .is('deleted_at', null)
 
@@ -409,15 +407,29 @@ export async function getAvailableOrgMembers(params: {
     const projectUserIds = new Set((projectTeam || []).map((m: any) => m.user_id))
 
     // Filter out users already on project
-    const availableMembers: OrgMember[] = (data || [])
-      .filter((row: any) => !projectUserIds.has(row.user_id))
-      .map((row: any) => ({
-        id: row.user_id,
-        email: row.profiles.email,
-        fullName: row.profiles.full_name,
-        avatarUrl: row.profiles.avatar_url,
-        orgRole: row.role,
-      }))
+    const availableOrgMembers = (data || []).filter((row: any) => !projectUserIds.has(row.user_id))
+
+    // Fetch profiles for available members
+    const userIds = availableOrgMembers.map((m: any) => m.user_id)
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .in('id', userIds)
+
+    const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || [])
+
+    // Combine org member data with profile data
+    const availableMembers: OrgMember[] = availableOrgMembers
+      .map((row: any) => {
+        const profile = profileMap.get(row.user_id)
+        return {
+          id: row.user_id,
+          email: profile?.email || 'Unknown',
+          fullName: profile?.full_name || null,
+          avatarUrl: profile?.avatar_url || null,
+          orgRole: row.role,
+        }
+      })
       .sort((a, b) => {
         // Sort by name, then email
         if (a.fullName && b.fullName) {

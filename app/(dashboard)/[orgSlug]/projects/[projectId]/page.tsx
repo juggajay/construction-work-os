@@ -199,7 +199,7 @@ export default async function ProjectPage({
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <Button variant="outline" className="h-24 flex-col" asChild>
                 <Link href={`/${orgSlug}/projects/${projectId}/costs`}>
                   <DollarSign className="mb-2 h-6 w-6" />
@@ -228,6 +228,12 @@ export default async function ProjectPage({
                 <Link href={`/${orgSlug}/projects/${projectId}/daily-reports`}>
                   <Clock className="mb-2 h-6 w-6" />
                   <span>Daily Reports</span>
+                </Link>
+              </Button>
+              <Button variant="outline" className="h-24 flex-col" asChild>
+                <Link href={`/${orgSlug}/projects/${projectId}/team`}>
+                  <Users className="mb-2 h-6 w-6" />
+                  <span>Team</span>
                 </Link>
               </Button>
             </div>
