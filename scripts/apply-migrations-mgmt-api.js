@@ -1,11 +1,20 @@
 require('dotenv').config({ path: '.env.local' });
 const { readFileSync } = require('fs');
 
-const accessToken = process.env.SUPABASE_ACCESS_TOKEN || 'sbp_d8294d5b91c7bcd7d7229e014ada14ca6779d6d2';
-const projectRef = 'tokjmeqjvexnmtampyjm';
+const accessToken = process.env.SUPABASE_ACCESS_TOKEN;
+const projectRef = process.env.SUPABASE_PROJECT_REF;
 
 if (!accessToken) {
-  console.error('❌ SUPABASE_ACCESS_TOKEN not found');
+  console.error('❌ Error: SUPABASE_ACCESS_TOKEN environment variable not set');
+  console.error('   Please add SUPABASE_ACCESS_TOKEN to your .env.local file');
+  console.error('   See SUPABASE_MIGRATION_GUIDE.md for setup instructions');
+  process.exit(1);
+}
+
+if (!projectRef) {
+  console.error('❌ Error: SUPABASE_PROJECT_REF environment variable not set');
+  console.error('   Please add SUPABASE_PROJECT_REF to your .env.local file');
+  console.error('   See SUPABASE_MIGRATION_GUIDE.md for setup instructions');
   process.exit(1);
 }
 
