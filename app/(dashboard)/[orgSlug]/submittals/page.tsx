@@ -136,64 +136,72 @@ export default async function OrganizationSubmittalsPage({ params }: PageProps) 
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Number</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>CSI Code</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {!submittals || submittals.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No submittals found
-                  </TableCell>
+                  <TableHead className="w-[100px]">Number</TableHead>
+                  <TableHead className="min-w-[200px]">Title</TableHead>
+                  <TableHead className="min-w-[150px]">Project</TableHead>
+                  <TableHead className="hidden md:table-cell">CSI Code</TableHead>
+                  <TableHead className="min-w-[120px]">Stage</TableHead>
+                  <TableHead className="hidden lg:table-cell">Due Date</TableHead>
+                  <TableHead className="hidden xl:table-cell">Created</TableHead>
                 </TableRow>
-              ) : (
-                submittals.map((submittal: any) => (
-                  <TableRow
-                    key={submittal.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      window.location.href = `/${orgSlug}/projects/${submittal.project_id}/submittals/${submittal.id}`
-                    }}
-                  >
-                    <TableCell className="font-medium">#{submittal.number}</TableCell>
-                    <TableCell className="max-w-[300px] truncate">{submittal.title}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Building2 className="h-3 w-3 text-muted-foreground" />
-                        <span className="truncate max-w-[150px]">{submittal.project?.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{submittal.csi_code || '-'}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={STATUS_COLORS[submittal.current_stage] || ''}
-                      >
-                        {STATUS_LABELS[submittal.current_stage] || submittal.current_stage}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {submittal.due_date
-                        ? new Date(submittal.due_date).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(submittal.created_at).toLocaleDateString()}
+              </TableHeader>
+              <TableBody>
+                {!submittals || submittals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      No submittals found
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  submittals.map((submittal: any) => (
+                    <TableRow
+                      key={submittal.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => {
+                        window.location.href = `/${orgSlug}/projects/${submittal.project_id}/submittals/${submittal.id}`
+                      }}
+                    >
+                      <TableCell className="font-medium whitespace-nowrap">
+                        #{submittal.number}
+                      </TableCell>
+                      <TableCell>
+                        <div className="line-clamp-2">{submittal.title}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Building2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{submittal.project?.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {submittal.csi_code || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={STATUS_COLORS[submittal.current_stage] || ''}
+                        >
+                          {STATUS_LABELS[submittal.current_stage] || submittal.current_stage}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell whitespace-nowrap">
+                        {submittal.due_date
+                          ? new Date(submittal.due_date).toLocaleDateString()
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell text-muted-foreground whitespace-nowrap">
+                        {new Date(submittal.created_at).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
