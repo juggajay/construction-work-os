@@ -76,12 +76,12 @@ This project has **Supabase CLI installed and configured**. You can interact wit
 
 **IMPORTANT**: To apply migrations to the remote Supabase database, you MUST use the Management API method.
 
-**Read this first**: `SUPABASE_MIGRATION_GUIDE.md` (comprehensive guide with credentials and exact commands)
+**Read this first**: `SUPABASE_MIGRATION_GUIDE.md` (comprehensive guide with setup and exact commands)
 
 **Quick Summary**:
 - **Working Method**: `node scripts/apply-migrations-mgmt-api.js`
-- **Project Reference**: `tokjmeqjvexnmtampyjm`
-- **Access Token**: `sbp_d8294d5b91c7bcd7d7229e014ada14ca6779d6d2`
+- **Configuration**: Set `SUPABASE_PROJECT_REF` and `SUPABASE_ACCESS_TOKEN` in `.env.local`
+- **See**: `SUPABASE_MIGRATION_GUIDE.md` for complete environment variable setup
 
 **Methods that DON'T work** (don't waste time trying):
 - ❌ Direct PostgreSQL connection (timeout)

@@ -12,8 +12,8 @@ node scripts/apply-migrations-mgmt-api.js
 ```
 
 **Requirements**:
-- Supabase Access Token: `sbp_d8294d5b91c7bcd7d7229e014ada14ca6779d6d2`
-- Project Reference: `tokjmeqjvexnmtampyjm`
+- Supabase Access Token: Set `SUPABASE_ACCESS_TOKEN` in `.env.local`
+- Project Reference: Set `SUPABASE_PROJECT_REF` in `.env.local`
 
 ### How It Works
 
@@ -47,21 +47,22 @@ const migrations = [
 ### 1. Direct PostgreSQL Connection
 ```bash
 # DOES NOT WORK - Connection timeout
-psql postgresql://postgres.tokjmeqjvexnmtampyjm:password@aws-1-us-east-1.pooler.supabase.com:5432/postgres
+psql $DATABASE_URL
 ```
 **Error**: Timeout connecting to pooler
 
 ### 2. Supabase CLI Link
 ```bash
 # DOES NOT WORK - Connection timeout
-npx supabase link --project-ref tokjmeqjvexnmtampyjm
+npx supabase link --project-ref $SUPABASE_PROJECT_REF
 ```
-**Error**: `failed to connect to host=aws-1-us-east-1.pooler.supabase.com dial tcp 18.214.78.123:5432: i/o timeout`
+**Error**: `failed to connect to host=aws-1-us-east-1.pooler.supabase.com dial tcp: i/o timeout`
 
 ### 3. Direct Port 6543 (Transaction Pooler)
 ```bash
 # DOES NOT WORK - Connection timeout
-psql postgresql://postgres.tokjmeqjvexnmtampyjm:password@aws-1-us-east-1.pooler.supabase.com:6543/postgres
+psql $DATABASE_URL
+# (Using port 6543)
 ```
 **Error**: Timeout
 
@@ -76,22 +77,31 @@ node scripts/apply-migrations-sdk.js
 
 ## 🔑 Credentials
 
-### Supabase Project Details
-- **Project Reference**: `tokjmeqjvexnmtampyjm`
-- **Project URL**: `https://tokjmeqjvexnmtampyjm.supabase.co`
-- **Region**: `aws-1-us-east-1`
+### Required Environment Variables
 
-### Access Token
-```
-sbp_d8294d5b91c7bcd7d7229e014ada14ca6779d6d2
-```
+Create a `.env.local` file (or `.env.production` for production) with the following variables:
 
-### Environment Variables (from `.env.local`)
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://tokjmeqjvexnmtampyjm.supabase.co
-SUPABASE_ACCESS_TOKEN=sbp_d8294d5b91c7bcd7d7229e014ada14ca6779d6d2
-DATABASE_URL=postgresql://postgres.tokjmeqjvexnmtampyjm:fJ1XI7m5uBkvokYS@aws-1-us-east-1.pooler.supabase.com:5432/postgres
+# Supabase Project Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Migration API Access
+SUPABASE_ACCESS_TOKEN=your_management_api_token
+SUPABASE_PROJECT_REF=your_project_reference
+
+# Database Connection (optional, for direct connections)
+DATABASE_URL=postgresql://postgres.[project_ref]:[password]@[host]:5432/postgres
 ```
+
+### How to Get These Values
+
+1. **Project URL & Keys**: Go to your Supabase Dashboard → Project Settings → API
+2. **Access Token**: Go to Supabase Dashboard → Account → Access Tokens → Create new token
+3. **Project Reference**: Found in your project URL (e.g., `https://[project_ref].supabase.co`)
+
+**⚠️ SECURITY**: Never commit `.env.local` or `.env.production` to git. These files are already in `.gitignore`.
 
 ---
 
@@ -228,11 +238,12 @@ Create a test change order and verify it gets assigned a number like `PCO-001`, 
 
 ---
 
-## 🔐 Security Note
+## 🔐 Security Best Practices
 
-The access token in this file is already committed to the repository. In production, this should be:
-- Stored in environment variables
-- Rotated regularly
-- Never committed to git
-
-However, for this development project, the token is hardcoded for convenience.
+**All credentials must be stored in environment variables:**
+- Use `.env.local` for local development
+- Use `.env.production` for production (or deployment platform environment variables)
+- **Never commit these files to git** - they are in `.gitignore`
+- **Rotate tokens regularly** (every 90 days recommended)
+- **Use separate tokens** for development and production
+- **Restrict token permissions** to only what's needed
