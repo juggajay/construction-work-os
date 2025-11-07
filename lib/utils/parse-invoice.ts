@@ -104,8 +104,16 @@ If you cannot find a field, use reasonable defaults:
       throw new Error('No response from OpenAI')
     }
 
+    // Strip markdown code fences if present (OpenAI sometimes wraps JSON in ```json ... ```)
+    let jsonContent = content.trim()
+    if (jsonContent.startsWith('```json')) {
+      jsonContent = jsonContent.replace(/^```json\s*\n?/, '').replace(/\n?```\s*$/, '')
+    } else if (jsonContent.startsWith('```')) {
+      jsonContent = jsonContent.replace(/^```\s*\n?/, '').replace(/\n?```\s*$/, '')
+    }
+
     // Parse the JSON response
-    const parsed = JSON.parse(content) as ParsedInvoiceData
+    const parsed = JSON.parse(jsonContent) as ParsedInvoiceData
 
     // Calculate confidence score based on field completeness
     let confidence = 1.0

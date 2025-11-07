@@ -44,11 +44,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Next.js
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net", // Required for Next.js and PDF.js
               "style-src 'self' 'unsafe-inline'", // Required for Tailwind/Radix
               "img-src 'self' data: blob: https:", // Allow Supabase images
               "font-src 'self' data:",
               "connect-src 'self' https://*.supabase.co", // Allow Supabase API calls
+              "worker-src 'self' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net", // Allow PDF.js worker
               "frame-ancestors 'none'",
             ].join('; '),
           },

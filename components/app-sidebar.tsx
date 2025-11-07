@@ -17,6 +17,7 @@ import {
   Calendar,
   Wrench,
   TrendingUp,
+  Activity,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -116,6 +117,13 @@ export function AppSidebar({ orgSlug }: AppSidebarProps) {
         {
           title: 'Insights',
           items: [
+            {
+              title: 'Project Health',
+              icon: Activity,
+              href: `/${orgSlug}/project-health`,
+              disabled: false,
+              badge: null,
+            },
             {
               title: 'Analytics',
               icon: TrendingUp,

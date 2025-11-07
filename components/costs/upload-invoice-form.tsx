@@ -66,6 +66,136 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
     }
   }, [])
 
+  // Convert PDF to image using PDF.js (client-side)
+  const convertPdfToImage = async (pdfFile: File): Promise<File> => {
+    try {
+      logger.debug('Converting PDF to image in browser', {
+        action: 'upload-invoice-form',
+        fileName: pdfFile.name,
+        fileSize: pdfFile.size,
+      })
+
+      // Load PDF.js from CDN to avoid webpack issues
+      const PDFJS_VERSION = '4.0.379'
+      const PDFJS_CDN = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}`
+
+      // Check if pdfjs is already loaded
+      if (!(window as any).pdfjsLib) {
+        console.log('Loading PDF.js from CDN...')
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script')
+          script.src = `${PDFJS_CDN}/pdf.min.mjs`
+          script.type = 'module'
+          script.onload = () => {
+            console.log('PDF.js loaded from CDN')
+            resolve()
+          }
+          script.onerror = () => reject(new Error('Failed to load PDF.js from CDN'))
+          document.head.appendChild(script)
+        })
+
+        // Wait a bit for the global to be set
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      const pdfjsLib = (window as any).pdfjsLib
+      if (!pdfjsLib) {
+        throw new Error('PDF.js failed to load')
+      }
+
+      // Configure worker
+      const workerSrc = `${PDFJS_CDN}/pdf.worker.min.mjs`
+      console.log('Setting PDF.js worker:', workerSrc)
+      pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc
+
+      // Read PDF file as ArrayBuffer
+      console.log('Reading PDF file...')
+      const arrayBuffer = await pdfFile.arrayBuffer()
+      console.log('PDF file read, size:', arrayBuffer.byteLength)
+
+      // Load PDF document
+      console.log('Loading PDF document...')
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
+      const pdf = await loadingTask.promise
+      console.log('PDF loaded, pages:', pdf.numPages)
+
+      // Get first page
+      console.log('Getting first page...')
+      const page = await pdf.getPage(1)
+      console.log('First page loaded')
+
+      // Set scale for good quality (2x for better resolution)
+      const scale = 2.0
+      const viewport = page.getViewport({ scale })
+      console.log('Viewport size:', viewport.width, 'x', viewport.height)
+
+      // Create canvas
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+
+      if (!context) {
+        throw new Error('Could not get canvas context')
+      }
+
+      canvas.width = viewport.width
+      canvas.height = viewport.height
+
+      // Render PDF page to canvas
+      console.log('Rendering PDF to canvas...')
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+      }).promise
+      console.log('PDF rendered to canvas')
+
+      // Convert canvas to Blob
+      console.log('Converting canvas to blob...')
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob)
+          } else {
+            reject(new Error('Failed to convert canvas to blob'))
+          }
+        }, 'image/png')
+      })
+      console.log('Canvas converted to blob, size:', blob.size)
+
+      // Create new File from Blob
+      const imageFile = new File(
+        [blob],
+        pdfFile.name.replace(/\.pdf$/i, '.png'),
+        { type: 'image/png' }
+      )
+
+      logger.info('PDF converted to image successfully', {
+        action: 'upload-invoice-form',
+        originalSize: pdfFile.size,
+        imageSize: imageFile.size,
+        originalName: pdfFile.name,
+        imageName: imageFile.name,
+      })
+
+      return imageFile
+    } catch (error) {
+      // Enhanced error logging
+      console.error('PDF conversion failed at:', error)
+      console.error('Error name:', error instanceof Error ? error.name : 'unknown')
+      console.error('Error message:', error instanceof Error ? error.message : String(error))
+      console.error('Error stack:', error instanceof Error ? error.stack : 'no stack')
+
+      logger.error('Failed to convert PDF to image', error as Error, {
+        action: 'upload-invoice-form',
+        fileName: pdfFile.name,
+        errorName: error instanceof Error ? error.name : 'unknown',
+        errorMessage: error instanceof Error ? error.message : String(error),
+      })
+
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      throw new Error(`Failed to convert PDF: ${errorMessage}. Please try uploading an image file instead.`)
+    }
+  }
+
   // Process file (used by both file input and drag-drop)
   const processFile = async (file: File) => {
     setSelectedFile(file)
@@ -78,35 +208,59 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       action: 'upload-invoice-form',
       projectId,
       fileName: file.name,
+      fileType: file.type,
     })
 
     try {
-      // TEMPORARY: PDF support disabled due to serverless compatibility
-      // TODO: Implement browser-based PDF rendering or use external service
+      // Convert PDF to image if needed (browser-based conversion)
+      let fileToProcess = file
       if (file.type === 'application/pdf') {
-        logger.warn('PDF upload attempted but not supported', {
+        logger.info('PDF detected, converting to image in browser', {
           action: 'upload-invoice-form',
           fileName: file.name,
         })
 
         toast({
-          title: 'PDF Not Supported',
-          description: 'Please upload an image file (JPG, PNG, HEIC) instead. PDF support coming soon.',
-          variant: 'destructive',
+          title: 'Converting PDF',
+          description: 'Converting PDF to image for AI analysis...',
         })
 
-        setIsParsing(false)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
+        try {
+          fileToProcess = await convertPdfToImage(file)
+
+          // Update selectedFile to the converted image so it's sent to the server
+          setSelectedFile(fileToProcess)
+
+          toast({
+            title: 'PDF Converted',
+            description: 'Successfully converted PDF to image. Analyzing with AI...',
+          })
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to convert PDF'
+          logger.error('PDF conversion failed', error as Error, {
+            action: 'upload-invoice-form',
+            fileName: file.name,
+          })
+
+          toast({
+            title: 'Conversion Failed',
+            description: errorMessage,
+            variant: 'destructive',
+          })
+
+          setIsParsing(false)
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
+          setSelectedFile(null)
+          return
         }
-        setSelectedFile(null)
-        return
       }
 
       // Create FormData for server action
       const formData = new FormData()
       formData.append('projectId', projectId)
-      formData.append('file', file)
+      formData.append('file', fileToProcess)
 
       const result = await parseInvoiceWithAIAction(formData)
 
@@ -240,14 +394,14 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       return
     }
 
-    // Validate file type (PDF temporarily disabled)
-    const validTypes = ['.jpg', '.jpeg', '.png', '.heic']
+    // Validate file type (now supports PDFs with browser-based conversion)
+    const validTypes = ['.jpg', '.jpeg', '.png', '.heic', '.pdf']
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
 
     if (!validTypes.includes(fileExtension)) {
       toast({
         title: 'Invalid file type',
-        description: 'Please upload a JPG, PNG, or HEIC file (PDF support coming soon)',
+        description: 'Please upload a JPG, PNG, HEIC, or PDF file',
         variant: 'destructive',
       })
       return
@@ -468,14 +622,14 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
                     Choose Invoice File
                   </Button>
                   <p className="text-xs text-neutral-400 mt-2">
-                    Supports JPG, PNG, HEIC (max 25MB) • PDF coming soon
+                    Supports JPG, PNG, HEIC, PDF (max 25MB)
                   </p>
                 </>
               )}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/heic"
+                accept="image/jpeg,image/png,image/heic,application/pdf"
                 onChange={handleFileSelect}
                 className="hidden"
                 disabled={isParsing}
