@@ -12,6 +12,11 @@ import { ProjectTimeline } from '@/components/projects/project-timeline'
 import Link from 'next/link'
 import { Plus, Building2, Filter, ArrowUpDown, Grid3x3, List, Columns, Calendar } from 'lucide-react'
 
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching
+// Revalidate every 60 seconds to balance freshness with performance
+// Projects list changes moderately (new projects, status updates)
+export const revalidate = 60
+
 interface ProjectsPageProps {
   params: Promise<{
     orgSlug: string

@@ -41,7 +41,6 @@ interface RFITableRow {
   assigned_to?: {
     id: string
     full_name: string | null
-    email: string
     avatar_url?: string | null
   } | null
   discipline?: string | null
@@ -66,7 +65,7 @@ function getDaysOpen(submittedAt: string | null): number {
   return diffDays
 }
 
-function getInitials(name: string | null, email: string): string {
+function getInitials(name: string | null): string {
   if (name) {
     const parts = name.split(' ')
     if (parts.length >= 2 && parts[0] && parts[1]) {
@@ -74,7 +73,7 @@ function getInitials(name: string | null, email: string): string {
     }
     return name.slice(0, 2).toUpperCase()
   }
-  return email.slice(0, 2).toUpperCase()
+  return 'NA'
 }
 
 export function RFITable({ rfis, isLoading = false, showProject = true, onRowClick }: RFITableProps) {
@@ -159,11 +158,11 @@ export function RFITable({ rfis, isLoading = false, showProject = true, onRowCli
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={rfi.assigned_to.avatar_url || undefined} />
                       <AvatarFallback className="text-xs">
-                        {getInitials(rfi.assigned_to.full_name, rfi.assigned_to.email)}
+                        {getInitials(rfi.assigned_to.full_name)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm">
-                      {rfi.assigned_to.full_name || rfi.assigned_to.email}
+                      {rfi.assigned_to.full_name || 'Assigned User'}
                     </span>
                   </div>
                 ) : (

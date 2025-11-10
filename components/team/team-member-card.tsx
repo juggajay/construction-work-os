@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in team grids
+ */
+
+import { memo } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -46,7 +51,7 @@ interface TeamMemberCardProps {
   className?: string
 }
 
-export function TeamMemberCard({ member, onCardClick, className }: TeamMemberCardProps) {
+export const TeamMemberCard = memo(function TeamMemberCard({ member, onCardClick, className }: TeamMemberCardProps) {
 
   return (
     <Card
@@ -204,4 +209,4 @@ export function TeamMemberCard({ member, onCardClick, className }: TeamMemberCar
       </CardContent>
     </Card>
   )
-}
+});

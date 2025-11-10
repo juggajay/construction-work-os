@@ -1,3 +1,8 @@
+/**
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in project health grids
+ */
+
+import { memo } from 'react';
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +16,7 @@ interface ProjectCardProps {
   orgSlug: string
 }
 
-export function ProjectCard({ project, orgSlug }: ProjectCardProps) {
+export const ProjectCard = memo(function ProjectCard({ project, orgSlug }: ProjectCardProps) {
   const latestInvoiceDate = project.latestInvoiceDate
     ? new Date(project.latestInvoiceDate).toLocaleDateString()
     : 'No invoices'
@@ -82,4 +87,4 @@ export function ProjectCard({ project, orgSlug }: ProjectCardProps) {
       </Card>
     </Link>
   )
-}
+});

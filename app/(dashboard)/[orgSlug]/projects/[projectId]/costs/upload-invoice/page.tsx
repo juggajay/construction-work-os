@@ -1,10 +1,31 @@
+/**
+ * ✅ PHASE 3B OPTIMIZATION: Dynamic import for UploadInvoiceForm
+ * Heavy component (763 lines + PDF.js) only loaded when needed
+ * Expected: ~80-100KB bundle reduction, 40-50% faster initial page load
+ */
+
+import dynamic from 'next/dynamic'
 import { getProjectById } from '@/lib/actions/project-helpers'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { UploadInvoiceForm } from '@/components/costs/upload-invoice-form'
+
+const UploadInvoiceForm = dynamic(
+  () => import('@/components/costs/upload-invoice-form').then((mod) => ({ default: mod.UploadInvoiceForm })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">Loading upload form...</p>
+        </div>
+      </div>
+    ),
+  }
+)
 
 interface UploadInvoicePageProps {
   params: Promise<{

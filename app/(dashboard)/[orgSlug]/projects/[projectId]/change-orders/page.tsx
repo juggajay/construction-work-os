@@ -1,4 +1,7 @@
 /**
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching (10s revalidate)
+export const revalidate = 10
+
  * Change Orders List Page
  *
  * Displays all change orders for a project with filtering, search, and sorting

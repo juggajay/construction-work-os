@@ -1,11 +1,26 @@
 /**
  * Create New Daily Report Page
  * Form for creating a new daily report
+ * ✅ PHASE 3B OPTIMIZATION: Dynamic import for DailyReportForm (362 lines)
  */
 
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
-import { DailyReportForm } from '@/components/daily-reports/daily-report-form';
+
+const DailyReportForm = dynamic(
+  () => import('@/components/daily-reports/daily-report-form').then((mod) => ({ default: mod.DailyReportForm })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">Loading form...</p>
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface PageProps {
   params: Promise<{

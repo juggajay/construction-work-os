@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in project grids
+ */
+
+import { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ConstructionBadge } from '@/components/ui/construction-badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -42,7 +47,7 @@ const statusColors = {
   archived: 'border-l-blue-500',
 }
 
-export function ProjectCard({ project, orgSlug }: ProjectCardProps) {
+export const ProjectCard = memo(function ProjectCard({ project, orgSlug }: ProjectCardProps) {
   return (
     <Link href={`/${orgSlug}/projects/${project.id}`}>
       <Card
@@ -157,4 +162,4 @@ export function ProjectCard({ project, orgSlug }: ProjectCardProps) {
       </Card>
     </Link>
   )
-}
+});

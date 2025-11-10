@@ -1,8 +1,10 @@
 /**
  * Submittal Review Stage Badge Component
  * Displays current review stage with appropriate styling
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in pipelines
  */
 
+import { memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 type ReviewStage = 'draft' | 'gc_review' | 'ae_review' | 'owner_review' | 'complete';
@@ -22,7 +24,7 @@ const stageConfig: Record<
   complete: { label: 'Complete', variant: 'outline' },
 };
 
-export function SubmittalStageBadge({ stage }: SubmittalStageBadgeProps) {
+export const SubmittalStageBadge = memo(function SubmittalStageBadge({ stage }: SubmittalStageBadgeProps) {
   const config = stageConfig[stage];
 
   return (
@@ -30,4 +32,4 @@ export function SubmittalStageBadge({ stage }: SubmittalStageBadgeProps) {
       {config.label}
     </Badge>
   );
-}
+});

@@ -1,4 +1,7 @@
 /**
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching (10s revalidate)
+export const revalidate = 10
+
  * Daily Reports List Page
  * Display all daily reports for a project with filtering and search
  */

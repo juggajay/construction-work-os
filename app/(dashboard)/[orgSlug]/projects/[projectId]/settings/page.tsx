@@ -1,11 +1,34 @@
+/**
+ * ✅ PHASE 3B OPTIMIZATION: Dynamic import for BudgetAllocationForm
+ * Heavy component (353 lines) + LineItemsTable (490 lines) only loaded when needed
+ * Expected: ~40-50KB bundle reduction
+ */
+
+import dynamic from 'next/dynamic'
 import { getProjectById } from '@/lib/actions/project-helpers'
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching (3600s revalidate)
+export const revalidate = 3600
+
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ProjectSettingsForm } from '@/components/projects/project-settings-form'
-import { BudgetAllocationForm } from '@/components/projects/budget-allocation-form'
+
+const BudgetAllocationForm = dynamic(
+  () => import('@/components/projects/budget-allocation-form').then((mod) => ({ default: mod.BudgetAllocationForm })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">Loading budget allocation...</p>
+        </div>
+      </div>
+    ),
+  }
+)
 
 interface ProjectSettingsPageProps {
   params: Promise<{

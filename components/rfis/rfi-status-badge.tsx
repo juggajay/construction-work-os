@@ -2,8 +2,10 @@
  * RFI Status Badge Component
  *
  * Displays the current status of an RFI with appropriate color coding
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in tables
  */
 
+import { memo } from 'react';
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -48,7 +50,7 @@ const statusConfig: Record<RFIStatus, { label: string; variant: string; classNam
   },
 }
 
-export function RFIStatusBadge({ status, isOverdue = false, className }: RFIStatusBadgeProps) {
+export const RFIStatusBadge = memo(function RFIStatusBadge({ status, isOverdue = false, className }: RFIStatusBadgeProps) {
   const config = statusConfig[status] || statusConfig.draft
 
   // Override styling if overdue
@@ -77,7 +79,7 @@ export function RFIStatusBadge({ status, isOverdue = false, className }: RFIStat
       {config.label}
     </Badge>
   )
-}
+});
 
 /**
  * Utility function to format status for display

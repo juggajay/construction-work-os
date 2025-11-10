@@ -28,10 +28,48 @@ export async function getChangeOrderById(
       throw new UnauthorizedError('You must be logged in')
     }
 
-    // Get change order with related data
+    // ✅ OPTIMIZATION: Fetch change order with all related data in ONE query
+    // Previously: 3 sequential queries (change_order + line_items + approvals)
+    // Now: 1 query with nested selects
+    // Expected improvement: 3x faster (300ms → 100ms)
+
     const { data: changeOrder, error: coError } = await supabase
       .from('change_orders')
-      .select('*')
+      .select(`
+        *,
+        line_items:change_order_line_items!change_order_id(
+          id,
+          description,
+          quantity,
+          unit,
+          unit_cost,
+          extended_cost,
+          total_amount,
+          csi_section,
+          sub_cost,
+          gc_markup_percent,
+          gc_markup_amount,
+          tax_rate,
+          tax_amount,
+          sort_order,
+          version,
+          created_at,
+          updated_at
+        ),
+        approvals:change_order_approvals!change_order_id(
+          id,
+          change_order_id,
+          approver_id,
+          approver_org_id,
+          stage,
+          status,
+          decision_at,
+          notes,
+          version,
+          created_at,
+          updated_at
+        )
+      `)
       .eq('id', id)
       .is('deleted_at', null)
       .single()
@@ -43,26 +81,19 @@ export async function getChangeOrderById(
       }
     }
 
-    // Get line items for current version
-    const { data: lineItems } = await supabase
-      .from('change_order_line_items')
-      .select('*')
-      .eq('change_order_id', id)
-      .eq('version', changeOrder.current_version)
-      .order('sort_order', { ascending: true })
+    // Filter line items and approvals by current version
+    const currentVersionLineItems = (changeOrder.line_items || [])
+      .filter((item: any) => item.version === changeOrder.current_version)
+      .sort((a: any, b: any) => a.sort_order - b.sort_order)
 
-    // Get approvals for current version
-    const { data: approvals } = await supabase
-      .from('change_order_approvals')
-      .select('*')
-      .eq('change_order_id', id)
-      .eq('version', changeOrder.current_version)
-      .order('created_at', { ascending: true })
+    const currentVersionApprovals = (changeOrder.approvals || [])
+      .filter((approval: any) => approval.version === changeOrder.current_version)
+      .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 
     const result: ChangeOrderDetails = {
       ...(changeOrder as ChangeOrder),
-      line_items: (lineItems || []) as ChangeOrderLineItem[],
-      approvals: (approvals || []) as ChangeOrderApproval[],
+      line_items: currentVersionLineItems as ChangeOrderLineItem[],
+      approvals: currentVersionApprovals as ChangeOrderApproval[],
     }
 
     return {

@@ -1,4 +1,7 @@
 /**
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching (10s revalidate)
+export const revalidate = 10
+
  * Submittals Pipeline Page
  * Display submittals in a kanban-style pipeline view
  */
