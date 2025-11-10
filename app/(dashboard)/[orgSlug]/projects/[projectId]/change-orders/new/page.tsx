@@ -1,11 +1,27 @@
 /**
  * Create New Change Order Page
+ * ✅ PHASE 3B OPTIMIZATION: Dynamic import for ChangeOrderForm (253 lines)
  */
 
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useParams } from 'next/navigation'
-import { ChangeOrderForm } from '@/components/change-orders/change-order-form'
+
+const ChangeOrderForm = dynamic(
+  () => import('@/components/change-orders/change-order-form').then((mod) => ({ default: mod.ChangeOrderForm })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center p-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">Loading form...</p>
+        </div>
+      </div>
+    ),
+  }
+)
 
 export default function NewChangeOrderPage() {
   const params = useParams()
