@@ -1,0 +1,249 @@
+# Artillery Load Testing - User Workflow Scenarios
+# Simulates realistic user journeys through the application
+#
+# Run with: artillery run tests/load/artillery-scenarios.yml
+#
+# This tests:
+# - Realistic user workflows (login → create RFI → submit)
+# - Concurrent multi-user scenarios
+# - Caching behavior under load
+# - ISR revalidation timing
+
+config:
+  target: "{{ $processEnvironment.BASE_URL }}"
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm-up - 5 users/sec"
+
+    # Ramp-up phase
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp-up - 10 users/sec"
+
+    # Sustained load
+    - duration: 180
+      arrivalRate: 20
+      name: "Sustained load - 20 users/sec"
+
+    # Spike test
+    - duration: 60
+      arrivalRate: 50
+      name: "Spike test - 50 users/sec"
+
+    # Cool down
+    - duration: 60
+      arrivalRate: 5
+      name: "Cool down - 5 users/sec"
+
+  # Environment variables
+  variables:
+    orgSlug: "{{ $processEnvironment.TEST_ORG_SLUG }}"
+    projectId: "{{ $processEnvironment.TEST_PROJECT_ID }}"
+    supabaseUrl: "{{ $processEnvironment.SUPABASE_URL }}"
+    supabaseKey: "{{ $processEnvironment.SUPABASE_ANON_KEY }}"
+
+  # HTTP defaults
+  http:
+    timeout: 10
+
+  # Plugins for enhanced reporting
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+
+  # Performance thresholds
+  ensure:
+    maxErrorRate: 5  # Less than 5% error rate
+    p95: 1000        # 95th percentile under 1 second
+    p99: 2000        # 99th percentile under 2 seconds
+
+scenarios:
+  # SCENARIO 1: Dashboard Performance Test
+  # Tests: Batch project health function, ISR caching
+  - name: "Dashboard Load Test"
+    weight: 30
+    flow:
+      - get:
+          url: "/{{ orgSlug }}"
+          expect:
+            - statusCode: 200
+            - contentType: text/html
+          capture:
+            - json: "$.props.pageProps"
+              as: "dashboardData"
+
+      - think: 2
+
+      - get:
+          url: "/{{ orgSlug }}/projects"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+  # SCENARIO 2: RFI Workflow
+  # Tests: Create RFI → View list → Update RFI
+  - name: "RFI Complete Workflow"
+    weight: 20
+    flow:
+      # View RFI list
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/rfis"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Navigate to create new RFI
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/rfis/new"
+          expect:
+            - statusCode: 200
+
+      - think: 5  # User fills out form
+
+      # Submit RFI (API call)
+      - post:
+          url: "{{ supabaseUrl }}/rest/v1/rfis"
+          headers:
+            apikey: "{{ supabaseKey }}"
+            Authorization: "Bearer {{ supabaseKey }}"
+            Content-Type: "application/json"
+            Prefer: "return=representation"
+          json:
+            subject: "Load Test RFI {{ $randomString() }}"
+            question: "This is a load testing RFI created by Artillery"
+            priority: "medium"
+            status: "draft"
+          expect:
+            - statusCode: [201, 403]  # 403 if auth required
+
+      - think: 2
+
+  # SCENARIO 3: Submittal Workflow
+  # Tests: N+1 query optimization (4→1 queries)
+  - name: "Submittal Detail View"
+    weight: 25
+    flow:
+      # View submittals list
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/submittals"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      # Load submittal detail (tests 4→1 query optimization)
+      - get:
+          url: "{{ supabaseUrl }}/rest/v1/submittals?select=*,attachments(*),reviews(*),versions(*)&limit=1"
+          headers:
+            apikey: "{{ supabaseKey }}"
+            Authorization: "Bearer {{ supabaseKey }}"
+          expect:
+            - statusCode: [200, 403]
+            - hasProperty: data
+
+      - think: 5  # User reviews submittal
+
+  # SCENARIO 4: Change Order Workflow
+  # Tests: N+1 query optimization (3→1 queries)
+  - name: "Change Order Management"
+    weight: 15
+    flow:
+      # View change orders list
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/change-orders"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Load change order detail (tests 3→1 query optimization)
+      - get:
+          url: "{{ supabaseUrl }}/rest/v1/change_orders?select=*,line_items(*),approvals(*)&limit=1"
+          headers:
+            apikey: "{{ supabaseKey }}"
+            Authorization: "Bearer {{ supabaseKey }}"
+          expect:
+            - statusCode: [200, 403]
+
+      - think: 4
+
+  # SCENARIO 5: Costs & Invoices
+  # Tests: Dynamic import loading, heavy component performance
+  - name: "Invoice Upload Flow"
+    weight: 10
+    flow:
+      # Navigate to costs page
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/costs"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Load invoice upload page (tests dynamic import)
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/costs/upload-invoice"
+          expect:
+            - statusCode: 200
+
+      - think: 8  # User waits for dynamic import + uploads file
+
+  # SCENARIO 6: Mixed User Activity
+  # Simulates realistic user bouncing between modules
+  - name: "Mixed Activity Pattern"
+    weight: 25
+    flow:
+      # Start at dashboard
+      - get:
+          url: "/{{ orgSlug }}"
+
+      - think: 3
+
+      # Check RFIs
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/rfis"
+
+      - think: 2
+
+      # Check Daily Reports
+      - get:
+          url: "/{{ orgSlug }}/projects/{{ projectId }}/daily-reports"
+
+      - think: 2
+
+      # Back to dashboard
+      - get:
+          url: "/{{ orgSlug }}"
+
+      - think: 1
+
+  # SCENARIO 7: API Batch Performance Test
+  # Directly tests the batch project health function
+  - name: "Batch Project Health API"
+    weight: 20
+    flow:
+      - post:
+          url: "{{ supabaseUrl }}/rest/v1/rpc/get_batch_project_health"
+          headers:
+            apikey: "{{ supabaseKey }}"
+            Authorization: "Bearer {{ supabaseKey }}"
+            Content-Type: "application/json"
+          json:
+            org_id: "{{ $processEnvironment.TEST_ORG_ID }}"
+          expect:
+            - statusCode: [200, 403]
+            - contentType: json
+          capture:
+            - json: "$"
+              as: "batchHealthData"
+
+      - think: 1
+
+# Custom functions for realistic test data
+functions:
+  randomString:
+    - return: "{{ $timestamp() }}-{{ $randomNumber(1000, 9999) }}"

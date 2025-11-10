@@ -49,12 +49,16 @@ async function main() {
 
     const migrations = [
       {
-        file: 'supabase/migrations/20251025025919_fix_change_order_numbering_case_type_mismatch.sql',
-        name: 'fix_change_order_numbering_case_type_mismatch'
+        file: 'supabase/migrations/20251110000001_phase1_performance_indexes.sql',
+        name: 'phase1_performance_indexes'
       },
       {
-        file: 'supabase/migrations/20251025030803_fix_daily_reports_user_foreign_keys.sql',
-        name: 'fix_daily_reports_user_foreign_keys'
+        file: 'supabase/migrations/20251110000002_create_batch_project_health_function.sql',
+        name: 'create_batch_project_health_function'
+      },
+      {
+        file: 'supabase/migrations/20251110000003_optimize_materialized_view_refresh.sql',
+        name: 'optimize_materialized_view_refresh'
       }
     ];
 
