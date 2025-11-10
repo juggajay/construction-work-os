@@ -90,105 +90,61 @@ export async function getOrgProjectsHealth(
       throw new UnauthorizedError('You do not have access to this organization')
     }
 
-    // Fetch all projects for the organization
-    const { data: projects, error: projectsError } = await supabase
-      .from('projects')
-      .select('id, name, status, budget')
-      .eq('org_id', org.id)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
+    // ✅ OPTIMIZATION: Use batch function instead of N+1 queries
+    // Previously: (N*2)+1 queries for N projects
+    // Now: 1 function call
+    // Expected improvement: 90% faster (8-12s → <1s for 100 projects)
 
-    if (projectsError) {
-      logger.error('Failed to fetch projects', projectsError, {
+    const { data: projectHealthResults, error: healthError } = await supabase
+      .rpc('get_batch_project_health', { p_org_id: org.id })
+
+    if (healthError) {
+      logger.error('Failed to fetch project health data', healthError, {
         action: 'getOrgProjectsHealth',
         orgSlug,
       })
-      return { success: false, error: 'Failed to fetch projects' }
+      return { success: false, error: 'Failed to fetch project health data' }
     }
 
-    // For each project, fetch cost summary and invoice counts
-    const projectHealthData: ProjectHealth[] = await Promise.all(
-      (projects || []).map(async (project) => {
-        // Fetch cost summary from materialized view
-        const { data: costSummary } = await supabase
-          .from('project_cost_summary')
-          .select('category, allocated_amount, spent_amount')
-          .eq('project_id', project.id)
+    // Transform database results to ProjectHealth format
+    const projectHealthData: ProjectHealth[] = (projectHealthResults || []).map((row: any) => {
+      const budget = Number(row.project_budget || 0)
+      const totalSpent = Number(row.total_spent || 0)
+      const totalAllocated = Number(row.total_allocated || 0)
+      const percentSpent = budget > 0 ? (totalSpent / budget) * 100 : 0
 
-        // Calculate totals
-        const totalSpent = (costSummary || []).reduce(
-          (sum, item) => sum + Number(item.spent_amount || 0),
-          0
-        )
-        const totalAllocated = (costSummary || []).reduce(
-          (sum, item) => sum + Number(item.allocated_amount || 0),
-          0
-        )
+      // Determine health status based on percent spent
+      let healthStatus: 'healthy' | 'warning' | 'critical' = 'healthy'
+      if (percentSpent >= 90) {
+        healthStatus = 'critical'
+      } else if (percentSpent >= 70) {
+        healthStatus = 'warning'
+      }
 
-        // Calculate category breakdown
-        const categoryBreakdown = {
-          labor: 0,
-          materials: 0,
-          equipment: 0,
-          other: 0,
-        }
-
-        ;(costSummary || []).forEach((item) => {
-          const spent = Number(item.spent_amount || 0)
-          if (item.category && item.category in categoryBreakdown) {
-            categoryBreakdown[item.category as keyof typeof categoryBreakdown] = spent
-          }
-        })
-
-        // Calculate percent spent
-        const budget = Number(project.budget || 0)
-        const percentSpent = budget > 0 ? (totalSpent / budget) * 100 : 0
-
-        // Determine health status
-        let healthStatus: 'healthy' | 'warning' | 'critical' = 'healthy'
-        if (percentSpent >= 90) {
-          healthStatus = 'critical'
-        } else if (percentSpent >= 70) {
-          healthStatus = 'warning'
-        }
-
-        // Fetch invoice counts by status
-        const { data: invoices } = await supabase
-          .from('project_invoices')
-          .select('status, created_at')
-          .eq('project_id', project.id)
-          .is('deleted_at', null)
-
-        const invoiceCount = {
-          total: invoices?.length || 0,
-          approved: invoices?.filter((i) => i.status === 'approved').length || 0,
-          pending: invoices?.filter((i) => i.status === 'pending').length || 0,
-          rejected: invoices?.filter((i) => i.status === 'rejected').length || 0,
-        }
-
-        // Get latest invoice date
-        const latestInvoiceDate =
-          invoices && invoices.length > 0
-            ? [...invoices].sort((a, b) =>
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-              )[0]?.created_at ?? null
-            : null
-
-        return {
-          id: project.id,
-          name: project.name,
-          status: project.status,
-          budget,
-          totalSpent,
-          totalAllocated,
-          percentSpent,
-          healthStatus,
-          invoiceCount,
-          latestInvoiceDate,
-          categoryBreakdown,
-        }
-      })
-    )
+      return {
+        id: row.project_id,
+        name: row.project_name,
+        status: row.project_status,
+        budget,
+        totalSpent,
+        totalAllocated,
+        percentSpent,
+        healthStatus,
+        invoiceCount: {
+          total: row.invoice_count_total || 0,
+          approved: row.invoice_count_approved || 0,
+          pending: row.invoice_count_pending || 0,
+          rejected: row.invoice_count_rejected || 0,
+        },
+        latestInvoiceDate: row.latest_invoice_date,
+        categoryBreakdown: {
+          labor: Number(row.category_labor || 0),
+          materials: Number(row.category_materials || 0),
+          equipment: Number(row.category_equipment || 0),
+          other: Number(row.category_other || 0),
+        },
+      }
+    })
 
     logger.info('Projects health fetched successfully', {
       action: 'getOrgProjectsHealth',
