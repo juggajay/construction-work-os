@@ -81,13 +81,11 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
 
       // Check if pdfjs is already loaded
       if (!(window as any).pdfjsLib) {
-        console.log('Loading PDF.js from CDN...')
         await new Promise<void>((resolve, reject) => {
           const script = document.createElement('script')
           script.src = `${PDFJS_CDN}/pdf.min.mjs`
           script.type = 'module'
           script.onload = () => {
-            console.log('PDF.js loaded from CDN')
             resolve()
           }
           script.onerror = () => reject(new Error('Failed to load PDF.js from CDN'))
@@ -105,29 +103,21 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
 
       // Configure worker
       const workerSrc = `${PDFJS_CDN}/pdf.worker.min.mjs`
-      console.log('Setting PDF.js worker:', workerSrc)
       pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc
 
       // Read PDF file as ArrayBuffer
-      console.log('Reading PDF file...')
       const arrayBuffer = await pdfFile.arrayBuffer()
-      console.log('PDF file read, size:', arrayBuffer.byteLength)
 
       // Load PDF document
-      console.log('Loading PDF document...')
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer })
       const pdf = await loadingTask.promise
-      console.log('PDF loaded, pages:', pdf.numPages)
 
       // Get first page
-      console.log('Getting first page...')
       const page = await pdf.getPage(1)
-      console.log('First page loaded')
 
       // Set scale for good quality (2x for better resolution)
       const scale = 2.0
       const viewport = page.getViewport({ scale })
-      console.log('Viewport size:', viewport.width, 'x', viewport.height)
 
       // Create canvas
       const canvas = document.createElement('canvas')
@@ -141,15 +131,12 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
       canvas.height = viewport.height
 
       // Render PDF page to canvas
-      console.log('Rendering PDF to canvas...')
       await page.render({
         canvasContext: context,
         viewport: viewport,
       }).promise
-      console.log('PDF rendered to canvas')
 
       // Convert canvas to Blob
-      console.log('Converting canvas to blob...')
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) {
@@ -159,7 +146,6 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
           }
         }, 'image/png')
       })
-      console.log('Canvas converted to blob, size:', blob.size)
 
       // Create new File from Blob
       const imageFile = new File(
@@ -336,26 +322,20 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
 
   // File input handler
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('🔵 handleFileSelect fired', { filesLength: e.target.files?.length })
     const file = e.target.files?.[0]
     if (!file) {
-      console.log('🔴 No file selected')
       return
     }
-    console.log('🟢 File selected:', { name: file.name, type: file.type, size: file.size })
     await processFile(file)
   }
 
   // Drag and drop handlers
   const handleDragEnter = (e: React.DragEvent) => {
-    console.log('🔵 handleDragEnter fired')
     e.preventDefault()
     e.stopPropagation()
     if (!isParsing) {
-      console.log('🟢 Setting dragging to true')
       setIsDragging(true)
     } else {
-      console.log('🔴 Blocked by isParsing')
     }
   }
 
@@ -376,21 +356,17 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
   }
 
   const handleDrop = async (e: React.DragEvent) => {
-    console.log('🔵 handleDrop fired')
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
 
     if (isParsing) {
-      console.log('🔴 Drop blocked by isParsing')
       return
     }
 
     const file = e.dataTransfer.files?.[0]
-    console.log('🟢 File from drop:', { name: file?.name, type: file?.type, hasFile: !!file })
 
     if (!file) {
-      console.log('🔴 No file in dataTransfer')
       return
     }
 
@@ -570,12 +546,9 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
           ${isParsing ? 'cursor-not-allowed opacity-75' : ''}
         `}
         onClick={() => {
-          console.log('🔵 Container onClick fired', { isParsing, hasRef: !!fileInputRef.current })
           if (!isParsing && fileInputRef.current) {
-            console.log('🟢 Calling fileInputRef.current.click()')
             fileInputRef.current.click()
           } else {
-            console.log('🔴 Click blocked:', { isParsing, hasRef: !!fileInputRef.current })
           }
         }}
       >
@@ -605,13 +578,10 @@ export function UploadInvoiceForm({ projectId, orgSlug }: UploadInvoiceFormProps
                   <Button
                     type="button"
                     onClick={(e) => {
-                      console.log('🔵 Button onClick fired', { hasRef: !!fileInputRef.current })
                       e.stopPropagation()
                       if (fileInputRef.current) {
-                        console.log('🟢 Calling fileInputRef.current.click() from button')
                         fileInputRef.current.click()
                       } else {
-                        console.log('🔴 No ref available')
                       }
                     }}
                     disabled={isParsing}

@@ -1,8 +1,10 @@
 /**
  * Submittal Status Badge Component
  * Displays submittal status with appropriate styling
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in lists
  */
 
+import { memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 type SubmittalStatus =
@@ -37,7 +39,7 @@ const statusConfig: Record<
   cancelled: { label: 'Cancelled', variant: 'secondary' },
 };
 
-export function SubmittalStatusBadge({ status }: SubmittalStatusBadgeProps) {
+export const SubmittalStatusBadge = memo(function SubmittalStatusBadge({ status }: SubmittalStatusBadgeProps) {
   const config = statusConfig[status];
 
   return (
@@ -45,4 +47,4 @@ export function SubmittalStatusBadge({ status }: SubmittalStatusBadgeProps) {
       {config.label}
     </Badge>
   );
-}
+});

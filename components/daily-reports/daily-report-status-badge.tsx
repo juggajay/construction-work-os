@@ -1,8 +1,10 @@
 /**
  * Daily Report Status Badge Component
  * Color-coded badge for report status
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in lists
  */
 
+import { memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 type DailyReportStatus = 'draft' | 'submitted' | 'approved' | 'archived';
@@ -22,7 +24,7 @@ const statusConfig: Record<
   archived: { label: 'Archived', variant: 'outline' },
 };
 
-export function DailyReportStatusBadge({
+export const DailyReportStatusBadge = memo(function DailyReportStatusBadge({
   status,
   className,
 }: DailyReportStatusBadgeProps) {
@@ -33,4 +35,4 @@ export function DailyReportStatusBadge({
       {config.label}
     </Badge>
   );
-}
+});

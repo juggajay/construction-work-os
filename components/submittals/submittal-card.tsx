@@ -1,10 +1,12 @@
 /**
  * SubmittalCard Component
  * Compact card for pipeline/kanban view with priority indication
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in kanban pipeline
  */
 
 'use client';
 
+import { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -60,7 +62,7 @@ const priorityBorderColors = {
   low: 'border-l-muted',
 };
 
-export function SubmittalCard({ submittal }: SubmittalCardProps) {
+export const SubmittalCard = memo(function SubmittalCard({ submittal }: SubmittalCardProps) {
   const router = useRouter();
   const priority = calculatePriority(submittal.procurement_deadline);
   const isUrgent = priority === 'high';
@@ -155,4 +157,4 @@ export function SubmittalCard({ submittal }: SubmittalCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

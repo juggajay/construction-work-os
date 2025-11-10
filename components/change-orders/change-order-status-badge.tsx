@@ -2,8 +2,10 @@
  * Change Order Status Badge Component
  *
  * Displays the current status of a change order with appropriate color coding
+ * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in tables
  */
 
+import { memo } from 'react';
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { ChangeOrderStatus } from '@/lib/types'
@@ -54,7 +56,7 @@ const statusConfig: Record<
   },
 }
 
-export function ChangeOrderStatusBadge({
+export const ChangeOrderStatusBadge = memo(function ChangeOrderStatusBadge({
   status,
   className,
 }: ChangeOrderStatusBadgeProps) {
@@ -68,7 +70,7 @@ export function ChangeOrderStatusBadge({
       {config!.label}
     </Badge>
   )
-}
+});
 
 /**
  * Utility function to format status for display
