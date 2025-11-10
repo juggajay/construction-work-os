@@ -96,7 +96,7 @@ export async function getOrgProjectsHealth(
     // Expected improvement: 90% faster (8-12s → <1s for 100 projects)
 
     const { data: projectHealthResults, error: healthError } = await supabase
-      .rpc('get_batch_project_health', { p_org_id: org.id })
+      .rpc('get_batch_project_health' as any, { p_org_id: org.id })
 
     if (healthError) {
       logger.error('Failed to fetch project health data', healthError, {

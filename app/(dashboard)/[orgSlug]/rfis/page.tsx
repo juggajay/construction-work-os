@@ -106,7 +106,6 @@ export default function OrganizationRFIsPage() {
           assigned_to:profiles!rfis_assigned_to_id_fkey (
             id,
             full_name,
-            email,
             avatar_url
           )
         `)
