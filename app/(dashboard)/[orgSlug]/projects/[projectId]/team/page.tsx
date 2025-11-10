@@ -1,4 +1,7 @@
 /**
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching (300s revalidate)
+export const revalidate = 300
+
  * Project Team Page
  * Main page for managing project team members
  */

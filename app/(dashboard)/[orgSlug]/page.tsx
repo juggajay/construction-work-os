@@ -9,6 +9,10 @@ import { Plus, Calendar } from 'lucide-react'
 import { KPICard } from '@/components/analytics/kpi-card'
 import { StatCard } from '@/components/analytics/stat-card'
 
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching
+// Dashboard with KPIs - revalidate every 60 seconds
+export const revalidate = 60
+
 export default async function OrganizationPage({
   params,
 }: {

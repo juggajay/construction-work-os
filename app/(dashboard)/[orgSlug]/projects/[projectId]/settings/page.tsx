@@ -1,4 +1,7 @@
 import { getProjectById } from '@/lib/actions/project-helpers'
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching (3600s revalidate)
+export const revalidate = 3600
+
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

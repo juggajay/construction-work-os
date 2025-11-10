@@ -1,4 +1,7 @@
 import { getProjectById } from '@/lib/actions/project-helpers'
+// ✅ PHASE 2 OPTIMIZATION: Page-level caching (10s revalidate)
+export const revalidate = 10
+
 import { getBudgetBreakdown } from '@/lib/actions/budgets'
 import { getBurnRateForecast } from '@/lib/actions/budgets'
 import { getProjectInvoices } from '@/lib/actions/invoices'
