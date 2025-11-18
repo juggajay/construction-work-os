@@ -2,10 +2,17 @@
  * Create project-invoices bucket via Supabase Management API
  */
 
+require('dotenv').config({ path: '.env.local' })
 const https = require('https')
 
-const accessToken = 'sbp_d8294d5b91c7bcd7d7229e014ada14ca6779d6d2'
-const projectRef = 'tokjmeqjvexnmtampyjm'
+const accessToken = process.env.SUPABASE_ACCESS_TOKEN
+const projectRef = process.env.SUPABASE_PROJECT_REF
+
+if (!accessToken || !projectRef) {
+  console.error('❌ Error: Missing required environment variables')
+  console.error('   Please set SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF in .env.local')
+  process.exit(1)
+}
 
 async function createBucket() {
   const data = JSON.stringify({
