@@ -53,7 +53,7 @@ export default async function OrganizationPage({
   return (
     <div className="space-y-4 lg:space-y-6 lg:p-6 -m-4 lg:m-0">
       {/* Header with Actions */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between p-4 lg:p-0">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between p-4 lg:p-0 animate-fadeIn">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Welcome back, {displayName}</p>
@@ -63,7 +63,7 @@ export default async function OrganizationPage({
             <Calendar className="mr-2 h-4 w-4" />
             {currentDate}
           </Button>
-          <Button asChild size="sm" className="touch-manipulation">
+          <Button asChild size="sm" variant="construction" className="touch-manipulation">
             <Link href={`/${orgSlug}/projects/new`}>
               <Plus className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Quick Add</span>
@@ -73,8 +73,8 @@ export default async function OrganizationPage({
         </div>
       </div>
 
-      {/* Key Metrics Grid - Enhanced KPI Cards */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 lg:gap-4 px-4 lg:px-0">
+      {/* Key Metrics Grid - Enhanced KPI Cards with stagger animation */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 lg:gap-4 px-4 lg:px-0 stagger-children">
         <KPICard
           title="Active Projects"
           value={kpis?.activeProjects || 0}
@@ -108,8 +108,8 @@ export default async function OrganizationPage({
         />
       </div>
 
-      {/* Analytics Overview */}
-      <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:gap-4 px-4 lg:px-0">
+      {/* Analytics Overview with stagger animation */}
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:gap-4 px-4 lg:px-0 stagger-children" style={{ animationDelay: '200ms' }}>
         <StatCard
           title="Project Status"
           icon="Building2"

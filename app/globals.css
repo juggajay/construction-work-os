@@ -45,6 +45,29 @@
     --danger-foreground: 0 0% 98%;
     --info: 199 89% 48%;
     --info-foreground: 210 100% 97%;
+
+    /* Construction accent colors */
+    --construction: 18 100% 60%;
+    --construction-foreground: 0 0% 100%;
+    --construction-muted: 18 100% 95%;
+
+    /* Dark mode depth system - surfaces */
+    --depth-0: 0 0% 100%;
+    --depth-1: 0 0% 98%;
+    --depth-2: 0 0% 96%;
+    --depth-3: 0 0% 94%;
+    --depth-4: 0 0% 92%;
+
+    /* High contrast for outdoor visibility */
+    --high-contrast-bg: 0 0% 100%;
+    --high-contrast-fg: 0 0% 0%;
+    --high-contrast-border: 0 0% 20%;
+
+    /* Status background colors for badges/alerts */
+    --success-bg: 142 76% 95%;
+    --warning-bg: 38 92% 95%;
+    --danger-bg: 0 84% 95%;
+    --info-bg: 199 89% 95%;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -87,6 +110,29 @@
     --danger-foreground: 0 0% 98%;
     --info: 199 89% 48%;
     --info-foreground: 210 100% 97%;
+
+    /* Construction accent colors - dark mode */
+    --construction: 18 100% 55%;
+    --construction-foreground: 0 0% 100%;
+    --construction-muted: 18 100% 15%;
+
+    /* Dark mode depth system - progressive surfaces */
+    --depth-0: 0 0% 4%;
+    --depth-1: 0 0% 7%;
+    --depth-2: 0 0% 10%;
+    --depth-3: 0 0% 12%;
+    --depth-4: 0 0% 14%;
+
+    /* High contrast for dark mode visibility */
+    --high-contrast-bg: 0 0% 10%;
+    --high-contrast-fg: 0 0% 100%;
+    --high-contrast-border: 0 0% 40%;
+
+    /* Status background colors for badges/alerts - dark mode */
+    --success-bg: 142 76% 15%;
+    --warning-bg: 38 92% 15%;
+    --danger-bg: 0 84% 15%;
+    --info-bg: 199 89% 15%;
   }
 }
 
@@ -314,5 +360,205 @@
     .mobile-stack > * + * {
       margin-top: 1rem;
     }
+  }
+
+  /* ===== FIELD WORKER OPTIMIZATIONS ===== */
+
+  /* High contrast mode for outdoor visibility */
+  .field-mode {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    font-weight: 500;
+  }
+
+  .dark .field-mode {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+  }
+
+  /* Extra large touch targets for gloves */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .touch-target-lg {
+    min-height: 56px;
+    min-width: 56px;
+  }
+
+  /* Button press feedback */
+  .press-feedback {
+    transition: transform 100ms ease-out;
+  }
+
+  .press-feedback:active {
+    transform: scale(0.97);
+  }
+
+  /* ===== ANIMATION UTILITIES ===== */
+
+  /* Fade in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 200ms ease-out;
+  }
+
+  /* Slide up animation */
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slideUp 300ms ease-out;
+  }
+
+  /* Slide in from right */
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 300ms ease-out;
+  }
+
+  /* Scale in animation */
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 200ms ease-out;
+  }
+
+  /* Success pulse animation */
+  @keyframes successPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
+
+  .animate-success-pulse {
+    animation: successPulse 600ms ease-out;
+  }
+
+  /* Construction accent pulse */
+  @keyframes constructionPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(255, 107, 53, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 107, 53, 0);
+    }
+  }
+
+  .animate-construction-pulse {
+    animation: constructionPulse 600ms ease-out;
+  }
+
+  /* Stagger children animation helper */
+  .stagger-children > * {
+    opacity: 0;
+    animation: slideUp 300ms ease-out forwards;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+  .stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+
+  /* Hover lift effect */
+  .hover-lift {
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .hover-lift:hover {
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+  }
+
+  /* Interactive card with border glow */
+  .interactive-card {
+    transition: all 200ms ease-out;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .interactive-card:hover {
+    border-color: hsl(var(--construction));
+  }
+
+  .dark .interactive-card:hover {
+    border-color: hsl(18 100% 55%);
+    box-shadow: 0 0 0 1px hsl(18 100% 55% / 0.3);
+  }
+
+  /* Skeleton shimmer animation */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
   }
 }

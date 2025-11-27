@@ -40,19 +40,26 @@ export const KPICard = memo(function KPICard({ title, value, icon, trend, subtit
 
   const trendColor = useMemo(() => {
     if (!trend) return ''
-    if (trend.value > 0) return 'text-green-600 bg-green-50'
-    if (trend.value < 0) return 'text-red-600 bg-red-50'
-    return 'text-neutral-600 bg-neutral-50'
+    if (trend.value > 0) return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-500/10'
+    if (trend.value < 0) return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-500/10'
+    return 'text-muted-foreground bg-muted'
   }, [trend])
 
   return (
-    <Card className={cn('hover:shadow-md transition-shadow', className)}>
-      <CardContent className="p-6">
+    <Card
+      depth={1}
+      hoverable
+      className={cn(
+        'group transition-all duration-normal',
+        className
+      )}
+    >
+      <CardContent className="p-4 lg:p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-neutral-600">{title}</p>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <div className="mt-2 flex items-baseline gap-2">
-              <h3 className="text-3xl font-bold text-neutral-900">{value}</h3>
+              <h3 className="text-2xl lg:text-3xl font-bold text-foreground">{value}</h3>
               {trend && (
                 <div
                   className={cn(
@@ -65,12 +72,12 @@ export const KPICard = memo(function KPICard({ title, value, icon, trend, subtit
                 </div>
               )}
             </div>
-            {subtitle && <p className="mt-1 text-xs text-neutral-500">{subtitle}</p>}
-            {trend && <p className="mt-1 text-xs text-neutral-500">{trend.label}</p>}
+            {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
+            {trend && <p className="mt-1 text-xs text-muted-foreground">{trend.label}</p>}
           </div>
 
-          <div className="rounded-lg bg-amber-50 p-3">
-            <Icon className="h-6 w-6 text-amber-600" />
+          <div className="rounded-lg bg-construction-500/10 p-2.5 lg:p-3 group-hover:bg-construction-500/20 transition-colors">
+            <Icon className="h-5 w-5 lg:h-6 lg:w-6 text-construction-500" />
           </div>
         </div>
       </CardContent>

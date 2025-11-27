@@ -10,6 +10,36 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		// Touch-friendly target sizes (WCAG 2.1 minimum 44px)
+  		minHeight: {
+  			'touch': '44px',
+  			'touch-lg': '48px',
+  			'touch-xl': '56px',
+  		},
+  		minWidth: {
+  			'touch': '44px',
+  			'touch-lg': '48px',
+  			'touch-xl': '56px',
+  		},
+  		height: {
+  			'touch': '44px',
+  			'touch-lg': '48px',
+  			'touch-xl': '56px',
+  		},
+  		// Typography scale with optimal line heights
+  		fontSize: {
+  			'display-xl': ['4rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
+  			'display-lg': ['3rem', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '700' }],
+  			'display': ['2.25rem', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '700' }],
+  			'heading-lg': ['1.875rem', { lineHeight: '1.25', fontWeight: '600' }],
+  			'heading': ['1.5rem', { lineHeight: '1.3', fontWeight: '600' }],
+  			'heading-sm': ['1.25rem', { lineHeight: '1.4', fontWeight: '600' }],
+  			'body-lg': ['1.125rem', { lineHeight: '1.6' }],
+  			'body': ['1rem', { lineHeight: '1.6' }],
+  			'body-sm': ['0.875rem', { lineHeight: '1.5' }],
+  			'caption': ['0.75rem', { lineHeight: '1.4' }],
+  			'tiny': ['0.625rem', { lineHeight: '1.4', letterSpacing: '0.02em' }],
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
@@ -32,6 +62,30 @@ const config: Config = {
   			'elevation-4': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
   			'elevation-5': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04)',
   			'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+  			// Dark mode glow effects
+  			'glow-construction': '0 0 20px rgba(255, 107, 53, 0.3)',
+  			'glow-success': '0 0 20px rgba(16, 185, 129, 0.3)',
+  			'glow-warning': '0 0 20px rgba(245, 158, 11, 0.3)',
+  			'glow-danger': '0 0 20px rgba(239, 68, 68, 0.3)',
+  			// Dark mode depth shadows
+  			'dark-elevation-1': '0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3)',
+  			'dark-elevation-2': '0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3)',
+  			'dark-elevation-3': '0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4)',
+  		},
+  		// Animation timing functions
+  		transitionTimingFunction: {
+  			'bounce-in': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  			'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+  			'smooth-out': 'cubic-bezier(0, 0, 0.2, 1)',
+  			'smooth-in': 'cubic-bezier(0.4, 0, 1, 1)',
+  			'spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+  		},
+  		// Animation durations
+  		transitionDuration: {
+  			'fast': '150ms',
+  			'normal': '200ms',
+  			'slow': '300ms',
+  			'slower': '500ms',
   		},
   		colors: {
   			background: 'hsl(var(--background))',

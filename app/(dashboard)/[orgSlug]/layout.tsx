@@ -2,6 +2,7 @@ import { getOrganizationBySlug } from '@/lib/actions/organization-helpers'
 import { notFound } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
+import { PageTransitionProvider } from '@/components/motion/page-transition-provider'
 
 export default async function OrgLayout({
   children,
@@ -22,7 +23,11 @@ export default async function OrgLayout({
       <div className="flex min-h-screen w-full">
         <AppSidebar orgSlug={orgSlug} />
         <SidebarInset className="flex-1">
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-6">
+            <PageTransitionProvider>
+              {children}
+            </PageTransitionProvider>
+          </main>
         </SidebarInset>
       </div>
     </SidebarProvider>
