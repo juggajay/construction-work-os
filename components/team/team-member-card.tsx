@@ -62,7 +62,7 @@ export const TeamMemberCard = memo(function TeamMemberCard({
   onCardClick,
   className,
 }: TeamMemberCardProps) {
-  const roleConfig = ROLE_CONFIG[member.role.toLowerCase()] || ROLE_CONFIG.member
+  const roleConfig = ROLE_CONFIG[member.role.toLowerCase()] ?? { bgClass: 'bg-white/[0.05]', textClass: 'text-white/50' }
 
   return (
     <div

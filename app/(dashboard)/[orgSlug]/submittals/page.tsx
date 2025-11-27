@@ -243,7 +243,7 @@ export default async function OrganizationSubmittalsPage({ params }: PageProps) 
                 </tr>
               ) : (
                 submittals.map((submittal: any) => {
-                  const status = STATUS_CONFIG[submittal.current_stage] || STATUS_CONFIG.draft
+                  const status = STATUS_CONFIG[submittal.current_stage as string] ?? { label: 'Draft', bgClass: 'bg-white/[0.05]', textClass: 'text-white/50' }
                   const isOverdue = submittal.due_date &&
                     new Date(submittal.due_date) < new Date() &&
                     submittal.current_stage !== 'complete'

@@ -185,10 +185,10 @@ export function TeamMemberGrid({ members, className }: TeamMemberGridProps) {
                     <span
                       className={cn(
                         'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg capitalize',
-                        ROLE_CONFIG[selectedMember.role.toLowerCase()]?.bgClass ||
-                          ROLE_CONFIG.member.bgClass,
-                        ROLE_CONFIG[selectedMember.role.toLowerCase()]?.textClass ||
-                          ROLE_CONFIG.member.textClass
+                        ROLE_CONFIG[selectedMember.role.toLowerCase()]?.bgClass ??
+                          'bg-white/[0.05]',
+                        ROLE_CONFIG[selectedMember.role.toLowerCase()]?.textClass ??
+                          'text-white/50'
                       )}
                     >
                       <Shield className="h-4 w-4" />
