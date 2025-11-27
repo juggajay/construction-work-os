@@ -390,7 +390,7 @@ export default async function DailyReportDetailPage({ params }: PageProps) {
           </div>
           <div className="p-5 space-y-4">
             {reportData.incidents.map((incident: any) => {
-              const severity = SEVERITY_CONFIG[incident.severity] || SEVERITY_CONFIG.low
+              const severity = SEVERITY_CONFIG[incident.severity as string] ?? { bgClass: 'bg-blue-500/10', textClass: 'text-blue-400' }
 
               return (
                 <div key={incident.id} className={cn(
