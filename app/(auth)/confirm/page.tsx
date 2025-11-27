@@ -12,7 +12,7 @@ export default function ConfirmPage({
       <Card>
         <CardHeader>
           <CardTitle>Confirmation failed</CardTitle>
-          <CardDescription className="text-red-600">
+          <CardDescription className="text-destructive">
             {searchParams.error === 'expired'
               ? 'This confirmation link has expired. Please request a new one.'
               : 'There was an error confirming your email. Please try again.'}

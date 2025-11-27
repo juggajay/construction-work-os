@@ -73,7 +73,7 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
@@ -113,7 +113,7 @@ export default function SignupPage() {
               minLength={8}
               disabled={isPending}
             />
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               At least 8 characters, 1 uppercase, 1 number
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function SignupPage() {
               disabled={isPending}
             />
             {fieldErrors.confirmPassword && (
-              <p className="text-sm text-red-500">{fieldErrors.confirmPassword}</p>
+              <p className="text-sm text-destructive">{fieldErrors.confirmPassword}</p>
             )}
           </div>
         </CardContent>
@@ -138,9 +138,9 @@ export default function SignupPage() {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? 'Creating account...' : 'Sign up'}
           </Button>
-          <p className="text-center text-sm text-neutral-600">
+          <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="font-medium text-neutral-900 hover:underline">
+            <Link href="/login" className="font-medium text-foreground hover:underline">
               Sign in
             </Link>
           </p>

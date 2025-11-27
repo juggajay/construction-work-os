@@ -64,7 +64,7 @@ export default function MagicLinkPage() {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
@@ -85,8 +85,8 @@ export default function MagicLinkPage() {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? 'Sending...' : 'Send magic link'}
           </Button>
-          <p className="text-center text-sm text-neutral-600">
-            <Link href="/login" className="font-medium text-neutral-900 hover:underline">
+          <p className="text-center text-sm text-muted-foreground">
+            <Link href="/login" className="font-medium text-foreground hover:underline">
               Back to login
             </Link>
           </p>
