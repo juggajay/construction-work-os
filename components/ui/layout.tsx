@@ -194,7 +194,7 @@ const Section = React.forwardRef<HTMLElement, SectionProps>(
 
     return (
       <Comp
-        ref={ref as React.Ref<HTMLElement>}
+        ref={ref as React.LegacyRef<HTMLDivElement>}
         className={cn(sectionVariants({ spacing, mb, className }))}
         {...props}
       >

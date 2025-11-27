@@ -133,6 +133,17 @@ const cardVariants = cva(
         true: "cursor-pointer",
         false: "",
       },
+
+      // ============================================
+      // HOVERABLE (boolean shorthand for lift effect)
+      // ============================================
+      hoverable: {
+        true: [
+          "cursor-pointer hover:-translate-y-1 hover:shadow-xl",
+          "dark:hover:shadow-glow-construction-sm",
+        ].join(" "),
+        false: "",
+      },
     },
 
     defaultVariants: {
@@ -142,6 +153,7 @@ const cardVariants = cva(
       hover: "none",
       size: "default",
       clickable: false,
+      hoverable: false,
     },
   }
 )
@@ -154,7 +166,7 @@ export interface CardProps
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, depth, padding, hover, size, clickable, asChild, ...props }, ref) => {
+  ({ className, variant, depth, padding, hover, size, clickable, hoverable, asChild, ...props }, ref) => {
     const Comp = asChild ? React.Fragment : "div"
     const cardProps = asChild ? {} : { ref, ...props }
 
@@ -162,7 +174,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <Comp {...cardProps}>
         <div
           ref={asChild ? undefined : ref}
-          className={cn(cardVariants({ variant, depth, padding, hover, size, clickable, className }))}
+          className={cn(cardVariants({ variant, depth, padding, hover, size, clickable, hoverable, className }))}
           {...(asChild ? props : {})}
         />
       </Comp>
