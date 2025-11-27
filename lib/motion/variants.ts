@@ -443,3 +443,282 @@ export function createSlideVariants(
     exit: { opacity: 0, x: distance * sign * -0.5, transition: { duration: DURATIONS.fast } },
   }
 }
+
+// ===== APPLE/STRIPE-INSPIRED VARIANTS =====
+
+// Subtle scale with shadow for premium feel
+export const premiumCardVariants: Variants = {
+  initial: {
+    opacity: 0,
+    y: 20,
+    scale: 0.98,
+  },
+  enter: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: DURATIONS.slow,
+      ease: EASINGS.smoothOut,
+    },
+  },
+  hover: {
+    y: -8,
+    scale: 1.01,
+    boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+    transition: {
+      duration: DURATIONS.normal,
+      ease: EASINGS.smooth,
+    },
+  },
+  tap: {
+    scale: 0.99,
+    y: -4,
+    transition: {
+      duration: DURATIONS.fast,
+    },
+  },
+}
+
+// Construction brand glow effect
+export const glowVariants: Variants = {
+  initial: {
+    boxShadow: '0 0 0 0 rgba(255, 107, 53, 0)',
+  },
+  hover: {
+    boxShadow: '0 0 40px 10px rgba(255, 107, 53, 0.15)',
+    transition: {
+      duration: DURATIONS.normal,
+    },
+  },
+}
+
+// Parallax scroll effect
+export const parallaxVariants: Variants = {
+  offscreen: {
+    y: 100,
+    opacity: 0,
+  },
+  onscreen: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 20,
+      duration: DURATIONS.slower,
+    },
+  },
+}
+
+// Hero section stagger
+export const heroContainerVariants: Variants = {
+  initial: {},
+  enter: {
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+}
+
+export const heroItemVariants: Variants = {
+  initial: {
+    opacity: 0,
+    y: 30,
+  },
+  enter: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: DURATIONS.slow,
+      ease: EASINGS.smoothOut,
+    },
+  },
+}
+
+// Field worker mode - high contrast animations
+export const fieldModeVariants: Variants = {
+  initial: {
+    opacity: 0,
+    scale: 0.95,
+  },
+  enter: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: DURATIONS.fast,
+      ease: 'easeOut',
+    },
+  },
+  tap: {
+    scale: 0.97,
+    transition: {
+      duration: 0.05,
+    },
+  },
+}
+
+// FAB menu expansion
+export const fabMenuVariants: Variants = {
+  closed: {
+    opacity: 0,
+    y: 20,
+    scale: 0.9,
+    pointerEvents: 'none' as const,
+  },
+  open: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    pointerEvents: 'auto' as const,
+    transition: springTransition,
+  },
+}
+
+export const fabItemVariants: Variants = {
+  closed: {
+    opacity: 0,
+    y: 10,
+    scale: 0.8,
+  },
+  open: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      delay: i * 0.05,
+      ...springTransition,
+    },
+  }),
+}
+
+// Data visualization animations
+export const chartBarVariants: Variants = {
+  initial: {
+    scaleY: 0,
+    originY: 1,
+  },
+  enter: (i: number) => ({
+    scaleY: 1,
+    transition: {
+      delay: i * 0.05,
+      duration: DURATIONS.slow,
+      ease: EASINGS.smoothOut,
+    },
+  }),
+}
+
+export const chartLineVariants: Variants = {
+  initial: {
+    pathLength: 0,
+    opacity: 0,
+  },
+  enter: {
+    pathLength: 1,
+    opacity: 1,
+    transition: {
+      pathLength: {
+        duration: 1,
+        ease: EASINGS.smoothOut,
+      },
+      opacity: {
+        duration: DURATIONS.fast,
+      },
+    },
+  },
+}
+
+// Counter/number animation
+export const counterVariants: Variants = {
+  initial: {
+    opacity: 0,
+    y: 10,
+  },
+  enter: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: DURATIONS.normal,
+      ease: EASINGS.smoothOut,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    transition: {
+      duration: DURATIONS.fast,
+    },
+  },
+}
+
+// Shake for validation errors
+export const shakeVariants: Variants = {
+  shake: {
+    x: [0, -10, 10, -10, 10, 0],
+    transition: {
+      duration: 0.4,
+      ease: 'easeInOut',
+    },
+  },
+}
+
+// Bounce for success/attention
+export const bounceVariants: Variants = {
+  bounce: {
+    y: [0, -15, 0],
+    transition: {
+      duration: 0.4,
+      ease: EASINGS.bounce,
+    },
+  },
+}
+
+// ===== REDUCED MOTION SUPPORT =====
+
+/**
+ * Check if user prefers reduced motion
+ */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/**
+ * Get variants with reduced motion fallback
+ */
+export function withReducedMotion<T extends Variants>(
+  variants: T,
+  reducedVariants?: Partial<T>
+): T {
+  if (prefersReducedMotion()) {
+    return {
+      ...variants,
+      initial: { opacity: 0 },
+      enter: { opacity: 1, transition: { duration: 0.01 } },
+      exit: { opacity: 0, transition: { duration: 0.01 } },
+      ...reducedVariants,
+    } as T
+  }
+  return variants
+}
+
+// ===== GESTURE UTILITIES =====
+
+/**
+ * Standard hover/tap animation for interactive elements
+ */
+export const interactiveVariants = {
+  whileHover: { scale: 1.02 },
+  whileTap: { scale: 0.98 },
+  transition: { duration: DURATIONS.fast },
+}
+
+/**
+ * Subtle hover/tap for field worker mode (larger targets)
+ */
+export const fieldInteractiveVariants = {
+  whileHover: { scale: 1.01, backgroundColor: 'rgba(255, 107, 53, 0.05)' },
+  whileTap: { scale: 0.98 },
+  transition: { duration: 0.1 },
+}

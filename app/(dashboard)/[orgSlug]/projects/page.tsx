@@ -1,20 +1,15 @@
 import { getOrganizationBySlug } from '@/lib/actions/organization-helpers'
 import { getOrganizationProjects, getBatchProjectMetrics } from '@/lib/actions/project-helpers'
 import { notFound } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProjectCard, ProjectCardData } from '@/components/projects/project-card'
 import { ProjectTable } from '@/components/projects/project-table'
 import { ProjectKanban } from '@/components/projects/project-kanban'
 import { ProjectTimeline } from '@/components/projects/project-timeline'
 import Link from 'next/link'
-import { Plus, Building2, Filter, ArrowUpDown, Grid3x3, List, Columns, Calendar } from 'lucide-react'
+import { Plus, Building2, Filter, ArrowUpDown, Grid3x3, List, Columns, Calendar, DollarSign, Briefcase, PauseCircle, Archive } from 'lucide-react'
+import { ProjectsViewSwitcher } from '@/components/projects/projects-view-switcher'
 
 // ✅ PHASE 2 OPTIMIZATION: Page-level caching
-// Revalidate every 60 seconds to balance freshness with performance
-// Projects list changes moderately (new projects, status updates)
 export const revalidate = 60
 
 interface ProjectsPageProps {
@@ -47,7 +42,6 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
 
   // Transform projects to ProjectCardData format
   const projectsData: ProjectCardData[] = projects.map((project: any) => {
-    // Calculate days remaining if dates are available
     let daysRemaining: number | undefined
     if (project.end_date) {
       const endDate = new Date(project.end_date)
@@ -55,7 +49,6 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
       daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
     }
 
-    // Generate sample health status based on project status
     let health: 'on-track' | 'at-risk' | 'delayed' | 'completed' = 'on-track'
     if (project.status === 'archived') {
       health = 'completed'
@@ -65,7 +58,6 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
       health = 'delayed'
     }
 
-    // Get actual metrics for this project
     const metrics = metricsMap[project.id] || {
       totalSpent: 0,
       rfiCount: 0,
@@ -73,7 +65,6 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
       completionPercentage: 0,
     }
 
-    // Calculate budget variance
     const budgetInMillions = project.budget ? project.budget / 1000000 : 0
     const spentInMillions = metrics.totalSpent / 1000000
     const budgetVariance = budgetInMillions > 0
@@ -94,7 +85,7 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
       budgetStatus,
       daysRemaining,
       scheduleStatus: daysRemaining && daysRemaining > 30 ? 'on-track' : daysRemaining && daysRemaining < 0 ? 'behind' : 'on-track',
-      team: [], // Team members are not displayed in cards currently
+      team: [],
     }
   })
 
@@ -102,100 +93,106 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
   const activeCount = projectsData.filter(p => p.status === 'active').length
   const onHoldCount = projectsData.filter(p => p.status === 'on_hold').length
   const archivedCount = projectsData.filter(p => p.status === 'archived').length
+  const planningCount = projectsData.filter(p => p.status === 'planning').length
   const totalValue = projectsData.reduce((sum, p) => sum + (p.budget || 0), 0)
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header with Filters */}
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="mt-2 text-muted-foreground">
-            {activeCount} active, {onHoldCount} on hold, {archivedCount} archived
+          <h1 className="text-2xl font-bold text-white tracking-tight">Projects</h1>
+          <p className="text-white/50 text-sm mt-1">
+            Manage and track all your construction projects
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
-          <Button variant="outline" size="sm">
-            <ArrowUpDown className="mr-2 h-4 w-4" />
-            Sort
-          </Button>
-          <Button asChild>
-            <Link href={`/${orgSlug}/projects/new`}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Project
-            </Link>
-          </Button>
+        <Link
+          href={`/${orgSlug}/projects/new`}
+          className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-medium text-sm shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-200"
+        >
+          <Plus className="h-4 w-4" />
+          New Project
+        </Link>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid gap-4 md:grid-cols-4">
+        {/* Active Projects */}
+        <div className="relative rounded-xl p-5 overflow-hidden group bg-white/[0.02] border border-white/[0.06] hover:border-emerald-500/30 transition-all duration-300">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Active</p>
+              <p className="text-3xl font-bold text-emerald-400 mt-1">{activeCount}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-emerald-500/10">
+              <Briefcase className="h-5 w-5 text-emerald-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* On Hold */}
+        <div className="relative rounded-xl p-5 overflow-hidden group bg-white/[0.02] border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">On Hold</p>
+              <p className="text-3xl font-bold text-amber-400 mt-1">{onHoldCount}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-500/10">
+              <PauseCircle className="h-5 w-5 text-amber-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Planning */}
+        <div className="relative rounded-xl p-5 overflow-hidden group bg-white/[0.02] border border-white/[0.06] hover:border-blue-500/30 transition-all duration-300">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Planning</p>
+              <p className="text-3xl font-bold text-blue-400 mt-1">{planningCount}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-blue-500/10">
+              <Calendar className="h-5 w-5 text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total Value */}
+        <div className="relative rounded-xl p-5 overflow-hidden group bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.1] transition-all duration-300">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Total Value</p>
+              <p className="text-3xl font-bold text-white mt-1">${totalValue.toFixed(1)}M</p>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-500/10">
+              <DollarSign className="h-5 w-5 text-amber-400" />
+            </div>
+          </div>
         </div>
       </div>
 
       {projects.length === 0 ? (
-        <Card>
-          <CardContent className="flex min-h-[400px] flex-col items-center justify-center py-12">
-            <Building2 className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h2 className="mb-2 text-xl font-semibold">No projects yet</h2>
-            <p className="mb-6 text-center text-muted-foreground">
-              Get started by creating your first project
-            </p>
-            <Button asChild>
-              <Link href={`/${orgSlug}/projects/new`}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Project
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <Tabs defaultValue="grid" className="w-full">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-            <TabsList>
-              <TabsTrigger value="grid">
-                <Grid3x3 className="h-4 w-4 mr-2" />
-                Grid
-              </TabsTrigger>
-              <TabsTrigger value="list">
-                <List className="h-4 w-4 mr-2" />
-                List
-              </TabsTrigger>
-              <TabsTrigger value="kanban">
-                <Columns className="h-4 w-4 mr-2" />
-                Kanban
-              </TabsTrigger>
-              <TabsTrigger value="timeline">
-                <Calendar className="h-4 w-4 mr-2" />
-                Timeline
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{projectsData.length} projects</Badge>
-              <Badge variant="outline">${totalValue.toFixed(1)}M total</Badge>
-            </div>
+        <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-12 text-center">
+          <div className="mx-auto w-16 h-16 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4">
+            <Building2 className="h-8 w-8 text-amber-400" />
           </div>
-
-          <TabsContent value="grid" className="mt-0">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {projectsData.map((project) => (
-                <ProjectCard key={project.id} project={project} orgSlug={orgSlug} />
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="list" className="mt-0">
-            <ProjectTable projects={projectsData} orgSlug={orgSlug} />
-          </TabsContent>
-
-          <TabsContent value="kanban" className="mt-0">
-            <ProjectKanban projects={projectsData} orgSlug={orgSlug} />
-          </TabsContent>
-
-          <TabsContent value="timeline" className="mt-0">
-            <ProjectTimeline projects={projectsData} orgSlug={orgSlug} />
-          </TabsContent>
-        </Tabs>
+          <h2 className="text-xl font-semibold text-white mb-2">No projects yet</h2>
+          <p className="text-white/50 mb-6">
+            Get started by creating your first project
+          </p>
+          <Link
+            href={`/${orgSlug}/projects/new`}
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-medium text-sm shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-200"
+          >
+            <Plus className="h-4 w-4" />
+            Create Project
+          </Link>
+        </div>
+      ) : (
+        <ProjectsViewSwitcher projectsData={projectsData} orgSlug={orgSlug} totalValue={totalValue} />
       )}
     </div>
   )

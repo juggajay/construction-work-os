@@ -2,28 +2,31 @@
  * Organization-Level RFI List Page
  *
  * Displays all RFIs across all projects in the organization
+ * Industrial Luxury aesthetic
  */
 
 'use client'
 
 import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { RFIStatusBadge, type RFIStatus } from '@/components/rfis/rfi-status-badge'
 import { RFITable } from '@/components/rfis/rfi-table'
 import { isOverdue, calculateResponseTime } from '@/lib/rfis/sla-calculations'
-import { Plus, Search, FileText, Clock, AlertCircle, TrendingDown, Filter, Building2 } from 'lucide-react'
+import {
+  Plus,
+  Search,
+  FileText,
+  Clock,
+  AlertCircle,
+  TrendingDown,
+  Building2,
+  ChevronDown,
+  Filter
+} from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { cn } from '@/lib/utils'
 
 export default function OrganizationRFIsPage() {
   const params = useParams()
@@ -34,6 +37,7 @@ export default function OrganizationRFIsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [overdueFilter, setOverdueFilter] = useState<string>('all')
   const [projectFilter, setProjectFilter] = useState<string>('all')
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch organization ID
   const { data: org } = useQuery({
@@ -127,11 +131,6 @@ export default function OrganizationRFIsPage() {
 
       if (error) throw error
 
-      // ✅ OPTIMIZATION: Profiles now fetched via JOIN (no N+1)
-      // Previously: 2 queries (rfis + profiles)
-      // Now: 1 query with JOIN
-      // Expected improvement: 50% faster (300ms → 150ms for 50 RFIs)
-
       // Filter overdue in memory (complex logic)
       let filtered = data || []
       if (overdueFilter === 'overdue') {
@@ -202,14 +201,14 @@ export default function OrganizationRFIsPage() {
 
     const avgResponseTime =
       responseTimes.length > 0
-        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length / 24 // Convert hours to days
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length / 24
         : 0
 
     return {
       total,
       pending,
       overdue,
-      avgResponseTime: Math.round(avgResponseTime * 10) / 10, // Round to 1 decimal
+      avgResponseTime: Math.round(avgResponseTime * 10) / 10,
     }
   }, [rfis])
 
@@ -218,122 +217,241 @@ export default function OrganizationRFIsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">RFIs</h1>
-          <p className="text-muted-foreground">All requests for information across projects</p>
-        </div>
-        <Button variant="outline" size="sm">
-          <Building2 className="h-4 w-4 mr-2" />
-          {projects?.length || 0} Projects
-        </Button>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-2xl font-bold text-white tracking-tight">RFIs</h1>
+          <p className="text-white/50 text-sm mt-1">
+            All requests for information across projects
+          </p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex items-center gap-3"
+        >
+          <div className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-lg",
+            "bg-white/[0.03] border border-white/[0.06]",
+            "text-white/50 text-sm"
+          )}>
+            <Building2 className="h-4 w-4" />
+            {projects?.length || 0} Projects
+          </div>
+        </motion.div>
       </div>
 
-      {/* RFI Metrics */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total RFIs</p>
-                <p className="text-2xl font-bold">{metrics.total}</p>
-              </div>
-              <FileText className="h-8 w-8 text-muted-foreground/20" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-warning/50 bg-warning/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Response</p>
-                <p className="text-2xl font-bold text-warning">{metrics.pending}</p>
-              </div>
-              <Clock className="h-8 w-8 text-warning/20" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-danger/50 bg-danger/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Overdue</p>
-                <p className="text-2xl font-bold text-danger">{metrics.overdue}</p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-danger/20" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Avg Response</p>
-                <p className="text-2xl font-bold">
-                  {metrics.avgResponseTime > 0
-                    ? `${metrics.avgResponseTime} days`
-                    : '-'}
-                </p>
-              </div>
-              <TrendingDown className="h-8 w-8 text-success/20" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* RFI List with Ball-in-Court Tracking */}
-      <Card>
-        <CardHeader>
+      {/* Metrics Row */}
+      <motion.div
+        className="grid gap-4 md:grid-cols-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        {/* Total RFIs */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-white/[0.06]",
+          "hover:border-white/[0.1] transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>RFI Log</CardTitle>
-              <CardDescription>Track all requests for information across all projects</CardDescription>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Total RFIs</p>
+              <p className="text-3xl font-bold text-white mt-1">{metrics.total}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
+            <div className="p-3 rounded-xl bg-blue-500/10">
+              <FileText className="h-5 w-5 text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Response */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-amber-500/20",
+          "hover:border-amber-500/40 transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Pending Response</p>
+              <p className="text-3xl font-bold text-amber-400 mt-1">{metrics.pending}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-500/10">
+              <Clock className="h-5 w-5 text-amber-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Overdue */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-red-500/20",
+          "hover:border-red-500/40 transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-red-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Overdue</p>
+              <p className="text-3xl font-bold text-red-400 mt-1">{metrics.overdue}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-red-500/10">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Avg Response */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-white/[0.06]",
+          "hover:border-white/[0.1] transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Avg Response</p>
+              <p className="text-3xl font-bold text-white mt-1">
+                {metrics.avgResponseTime > 0 ? `${metrics.avgResponseTime}d` : '-'}
+              </p>
+            </div>
+            <div className="p-3 rounded-xl bg-emerald-500/10">
+              <TrendingDown className="h-5 w-5 text-emerald-400" />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* RFI List Card */}
+      <motion.div
+        className={cn(
+          "rounded-xl overflow-hidden",
+          "bg-white/[0.02] border border-white/[0.06]"
+        )}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        {/* Card Header */}
+        <div className="p-5 border-b border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-white">RFI Log</h2>
+              <p className="text-sm text-white/40 mt-0.5">
+                Track all requests for information across all projects
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                <input
+                  type="text"
                   placeholder="Search RFIs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className={cn(
+                    "w-[200px] pl-10 pr-4 py-2 text-sm rounded-lg",
+                    "bg-white/[0.03] border border-white/[0.08]",
+                    "text-white placeholder:text-white/30",
+                    "focus:outline-none focus:border-amber-500/50",
+                    "transition-all duration-200"
+                  )}
                 />
               </div>
-              <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="All Projects" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  {projects?.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="submitted">Submitted</SelectItem>
-                  <SelectItem value="under_review">Under Review</SelectItem>
-                  <SelectItem value="answered">Answered</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Filter Toggle */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm",
+                  "bg-white/[0.03] border border-white/[0.08]",
+                  "text-white/70 hover:text-white hover:bg-white/[0.06]",
+                  "transition-all duration-200",
+                  showFilters && "border-amber-500/50 text-amber-400"
+                )}
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  showFilters && "rotate-180"
+                )} />
+              </button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+
+          {/* Expandable Filters */}
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-white/[0.06]"
+            >
+              {/* Project Filter */}
+              <select
+                value={projectFilter}
+                onChange={(e) => setProjectFilter(e.target.value)}
+                className={cn(
+                  "px-3 py-2 text-sm rounded-lg appearance-none cursor-pointer",
+                  "bg-white/[0.03] border border-white/[0.08]",
+                  "text-white/70",
+                  "focus:outline-none focus:border-amber-500/50",
+                  "transition-all duration-200"
+                )}
+              >
+                <option value="all">All Projects</option>
+                {projects?.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className={cn(
+                  "px-3 py-2 text-sm rounded-lg appearance-none cursor-pointer",
+                  "bg-white/[0.03] border border-white/[0.08]",
+                  "text-white/70",
+                  "focus:outline-none focus:border-amber-500/50",
+                  "transition-all duration-200"
+                )}
+              >
+                <option value="all">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="submitted">Submitted</option>
+                <option value="under_review">Under Review</option>
+                <option value="answered">Answered</option>
+                <option value="closed">Closed</option>
+              </select>
+
+              {/* Clear Filters */}
+              {(projectFilter !== 'all' || statusFilter !== 'all') && (
+                <button
+                  onClick={() => {
+                    setProjectFilter('all')
+                    setStatusFilter('all')
+                  }}
+                  className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                  Clear filters
+                </button>
+              )}
+            </motion.div>
+          )}
+        </div>
+
+        {/* Table Content */}
+        <div className="overflow-x-auto">
           <RFITable
             rfis={filteredRfis || []}
             isLoading={isLoading}
@@ -343,8 +461,8 @@ export default function OrganizationRFIsPage() {
             }}
             showProject={true}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </motion.div>
     </div>
   )
 }

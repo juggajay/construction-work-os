@@ -1,16 +1,12 @@
 'use client'
 
 /**
- * ✅ PHASE 3 OPTIMIZATION: Memoized to prevent unnecessary re-renders in project grids
+ * Project Card Component
+ * Industrial Luxury aesthetic
  */
 
 import { memo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { ConstructionBadge } from '@/components/ui/construction-badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { MapPin, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react'
+import { MapPin, ArrowRight, TrendingUp, TrendingDown, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -40,41 +36,67 @@ interface ProjectCardProps {
   orgSlug: string
 }
 
-const statusColors = {
-  planning: 'border-l-gray-500',
-  active: 'border-l-green-500',
-  on_hold: 'border-l-yellow-500',
-  archived: 'border-l-blue-500',
+const statusConfig = {
+  planning: { label: 'Planning', color: 'blue' },
+  active: { label: 'Active', color: 'emerald' },
+  on_hold: { label: 'On Hold', color: 'amber' },
+  archived: { label: 'Archived', color: 'gray' },
+}
+
+const healthConfig = {
+  'on-track': { label: 'On Track', bgClass: 'bg-emerald-500/10', textClass: 'text-emerald-400', borderClass: 'border-emerald-500/20' },
+  'at-risk': { label: 'At Risk', bgClass: 'bg-amber-500/10', textClass: 'text-amber-400', borderClass: 'border-amber-500/20' },
+  'delayed': { label: 'Delayed', bgClass: 'bg-red-500/10', textClass: 'text-red-400', borderClass: 'border-red-500/20' },
+  'completed': { label: 'Completed', bgClass: 'bg-blue-500/10', textClass: 'text-blue-400', borderClass: 'border-blue-500/20' },
 }
 
 export const ProjectCard = memo(function ProjectCard({ project, orgSlug }: ProjectCardProps) {
+  const status = statusConfig[project.status] || statusConfig.active
+  const health = healthConfig[project.health] || healthConfig['on-track']
+
   return (
     <Link href={`/${orgSlug}/projects/${project.id}`}>
-      <Card
+      <div
         className={cn(
-          'hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer border-l-4 h-full',
-          statusColors[project.status]
+          'group relative rounded-xl overflow-hidden h-full',
+          'bg-white/[0.02] border border-white/[0.06]',
+          'hover:border-white/[0.12] hover:bg-white/[0.04]',
+          'transition-all duration-300 cursor-pointer'
         )}
       >
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-xl truncate">{project.name}</CardTitle>
-              <CardDescription>
-                Project #{project.number}
-              </CardDescription>
-            </div>
-            <ConstructionBadge status={project.health} className="ml-2 flex-shrink-0">
-              {project.health}
-            </ConstructionBadge>
-          </div>
-        </CardHeader>
+        {/* Top accent line based on status */}
+        <div className={cn(
+          "absolute top-0 left-0 w-full h-0.5",
+          status.color === 'emerald' && "bg-gradient-to-r from-emerald-500 to-emerald-600",
+          status.color === 'blue' && "bg-gradient-to-r from-blue-500 to-blue-600",
+          status.color === 'amber' && "bg-gradient-to-r from-amber-500 to-amber-600",
+          status.color === 'gray' && "bg-gradient-to-r from-gray-500 to-gray-600"
+        )} />
 
-        <CardContent className="space-y-4">
+        <div className="p-5 space-y-4">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-white truncate group-hover:text-amber-400 transition-colors">
+                {project.name}
+              </h3>
+              <p className="text-sm text-white/40 mt-0.5">
+                Project #{project.number}
+              </p>
+            </div>
+            <span className={cn(
+              "px-2.5 py-1 text-xs font-medium rounded-lg shrink-0",
+              health.bgClass,
+              health.textClass
+            )}>
+              {health.label}
+            </span>
+          </div>
+
           {/* Location */}
           {project.address && (
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex items-center gap-2 text-sm text-white/50">
+              <MapPin className="h-4 w-4 shrink-0" />
               <span className="truncate">{project.address}</span>
             </div>
           )}
@@ -82,24 +104,36 @@ export const ProjectCard = memo(function ProjectCard({ project, orgSlug }: Proje
           {/* Progress Bar */}
           <div>
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium">{project.completion}%</span>
+              <span className="text-white/40">Completion</span>
+              <span className="font-medium text-white">{project.completion}%</span>
             </div>
-            <Progress value={project.completion} className="h-2" />
+            <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-500",
+                  project.completion >= 100
+                    ? "bg-emerald-500"
+                    : project.completion >= 75
+                    ? "bg-amber-500"
+                    : "bg-gradient-to-r from-amber-500 to-amber-600"
+                )}
+                style={{ width: `${Math.min(project.completion, 100)}%` }}
+              />
+            </div>
           </div>
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
             <div>
-              <p className="text-xs text-muted-foreground">Budget</p>
-              <p className="font-bold">
+              <p className="text-xs text-white/40 uppercase tracking-wider">Budget</p>
+              <p className="font-bold text-white mt-1">
                 {project.budget ? `$${project.budget.toFixed(1)}M` : 'N/A'}
               </p>
               {project.budgetVariance !== undefined && (
                 <p
                   className={cn(
-                    'text-xs flex items-center gap-1',
-                    project.budgetStatus === 'over' ? 'text-red-600' : 'text-green-600'
+                    'text-xs flex items-center gap-1 mt-0.5',
+                    project.budgetStatus === 'over' ? 'text-red-400' : 'text-emerald-400'
                   )}
                 >
                   {project.budgetStatus === 'over' ? (
@@ -107,59 +141,57 @@ export const ProjectCard = memo(function ProjectCard({ project, orgSlug }: Proje
                   ) : (
                     <TrendingDown className="h-3 w-3" />
                   )}
-                  {Math.abs(project.budgetVariance)}%
+                  {Math.abs(project.budgetVariance)}% {project.budgetStatus}
                 </p>
               )}
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Schedule</p>
-              <p className="font-bold">
-                {project.daysRemaining !== undefined ? `${project.daysRemaining}d` : 'N/A'}
+              <p className="text-xs text-white/40 uppercase tracking-wider">Schedule</p>
+              <p className="font-bold text-white mt-1">
+                {project.daysRemaining !== undefined
+                  ? project.daysRemaining < 0
+                    ? `${Math.abs(project.daysRemaining)}d overdue`
+                    : `${project.daysRemaining}d left`
+                  : 'N/A'}
               </p>
               {project.scheduleStatus && (
                 <p
                   className={cn(
-                    'text-xs capitalize',
+                    'text-xs capitalize mt-0.5',
                     project.scheduleStatus === 'behind'
-                      ? 'text-red-600'
+                      ? 'text-red-400'
                       : project.scheduleStatus === 'ahead'
-                      ? 'text-green-600'
-                      : 'text-muted-foreground'
+                      ? 'text-emerald-400'
+                      : 'text-white/40'
                   )}
                 >
-                  {project.scheduleStatus}
+                  {project.scheduleStatus === 'on-track' ? 'On schedule' : project.scheduleStatus}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Team Avatars */}
-          <div className="flex items-center justify-between">
-            <div className="flex -space-x-2">
-              {project.team && project.team.length > 0 ? (
-                <>
-                  {project.team.slice(0, 4).map((member) => (
-                    <Avatar key={member.id} className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={member.avatar} alt={member.name} />
-                      <AvatarFallback className="text-xs">{member.initials}</AvatarFallback>
-                    </Avatar>
-                  ))}
-                  {project.team.length > 4 && (
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border-2 border-background">
-                      +{project.team.length - 4}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">No team members</span>
-              )}
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-2">
+            {/* Status Badge */}
+            <span className={cn(
+              "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded",
+              status.color === 'emerald' && "bg-emerald-500/10 text-emerald-400",
+              status.color === 'blue' && "bg-blue-500/10 text-blue-400",
+              status.color === 'amber' && "bg-amber-500/10 text-amber-400",
+              status.color === 'gray' && "bg-white/[0.05] text-white/40"
+            )}>
+              {status.label}
+            </span>
+
+            {/* Arrow indicator */}
+            <div className="flex items-center gap-1 text-white/30 group-hover:text-amber-400 transition-colors">
+              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">View</span>
+              <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
             </div>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-              <ArrowRight className="h-4 w-4" />
-            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   )
 });

@@ -1,7 +1,6 @@
 /**
  * Organization-Level Daily Reports Page
- *
- * Displays all daily reports across all projects in the organization
+ * Industrial Luxury aesthetic
  */
 
 'use client'
@@ -9,30 +8,48 @@
 import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { DailyReportStatusBadge } from '@/components/daily-reports/daily-report-status-badge'
-import { Search, FileText, Users, Cloud, Building2, Calendar } from 'lucide-react'
+  Search,
+  FileText,
+  Users,
+  Cloud,
+  Building2,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  Filter,
+  Sun,
+  CloudRain,
+  Snowflake,
+  Wind,
+  CloudFog,
+  CloudSun,
+  X,
+} from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 
 type DailyReportStatus = 'draft' | 'submitted' | 'approved' | 'archived'
+
+// Status badge config - Industrial Luxury style
+const STATUS_CONFIG: Record<DailyReportStatus, { label: string; bgClass: string; textClass: string }> = {
+  draft: { label: 'Draft', bgClass: 'bg-white/[0.05]', textClass: 'text-white/50' },
+  submitted: { label: 'Submitted', bgClass: 'bg-amber-500/10', textClass: 'text-amber-400' },
+  approved: { label: 'Approved', bgClass: 'bg-emerald-500/10', textClass: 'text-emerald-400' },
+  archived: { label: 'Archived', bgClass: 'bg-white/[0.05]', textClass: 'text-white/30' },
+}
+
+// Weather icon mapping
+const WEATHER_ICONS: Record<string, typeof Sun> = {
+  clear: Sun,
+  partly_cloudy: CloudSun,
+  overcast: Cloud,
+  rain: CloudRain,
+  snow: Snowflake,
+  fog: CloudFog,
+  wind: Wind,
+}
 
 export default function OrganizationDailyReportsPage() {
   const params = useParams()
@@ -42,6 +59,7 @@ export default function OrganizationDailyReportsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [projectFilter, setProjectFilter] = useState<string>('all')
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch organization ID
   const { data: org } = useQuery({
@@ -179,192 +197,351 @@ export default function OrganizationDailyReportsPage() {
 
   const getWeatherIcon = (condition: string | null) => {
     if (!condition) return null
-    return <Cloud className="h-4 w-4 text-muted-foreground" />
+    const Icon = WEATHER_ICONS[condition] || Cloud
+    return <Icon className="h-4 w-4 text-white/40" />
   }
 
+  const activeFilters = (statusFilter !== 'all' ? 1 : 0) + (projectFilter !== 'all' ? 1 : 0)
+
   return (
-    <div className="p-6 space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Daily Reports</h1>
-          <p className="text-muted-foreground">Track daily activities and progress across projects</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Daily Reports</h1>
+          <p className="text-white/50 text-sm mt-1">
+            Track daily activities and progress across projects
+          </p>
         </div>
-        <Button variant="outline" size="sm">
-          <Building2 className="h-4 w-4 mr-2" />
-          {projects?.length || 0} Projects
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-lg",
+            "bg-white/[0.03] border border-white/[0.06]",
+            "text-white/50 text-sm"
+          )}>
+            <Building2 className="h-4 w-4" />
+            {projects?.length || 0} Projects
+          </div>
+        </div>
       </div>
 
-      {/* Metrics */}
+      {/* Metrics Row */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Reports</p>
-                <p className="text-2xl font-bold">{metrics.total}</p>
-              </div>
-              <FileText className="h-8 w-8 text-muted-foreground/20" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">This Week</p>
-                <p className="text-2xl font-bold">{metrics.thisWeek}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-primary/20" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-warning/50 bg-warning/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Submitted</p>
-                <p className="text-2xl font-bold text-warning">{metrics.submitted}</p>
-              </div>
-              <Users className="h-8 w-8 text-warning/20" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-success/50 bg-success/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Approved</p>
-                <p className="text-2xl font-bold text-success">{metrics.approved}</p>
-              </div>
-              <FileText className="h-8 w-8 text-success/20" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Daily Reports List */}
-      <Card>
-        <CardHeader>
+        {/* Total Reports */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-white/[0.06]",
+          "hover:border-white/[0.1] transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Daily Report Log</CardTitle>
-              <CardDescription>All daily reports across all projects</CardDescription>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Total Reports</p>
+              <p className="text-3xl font-bold text-white mt-1">{metrics.total}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
+            <div className="p-3 rounded-xl bg-blue-500/10">
+              <FileText className="h-5 w-5 text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* This Week */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-white/[0.06]",
+          "hover:border-white/[0.1] transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">This Week</p>
+              <p className="text-3xl font-bold text-purple-400 mt-1">{metrics.thisWeek}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-purple-500/10">
+              <Calendar className="h-5 w-5 text-purple-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Submitted */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-amber-500/20",
+          "hover:border-amber-500/40 transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Submitted</p>
+              <p className="text-3xl font-bold text-amber-400 mt-1">{metrics.submitted}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-500/10">
+              <Users className="h-5 w-5 text-amber-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Approved */}
+        <div className={cn(
+          "relative rounded-xl p-5 overflow-hidden group",
+          "bg-white/[0.02] border border-white/[0.06]",
+          "hover:border-emerald-500/30 transition-all duration-300"
+        )}>
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-white/40">Approved</p>
+              <p className="text-3xl font-bold text-emerald-400 mt-1">{metrics.approved}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-emerald-500/10">
+              <FileText className="h-5 w-5 text-emerald-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Daily Reports Table */}
+      <div className={cn(
+        "rounded-xl overflow-hidden",
+        "bg-white/[0.02] border border-white/[0.06]"
+      )}>
+        {/* Card Header */}
+        <div className="p-5 border-b border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Daily Report Log</h2>
+              <p className="text-sm text-white/40 mt-0.5">
+                All daily reports across all projects
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                <input
+                  type="text"
                   placeholder="Search reports..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className={cn(
+                    "w-64 pl-10 pr-4 h-10 rounded-lg text-sm",
+                    "bg-white/[0.03] border border-white/[0.08]",
+                    "text-white placeholder:text-white/30",
+                    "focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20",
+                    "transition-all duration-200"
+                  )}
                 />
               </div>
-              <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="All Projects" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  {projects?.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="submitted">Submitted</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Filter Toggle */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={cn(
+                  "inline-flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-medium",
+                  "border transition-all duration-200",
+                  showFilters || activeFilters > 0
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                    : "bg-white/[0.03] border-white/[0.08] text-white/60 hover:text-white hover:border-white/[0.15]"
+                )}
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+                {activeFilters > 0 && (
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-xs">
+                    {activeFilters}
+                  </span>
+                )}
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  showFilters && "rotate-180"
+                )} />
+              </button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Weather</TableHead>
-                <TableHead>Crew</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : filteredReports && filteredReports.length > 0 ? (
-                filteredReports.map((report: any) => (
-                  <TableRow
-                    key={report.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleRowClick(report.id, report.project_id)}
+
+          {/* Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="flex flex-wrap items-center gap-3 pt-4 mt-4 border-t border-white/[0.06]">
+                  {/* Project Filter */}
+                  <select
+                    value={projectFilter}
+                    onChange={(e) => setProjectFilter(e.target.value)}
+                    className={cn(
+                      "h-9 px-3 rounded-lg text-sm",
+                      "bg-white/[0.03] border border-white/[0.08]",
+                      "text-white/80",
+                      "focus:outline-none focus:border-amber-500/50",
+                      "transition-all duration-200"
+                    )}
                   >
-                    <TableCell className="font-medium">
-                      {new Date(report.report_date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Building2 className="h-3 w-3 text-muted-foreground" />
-                        <span className="truncate max-w-[150px]">{report.project?.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DailyReportStatusBadge status={report.status as DailyReportStatus} />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getWeatherIcon(report.weather_condition)}
-                        <span className="text-sm">
-                          {report.temperature_high ? `${Math.round(report.temperature_high)}°F` : '-'}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3 text-muted-foreground" />
-                        <span>{report.total_crew_count || 0}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(report.created_at).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <option value="all" className="bg-[#0a0a0a]">All Projects</option>
+                    {projects?.map((project) => (
+                      <option key={project.id} value={project.id} className="bg-[#0a0a0a]">
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Status Filter */}
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className={cn(
+                      "h-9 px-3 rounded-lg text-sm",
+                      "bg-white/[0.03] border border-white/[0.08]",
+                      "text-white/80",
+                      "focus:outline-none focus:border-amber-500/50",
+                      "transition-all duration-200"
+                    )}
+                  >
+                    <option value="all" className="bg-[#0a0a0a]">All Statuses</option>
+                    <option value="draft" className="bg-[#0a0a0a]">Draft</option>
+                    <option value="submitted" className="bg-[#0a0a0a]">Submitted</option>
+                    <option value="approved" className="bg-[#0a0a0a]">Approved</option>
+                    <option value="archived" className="bg-[#0a0a0a]">Archived</option>
+                  </select>
+
+                  {/* Clear Filters */}
+                  {activeFilters > 0 && (
+                    <button
+                      onClick={() => {
+                        setStatusFilter('all')
+                        setProjectFilter('all')
+                      }}
+                      className="inline-flex items-center gap-1 px-3 h-9 rounded-lg text-sm text-white/50 hover:text-white transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Table Content */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/[0.06]">
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+                  Date
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+                  Project
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+                  Status
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 hidden md:table-cell">
+                  Weather
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 hidden lg:table-cell">
+                  Crew
+                </th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 hidden lg:table-cell">
+                  Created
+                </th>
+                <th className="w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="px-5 py-12 text-center text-white/40">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+                      Loading reports...
+                    </div>
+                  </td>
+                </tr>
+              ) : !filteredReports || filteredReports.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-5 py-12 text-center text-white/40">
                     No daily reports found
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
+              ) : (
+                filteredReports.map((report: any) => {
+                  const status = STATUS_CONFIG[report.status as DailyReportStatus] || STATUS_CONFIG.draft
+
+                  return (
+                    <tr
+                      key={report.id}
+                      className={cn(
+                        "group cursor-pointer border-b border-white/[0.03]",
+                        "hover:bg-white/[0.02] transition-colors duration-200"
+                      )}
+                      onClick={() => handleRowClick(report.id, report.project_id)}
+                    >
+                      <td className="px-5 py-4">
+                        <span className="font-medium text-white">
+                          {new Date(report.report_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2 text-sm text-white/60">
+                          <Building2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate max-w-[180px]">{report.project?.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={cn(
+                          "inline-flex px-2.5 py-1 text-xs font-medium rounded-lg",
+                          status.bgClass,
+                          status.textClass
+                        )}>
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 hidden md:table-cell">
+                        <div className="flex items-center gap-2">
+                          {getWeatherIcon(report.weather_condition)}
+                          <span className="text-sm text-white/50">
+                            {report.temperature_high ? `${Math.round(report.temperature_high)}°F` : '-'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 hidden lg:table-cell">
+                        <div className="flex items-center gap-1.5 text-sm text-white/50">
+                          <Users className="h-3.5 w-3.5" />
+                          <span>{report.total_crew_count || 0}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 hidden lg:table-cell text-sm text-white/40">
+                        {new Date(report.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ChevronRight className="h-4 w-4 text-white/40" />
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </motion.div>
   )
 }
