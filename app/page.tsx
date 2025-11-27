@@ -1,792 +1,1069 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight,
   Check,
   CheckCircle,
-  AlertCircle,
-  XCircle,
   Play,
   Star,
   Sparkles,
   Wifi,
-  Download,
   Building2,
   FileText,
-  Clock,
   DollarSign,
-  Wrench,
   Shield,
-  Award,
-  ChevronRight,
-  Zap,
   Mail,
-  X,
+  Users,
+  TrendingUp,
+  AlertTriangle,
+  Timer,
+  Calculator,
+  Quote,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-// Lazy load heavy components for better performance
-const TestimonialCarousel = dynamic(() => import('@/components/landing/testimonial-carousel'), {
-  loading: () => <div className="h-96 animate-pulse bg-muted rounded-lg" />,
-})
-const PricingSection = dynamic(() => import('@/components/landing/pricing-section'), {
-  loading: () => <div className="h-96 animate-pulse bg-muted rounded-lg" />,
-})
+// Lazy load heavy components
 const FAQSection = dynamic(() => import('@/components/landing/faq-section'), {
   loading: () => <div className="h-96 animate-pulse bg-muted rounded-lg" />,
 })
 
-export default function LandingPage() {
-  // Track visitor engagement for ethical scarcity
-  const [timeOnPage, setTimeOnPage] = useState(0)
-  const [showExitIntent, setShowExitIntent] = useState(false)
-  const [exitIntentDismissed, setExitIntentDismissed] = useState(false)
-  const [email, setEmail] = useState('')
+// ============================================================================
+// ANIMATED BACKGROUND COMPONENT
+// ============================================================================
+function AnimatedGradientBackground() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Base gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
 
-  // Check if exit intent was previously dismissed
+      {/* Animated orbs */}
+      <motion.div
+        className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div
+        className="absolute -bottom-40 -left-40 w-96 h-96 bg-construction-500/10 rounded-full blur-3xl"
+        animate={{
+          scale: [1.2, 1, 1.2],
+          opacity: [0.5, 0.3, 0.5],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+
+      {/* Grid pattern */}
+      <div
+        className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--foreground)/0.03)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground)/0.03)_1px,transparent_1px)] bg-[size:64px_64px]"
+        aria-hidden="true"
+      />
+    </div>
+  )
+}
+
+// ============================================================================
+// FLOATING CTA BAR (appears on scroll)
+// ============================================================================
+function FloatingCTA({ visible }: { visible: boolean }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b shadow-lg"
+        >
+          <div className="container flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <Building2 className="h-6 w-6 text-primary" />
+              <span className="font-bold hidden sm:inline">Construction Work OS</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground hidden md:inline">
+                Join 47+ contractors saving $50K/project
+              </span>
+              <Button size="sm" className="bg-primary hover:bg-primary/90" asChild>
+                <Link href="/signup">
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ============================================================================
+// LOGO CAROUSEL
+// ============================================================================
+const logos = [
+  { name: 'Thompson Brothers', initial: 'TB' },
+  { name: 'Martinez Construction', initial: 'MC' },
+  { name: 'Chen Electric', initial: 'CE' },
+  { name: 'Alpine Builders', initial: 'AB' },
+  { name: 'Park HVAC', initial: 'PH' },
+  { name: 'Summit Contractors', initial: 'SC' },
+]
+
+function LogoCarousel() {
+  return (
+    <div className="flex items-center gap-8 overflow-hidden">
+      <motion.div
+        className="flex items-center gap-8"
+        animate={{ x: [0, -1000] }}
+        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+      >
+        {[...logos, ...logos].map((logo, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 text-muted-foreground/60 whitespace-nowrap"
+          >
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center font-bold text-sm">
+              {logo.initial}
+            </div>
+            <span className="font-medium">{logo.name}</span>
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  )
+}
+
+// ============================================================================
+// METRIC COUNTER ANIMATION
+// ============================================================================
+function AnimatedCounter({ value, suffix = '', prefix = '' }: { value: number, suffix?: string, prefix?: string }) {
+  const [count, setCount] = useState(0)
+  const [hasAnimated, setHasAnimated] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
+
   useEffect(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const dismissed = localStorage.getItem('exitIntentDismissed')
-        if (dismissed === 'true') {
-          setExitIntentDismissed(true)
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !hasAnimated) {
+          setHasAnimated(true)
+          const duration = 2000
+          const steps = 60
+          const increment = value / steps
+          let current = 0
+
+          const timer = setInterval(() => {
+            current += increment
+            if (current >= value) {
+              setCount(value)
+              clearInterval(timer)
+            } else {
+              setCount(Math.floor(current))
+            }
+          }, duration / steps)
         }
-      }
-    } catch (error) {
-      // localStorage might be disabled, allow modal to show
-      console.error('Error reading localStorage:', error)
+      },
+      { threshold: 0.5 }
+    )
+
+    if (ref.current) {
+      observer.observe(ref.current)
     }
-  }, [])
+
+    return () => observer.disconnect()
+  }, [value, hasAnimated])
+
+  return (
+    <span ref={ref} className="tabular-nums">
+      {prefix}{count.toLocaleString()}{suffix}
+    </span>
+  )
+}
+
+// ============================================================================
+// BEFORE/AFTER COMPARISON
+// ============================================================================
+function BeforeAfterComparison() {
+  return (
+    <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+      {/* Before */}
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <Card className="border-destructive/30 bg-destructive/5 h-full">
+          <CardHeader>
+            <Badge variant="destructive" className="w-fit mb-2">Before</Badge>
+            <CardTitle className="text-xl">The Chaos of Email & Spreadsheets</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[
+              { icon: Mail, text: 'RFIs buried in email threads', stat: '12+ day response time' },
+              { icon: AlertTriangle, text: 'Version control nightmares', stat: 'Which Excel is correct?' },
+              { icon: Users, text: 'Field team can\'t access info', stat: '0% field adoption' },
+              { icon: DollarSign, text: 'Per-seat pricing bleeds budget', stat: '$1,200/user/year' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="h-5 w-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="font-medium">{item.text}</p>
+                  <p className="text-sm text-destructive">{item.stat}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* After */}
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <Card className="border-primary/30 bg-primary/5 h-full">
+          <CardHeader>
+            <Badge className="w-fit mb-2 bg-primary">After</Badge>
+            <CardTitle className="text-xl">One Platform. Total Control.</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[
+              { icon: FileText, text: 'Native RFI workflows with tracking', stat: '2 day avg response' },
+              { icon: CheckCircle, text: 'Single source of truth', stat: 'Real-time sync' },
+              { icon: Wifi, text: 'Offline-first mobile app', stat: '95% field adoption' },
+              { icon: Users, text: 'Unlimited users per project', stat: '$299/project flat' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">{item.text}</p>
+                  <p className="text-sm text-primary">{item.stat}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  )
+}
+
+// ============================================================================
+// ROI CALCULATOR
+// ============================================================================
+function ROICalculator() {
+  const [projects, setProjects] = useState(3)
+  const [teamSize, setTeamSize] = useState(15)
+
+  const procoreCost = projects * 1000 + teamSize * 100 // Rough Procore pricing
+  const ourCost = projects * 299
+  const savings = procoreCost - ourCost
+  const timeSaved = teamSize * 4 // 4 hours per person per month
+  const rfiSavings = projects * 18000 // $18K per project from faster RFIs
+
+  return (
+    <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5 max-w-2xl mx-auto">
+      <CardHeader className="text-center">
+        <Badge className="w-fit mx-auto mb-2">
+          <Calculator className="h-3 w-3 mr-1" />
+          ROI Calculator
+        </Badge>
+        <CardTitle>See Your Potential Savings</CardTitle>
+        <CardDescription>Adjust the sliders to match your business</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Project Slider */}
+        <div>
+          <div className="flex justify-between mb-2">
+            <label className="text-sm font-medium">Active Projects</label>
+            <span className="text-sm font-bold text-primary">{projects}</span>
+          </div>
+          <input
+            type="range"
+            min="1"
+            max="20"
+            value={projects}
+            onChange={(e) => setProjects(parseInt(e.target.value))}
+            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+          />
+        </div>
+
+        {/* Team Size Slider */}
+        <div>
+          <div className="flex justify-between mb-2">
+            <label className="text-sm font-medium">Team Members</label>
+            <span className="text-sm font-bold text-primary">{teamSize}</span>
+          </div>
+          <input
+            type="range"
+            min="5"
+            max="100"
+            value={teamSize}
+            onChange={(e) => setTeamSize(parseInt(e.target.value))}
+            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+          />
+        </div>
+
+        {/* Results */}
+        <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+          <div className="text-center">
+            <p className="text-3xl font-bold text-primary">${savings.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">Software Savings/yr</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl font-bold text-primary">{timeSaved}h</p>
+            <p className="text-xs text-muted-foreground">Time Saved/mo</p>
+          </div>
+          <div className="text-center">
+            <p className="text-3xl font-bold text-primary">${rfiSavings.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">RFI Efficiency Gains</p>
+          </div>
+        </div>
+
+        <div className="bg-primary/10 rounded-lg p-4 text-center">
+          <p className="text-lg font-bold">
+            Total Annual Impact: <span className="text-primary">${(savings + rfiSavings).toLocaleString()}</span>
+          </p>
+        </div>
+
+        <Button className="w-full min-h-[56px]" size="lg" asChild>
+          <Link href="/signup">
+            Claim Your Savings
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================================================
+// TESTIMONIAL WITH PHOTO
+// ============================================================================
+interface TestimonialData {
+  quote: string
+  name: string
+  title: string
+  company: string
+  metric: string
+  avatar: string
+}
+
+const testimonials: TestimonialData[] = [
+  {
+    quote: "We cut RFI response time from 12 days to 2 days. The ball-in-court tracking eliminated all the 'whose turn is it?' confusion. Our architects actually thanked us.",
+    name: "Sarah Martinez",
+    title: "Project Manager",
+    company: "Martinez Construction LLC",
+    metric: "83% faster RFI responses",
+    avatar: "SM",
+  },
+  {
+    quote: "Switched from Procore and cut our software costs by 70%. The unlimited user model means our whole field team can actually use it. Game changer for collaboration.",
+    name: "Mike Thompson",
+    title: "General Contractor",
+    company: "Thompson Brothers Construction",
+    metric: "$8,400 annual savings",
+    avatar: "MT",
+  },
+  {
+    quote: "The offline mode saved us on a remote hospital project with spotty service. Finally, a tool that understands we're not always connected.",
+    name: "James Chen",
+    title: "Electrical Contractor",
+    company: "Chen Electric & Controls",
+    metric: "95% field adoption",
+    avatar: "JC",
+  },
+]
+
+function TestimonialsSection() {
+  const [activeIndex, setActiveIndex] = useState(0)
 
   useEffect(() => {
-    const timer = setInterval(() => setTimeOnPage(prev => prev + 1), 1000)
-    return () => clearInterval(timer)
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % testimonials.length)
+    }, 8000)
+    return () => clearInterval(interval)
   }, [])
 
-  // Exit intent detection
+  return (
+    <div className="max-w-4xl mx-auto">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeIndex}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="border-primary/20 bg-gradient-to-br from-background to-muted/30">
+            <CardContent className="p-8 md:p-12">
+              {/* Stars */}
+              <div className="flex gap-1 mb-6 justify-center">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                ))}
+              </div>
+
+              {/* Quote */}
+              <div className="relative mb-8">
+                <Quote className="absolute -top-4 -left-4 h-8 w-8 text-primary/20" />
+                <blockquote className="text-lg md:text-xl text-center leading-relaxed italic">
+                  {testimonials[activeIndex]?.quote}
+                </blockquote>
+              </div>
+
+              {/* Metric */}
+              <div className="flex justify-center mb-6">
+                <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-2 text-sm font-semibold">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  {testimonials[activeIndex]?.metric}
+                </Badge>
+              </div>
+
+              {/* Author */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
+                  {testimonials[activeIndex]?.avatar}
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-lg">{testimonials[activeIndex]?.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {testimonials[activeIndex]?.title}, {testimonials[activeIndex]?.company}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-6">
+        {testimonials.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveIndex(i)}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === activeIndex ? 'w-8 bg-primary' : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+            }`}
+            aria-label={`Go to testimonial ${i + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// PRICING SECTION (FOCUSED)
+// ============================================================================
+function PricingSection() {
+  return (
+    <section className="py-24 bg-background" id="pricing">
+      <div className="container">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <Badge className="mb-4">Simple Pricing</Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            One Price. Unlimited Users.
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            No per-seat gotchas. No hidden fees. Just flat, predictable pricing.
+          </p>
+        </motion.div>
+
+        {/* Single Featured Plan */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-lg mx-auto"
+        >
+          <Card className="border-primary shadow-2xl relative overflow-hidden">
+            {/* Popular badge */}
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 py-1 text-sm font-semibold rounded-bl-lg">
+              Most Popular
+            </div>
+
+            <CardHeader className="text-center pt-8 pb-4">
+              <CardTitle className="text-2xl mb-2">Professional</CardTitle>
+              <div className="flex items-baseline justify-center gap-2 mb-2">
+                <span className="text-6xl font-bold">$299</span>
+                <span className="text-muted-foreground">/project/month</span>
+              </div>
+              <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                70% cheaper than Procore
+              </Badge>
+            </CardHeader>
+
+            <CardContent className="pb-8">
+              <ul className="space-y-4 mb-8">
+                {[
+                  'Unlimited team members',
+                  'Full RFI, Submittal & Change Order workflows',
+                  'Offline-first mobile app',
+                  'QuickBooks Integration',
+                  'Priority support (2-hour SLA)',
+                  'SOC 2 Type II security',
+                  '14-day free trial',
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button className="w-full min-h-[56px] text-lg" size="lg" asChild>
+                <Link href="/signup">
+                  Start Your Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                No credit card required • Cancel anytime
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Money-back guarantee */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="max-w-md mx-auto mt-8"
+        >
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="p-6 text-center">
+              <Shield className="h-8 w-8 mx-auto mb-2 text-primary" />
+              <p className="font-semibold">30-Day Money-Back Guarantee</p>
+              <p className="text-sm text-muted-foreground">
+                Not seeing results? Full refund, no questions asked.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Enterprise callout */}
+        <p className="text-center text-muted-foreground mt-8">
+          Managing $50M+ in projects?{' '}
+          <Link href="/contact" className="text-primary font-medium hover:underline">
+            Contact us for Enterprise pricing →
+          </Link>
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================================
+// MAIN LANDING PAGE
+// ============================================================================
+export default function LandingPage() {
+  const [showFloatingCTA, setShowFloatingCTA] = useState(false)
+  const heroRef = useRef<HTMLElement>(null)
+
+  // Track scroll for floating CTA
   useEffect(() => {
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !showExitIntent && !exitIntentDismissed && timeOnPage > 10) {
-        setShowExitIntent(true)
+    const handleScroll = () => {
+      if (heroRef.current) {
+        const heroBottom = heroRef.current.offsetTop + heroRef.current.offsetHeight
+        setShowFloatingCTA(window.scrollY > heroBottom - 100)
       }
     }
-    document.addEventListener('mouseleave', handleMouseLeave)
-    return () => document.removeEventListener('mouseleave', handleMouseLeave)
-  }, [timeOnPage, showExitIntent, exitIntentDismissed])
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState('')
-  const [emailError, setEmailError] = useState('')
-
-  const validateEmail = useCallback((email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value
-    setEmail(newEmail)
-    setEmailError('')
-    setSubmitError('')
-  }, [])
-
-  const handleDismissModal = useCallback(() => {
-    setShowExitIntent(false)
-    setExitIntentDismissed(true)
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('exitIntentDismissed', 'true')
-      }
-    } catch (error) {
-      // localStorage might be disabled, continue anyway
-      console.error('Error writing to localStorage:', error)
-    }
-  }, [])
-
-  const handleEmailCapture = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitError('')
-    setEmailError('')
-
-    // Client-side validation
-    if (!email) {
-      setEmailError('Email is required')
-      return
-    }
-
-    if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address')
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      const response = await fetch('/api/email-capture', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          source: 'exit-intent',
-          timestamp: new Date().toISOString(),
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit email')
-      }
-
-      // Success - close modal and mark as dismissed
-      handleDismissModal()
-      setEmail('')
-    } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : 'Failed to submit. Please try again.'
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [email, validateEmail, handleDismissModal])
 
   return (
     <div className="min-h-screen bg-background">
-      {/* NAVIGATION HEADER */}
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-primary" aria-hidden="true" />
-            <span className="font-bold text-lg">Construction Work OS</span>
+      <FloatingCTA visible={showFloatingCTA} />
+
+      {/* ================================================================== */}
+      {/* HERO SECTION */}
+      {/* ================================================================== */}
+      <section ref={heroRef} className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <AnimatedGradientBackground />
+
+        {/* Navigation */}
+        <nav className="absolute top-0 left-0 right-0 z-10">
+          <div className="container flex items-center justify-between h-20">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-8 w-8 text-primary" />
+              <span className="font-bold text-xl">Construction Work OS</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                <Link href="/login">Log In</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/signup">Start Free Trial</Link>
+              </Button>
+            </div>
           </div>
+        </nav>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-              Pricing
-            </a>
-            <a href="#faq" className="text-sm font-medium hover:text-primary transition-colors">
-              FAQ
-            </a>
-          </nav>
+        {/* Hero Content */}
+        <div className="container relative z-10 pt-20">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Social Proof Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Badge variant="outline" className="mb-6 px-4 py-2 text-sm border-primary/30 bg-primary/5">
+                <Star className="mr-2 h-4 w-4 fill-yellow-500 text-yellow-500" />
+                Trusted by 47 contractors managing $847M in projects
+              </Badge>
+            </motion.div>
 
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup">Start Free Trial</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+            {/* Main Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
+            >
+              Stop Losing{' '}
+              <span className="bg-gradient-to-r from-primary via-construction-500 to-primary bg-clip-text text-transparent">
+                $50K Per Project
+              </span>{' '}
+              to Email Chaos
+            </motion.h1>
 
-      {/* HERO SECTION - Authority, Social Proof, Commitment */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white to-neutral-50 dark:from-neutral-950 dark:to-neutral-900">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" aria-hidden="true" />
+            {/* Subheadline */}
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+            >
+              The construction management platform that actually works offline,
+              has native RFI workflows, and costs{' '}
+              <span className="font-semibold text-foreground">70% less than Procore.</span>
+            </motion.p>
 
-        <div className="container relative py-16 md:py-24 lg:py-32">
-          {/* Social Proof Badge */}
-          <div className="mx-auto max-w-4xl text-center">
-            <Badge variant="outline" className="mb-4 animate-fade-in border-primary/20">
-              <Star className="mr-1 h-3 w-3 fill-yellow-500 text-yellow-500" aria-hidden="true" />
-              Trusted by 47 contractors managing $847M in projects
-            </Badge>
-
-            {/* Authority Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-6">
-              The Work OS Built for{' '}
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Construction
-              </span>
-            </h1>
-
-            {/* Value Proposition */}
-            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Stop losing RFIs in email chains. Native workflows for contractors who build America.{' '}
-              <span className="font-semibold text-foreground">$299/project, unlimited users.</span>
-            </p>
-
-            {/* Commitment Ladder CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+            {/* Single Primary CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center mb-8"
+            >
               <Button
                 size="lg"
-                className="bg-primary hover:bg-primary/90 text-lg min-h-[56px] px-8"
+                className="bg-primary hover:bg-primary/90 text-lg min-h-[64px] px-10 shadow-lg shadow-primary/25"
                 asChild
               >
                 <Link href="/signup">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                  Start Your Free 14-Day Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
                 variant="outline"
                 size="lg"
-                className="text-lg min-h-[56px] px-8"
+                className="text-lg min-h-[64px] px-8"
               >
-                <Play className="mr-2 h-5 w-5" aria-hidden="true" />
+                <Play className="mr-2 h-5 w-5" />
                 Watch 2-Min Demo
               </Button>
-            </div>
+            </motion.div>
 
-            {/* Risk Reversal */}
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Check className="h-4 w-4 text-success" aria-hidden="true" />
+            {/* Trust Signals */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground"
+            >
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-primary" />
                 No credit card required
               </span>
-              <span className="flex items-center gap-1">
-                <Check className="h-4 w-4 text-success" aria-hidden="true" />
-                14-day free trial
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-primary" />
+                Setup in 15 minutes
               </span>
-              <span className="flex items-center gap-1">
-                <Check className="h-4 w-4 text-success" aria-hidden="true" />
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-primary" />
                 Cancel anytime
               </span>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Product Screenshot Placeholder */}
-          <div className="mt-16 mx-auto max-w-6xl">
-            <div className="relative rounded-xl shadow-2xl overflow-hidden border bg-muted aspect-video">
-              {/* TODO: Replace with actual dashboard screenshot */}
+          {/* Product Screenshot */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="mt-16 mx-auto max-w-6xl"
+          >
+            <div className="relative rounded-xl shadow-2xl overflow-hidden border bg-card aspect-video group">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
               <div className="flex items-center justify-center h-full">
-                <Building2 className="h-24 w-24 text-muted-foreground/30" aria-hidden="true" />
+                <div className="text-center">
+                  <Building2 className="h-24 w-24 text-muted-foreground/20 mx-auto mb-4" />
+                  <p className="text-muted-foreground">Dashboard Preview</p>
+                </div>
               </div>
-              <Badge className="absolute top-4 left-4 bg-green-500 text-white border-0">
-                <Wifi className="mr-1 h-3 w-3" aria-hidden="true" />
+
+              {/* Feature badges on screenshot */}
+              <Badge className="absolute top-4 left-4 bg-green-500 text-white border-0 shadow-lg">
+                <Wifi className="mr-1 h-3 w-3" />
                 Works Offline
               </Badge>
-              <Badge className="absolute top-4 right-4 bg-blue-500 text-white border-0">
-                <Sparkles className="mr-1 h-3 w-3" aria-hidden="true" />
+              <Badge className="absolute top-4 right-4 bg-blue-500 text-white border-0 shadow-lg">
+                <Sparkles className="mr-1 h-3 w-3" />
                 AI-Powered
               </Badge>
+              <Badge className="absolute bottom-4 left-4 bg-purple-500 text-white border-0 shadow-lg">
+                <Users className="mr-1 h-3 w-3" />
+                Unlimited Users
+              </Badge>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* SOCIAL PROOF BAR */}
+      {/* ================================================================== */}
+      <section className="py-8 border-y bg-muted/30 overflow-hidden">
+        <div className="container">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            {/* Live Metrics */}
+            <div className="flex items-center gap-8 text-center lg:text-left">
+              <div>
+                <p className="text-3xl font-bold text-primary">
+                  <AnimatedCounter value={2847} />
+                </p>
+                <p className="text-sm text-muted-foreground">RFIs This Week</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold">
+                  <AnimatedCounter value={847} prefix="$" suffix="M" />
+                </p>
+                <p className="text-sm text-muted-foreground">Projects Managed</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold">
+                  <AnimatedCounter value={95} suffix="%" />
+                </p>
+                <p className="text-sm text-muted-foreground">Field Adoption</p>
+              </div>
+            </div>
+
+            {/* Logo scroll */}
+            <div className="flex-1 min-w-0 hidden lg:block">
+              <LogoCarousel />
             </div>
           </div>
         </div>
       </section>
 
-      {/* SOCIAL PROOF BAR - Live Metrics */}
-      <section className="border-y bg-muted/30 py-4" aria-label="Live activity metrics">
+      {/* ================================================================== */}
+      {/* BEFORE/AFTER SECTION */}
+      {/* ================================================================== */}
+      <section className="py-24 bg-background">
         <div className="container">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8 text-center sm:text-left">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="animate-pulse h-2 w-2 bg-success rounded-full" aria-hidden="true" />
-              <span className="font-semibold text-success">2,847 RFIs</span>
-              <span className="text-muted-foreground">processed this week</span>
-            </div>
-            <div className="flex items-center gap-4 sm:gap-6 text-sm">
-              <div><span className="font-bold">47</span> contractors</div>
-              <div><span className="font-bold">$847M</span> managed</div>
-              <div><span className="font-bold">95%</span> field adoption</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PROBLEM AGITATION - Pain Points */}
-      <section className="py-16 md:py-24 bg-background">
-        <div className="container">
-          <div className="mx-auto max-w-3xl text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              If You&apos;re Managing Projects Like This, You&apos;re Losing Money
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <Badge className="mb-4" variant="destructive">The Problem</Badge>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+              Email Is Costing You $50K Per Project
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              The average contractor loses $50K per project to inefficiency. Here&apos;s why:
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              The average contractor loses money to slow RFIs, version confusion, and tools that don&apos;t work in the field.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                icon: Mail,
-                title: 'RFIs Lost in Email',
-                problems: ['7-14 day response times', 'No audit trail', 'Ball-in-court confusion'],
-                cost: '$18K lost'
-              },
-              {
-                icon: FileText,
-                title: 'Spreadsheet Hell',
-                problems: ['Version control chaos', 'No real-time updates', 'Manual data entry'],
-                cost: '$22K lost'
-              },
-              {
-                icon: Wrench,
-                title: 'Generic Tools',
-                problems: ["monday.com doesn&apos;t know construction", 'No offline mode', 'Per-seat pricing'],
-                cost: '$10K lost'
-              }
-            ].map((problem) => (
-              <Card key={problem.title} className="border-red-200 dark:border-red-900/50">
-                <CardHeader>
-                  <problem.icon className="h-8 w-8 text-destructive mb-2" aria-hidden="true" />
-                  <CardTitle className="text-xl">{problem.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 mb-4" role="list">
-                    {problem.problems.map(p => (
-                      <li key={p} className="flex items-start gap-2 text-sm">
-                        <XCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" aria-hidden="true" />
-                        <span>{p}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Badge variant="destructive" className="text-sm">
-                    {problem.cost} per project
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <BeforeAfterComparison />
         </div>
       </section>
 
-      {/* SOLUTION - Features with Benefits */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      {/* ================================================================== */}
+      {/* FEATURES SECTION */}
+      {/* ================================================================== */}
+      <section className="py-24 bg-muted/30">
         <div className="container">
-          <div className="mx-auto max-w-3xl text-center mb-12">
-            <Badge className="mb-4">The Solution</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Construction-Native Workflows That Actually Work
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <Badge className="mb-4">Why Contractors Switch</Badge>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+              Built Different. Built for Construction.
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              Built by contractors, for contractors. Every feature designed for the field.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Not another generic project tool. Purpose-built for how construction actually works.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
               {
                 icon: FileText,
-                title: 'Native RFIs & Submittals',
-                description: 'Not generic boards. Actual construction workflows with ball-in-court tracking.',
-                benefit: '70% faster response'
+                title: 'Native RFI Workflows',
+                description: 'Ball-in-court tracking, automatic escalation, and response time analytics. Not generic boards.',
+                metric: '70% faster responses',
               },
               {
                 icon: Wifi,
-                title: 'Offline-First Field UX',
-                description: 'Works in dead zones. Syncs when connected. 56px glove-friendly buttons.',
-                benefit: '95% field adoption'
+                title: 'Offline-First Mobile',
+                description: 'Works in dead zones, tunnels, and basements. Syncs automatically when connected.',
+                metric: '95% field adoption',
               },
               {
                 icon: Sparkles,
-                title: 'AI Copilots',
-                description: 'Smart RFI routing, spec compliance checks, schedule impact analysis.',
-                benefit: 'Save 3 hours/day'
+                title: 'AI Copilot',
+                description: 'Smart routing, spec compliance checks, and predictive schedule impact analysis.',
+                metric: 'Save 3 hours/day',
               },
               {
-                icon: DollarSign,
-                title: 'Transparent Pricing',
-                description: '$299/project with unlimited users. No per-seat gotchas.',
-                benefit: '70% cheaper than Procore'
+                icon: Users,
+                title: 'Unlimited Users',
+                description: '$299/project includes everyone. No per-seat pricing. Your whole team can use it.',
+                metric: '70% cost savings',
               },
               {
-                icon: Clock,
-                title: '15-Minute Setup',
-                description: 'Import your project. Invite your team. Start tracking.',
-                benefit: 'No consultants needed'
+                icon: Timer,
+                title: '15-Min Setup',
+                description: 'Import your project, invite your team, start tracking. No consultants needed.',
+                metric: 'Same-day deployment',
               },
               {
                 icon: Shield,
                 title: 'Enterprise Security',
-                description: 'SOC 2 Type II. Daily backups. Role-based access.',
-                benefit: 'Bank-level protection'
-              }
-            ].map((feature) => (
-              <Card
+                description: 'SOC 2 Type II certified. Daily backups. Role-based access control.',
+                metric: 'Bank-level protection',
+              },
+            ].map((feature, i) => (
+              <motion.div
                 key={feature.title}
-                className="transition-all hover:shadow-lg hover:-translate-y-1"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
               >
-                <CardHeader>
-                  <feature.icon className="h-8 w-8 text-primary mb-2" aria-hidden="true" />
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-3">{feature.description}</p>
-                  <Badge className="bg-success/10 text-success border-success/20">
-                    {feature.benefit}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* AUTHORITY SECTION - Expertise */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-background to-muted/30">
-        <div className="container">
-          <div className="mx-auto max-w-4xl text-center">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-              Built by Contractors
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              We&apos;ve Managed $2B+ in Construction Projects
-            </h2>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8">
-              Before building software, we ran electrical contracting firms. We know the difference
-              between CSI MasterFormat and &ldquo;folders.&rdquo; We&apos;ve dealt with RFI chains, submittal logs,
-              and change order hell.
-            </p>
-
-            {/* Certification Badges */}
-            <div className="flex flex-wrap justify-center gap-8 mb-8">
-              <div className="text-center">
-                <Award className="h-12 w-12 mx-auto mb-2 text-primary" aria-hidden="true" />
-                <p className="text-sm font-medium">Supports AIA Document Formats</p>
-              </div>
-              <div className="text-center">
-                <Shield className="h-12 w-12 mx-auto mb-2 text-primary" aria-hidden="true" />
-                <p className="text-sm font-medium">SOC 2 Type II</p>
-              </div>
-              <div className="text-center">
-                <Building2 className="h-12 w-12 mx-auto mb-2 text-primary" aria-hidden="true" />
-                <p className="text-sm font-medium">QuickBooks Integration</p>
-              </div>
-            </div>
-
-            {/* Founder Story */}
-            <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
-              <CardContent className="p-6 md:p-8">
-                <div className="flex flex-col sm:flex-row items-start gap-4">
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="h-10 w-10 text-primary" aria-hidden="true" />
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="text-base md:text-lg mb-2">
-                      &quot;After 15 years running a $12M electrical contracting business, I was drowning
-                      in email RFIs and Excel submittals. Procore was overkill. monday.com didn&apos;t
-                      understand construction. So we built what we needed.&quot;
-                    </p>
-                    <p className="font-semibold">— Mike Rodriguez, Founder & Former PM</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* RECIPROCITY - Free Resources */}
-      <section className="py-16 md:py-24 bg-background">
-        <div className="container">
-          <div className="mx-auto max-w-3xl text-center mb-12">
-            <Badge className="mb-4">Free Resources</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Value Before You Pay a Cent
-            </h2>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              Get these construction-specific tools and guides absolutely free. No strings attached.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {[
-              {
-                type: 'Calculator',
-                title: 'RFI Response Time Calculator',
-                description: 'Calculate how much delays are costing you',
-                icon: Clock,
-                cta: 'Try Calculator'
-              },
-              {
-                type: 'Template',
-                title: 'Construction Project Template',
-                description: 'Pre-configured with CSI codes & workflows',
-                icon: FileText,
-                cta: 'Download Template'
-              },
-              {
-                type: 'Guide',
-                title: '7 Ways Email Costs You $50K',
-                description: 'Eye-opening PDF with real contractor data',
-                icon: Download,
-                cta: 'Get Free Guide'
-              }
-            ].map((resource) => (
-              <Card key={resource.title} className="group transition-all hover:shadow-lg hover:-translate-y-1">
-                <CardContent className="p-6">
-                  <div className="mb-4">
-                    <Badge variant="secondary" className="mb-2">
-                      Free {resource.type}
+                <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30">
+                  <CardHeader>
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                      <feature.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-4">{feature.description}</p>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary">
+                      {feature.metric}
                     </Badge>
-                    <h3 className="font-semibold text-lg mb-2">{resource.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {resource.description}
-                    </p>
-                  </div>
-                  <Button className="w-full min-h-[56px]" variant="outline">
-                    <resource.icon className="mr-2 h-4 w-4" aria-hidden="true" />
-                    {resource.cta}
-                  </Button>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SCARCITY - Limited Availability */}
-      <section className="py-8 md:py-12 bg-warning/10 dark:bg-warning/5 border-y border-warning/20" aria-label="Limited time offer">
+      {/* ================================================================== */}
+      {/* ROI CALCULATOR SECTION */}
+      {/* ================================================================== */}
+      <section className="py-24 bg-background">
         <div className="container">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-start gap-4 text-center md:text-left">
-              <AlertCircle className="h-8 w-8 text-warning flex-shrink-0" aria-hidden="true" />
-              <div>
-                <p className="font-bold text-lg">Early Adopter Pricing Ends Soon</p>
-                <p className="text-sm text-muted-foreground">
-                  Lock in $299/month forever. Price increases to $599 for new customers in January.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold">12</p>
-                <p className="text-xs text-muted-foreground">Spots Left</p>
-              </div>
-              <Button className="bg-warning hover:bg-warning/90 text-warning-foreground min-h-[56px]" asChild>
-                <Link href="/signup">
-                  Claim Your Spot
-                  <ChevronRight className="ml-2 h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <Badge className="mb-4">Calculate Your Savings</Badge>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+              What&apos;s Inefficiency Costing You?
+            </h2>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <ROICalculator />
+          </motion.div>
         </div>
       </section>
 
-      {/* TESTIMONIALS - Social Proof */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      {/* ================================================================== */}
+      {/* TESTIMONIALS SECTION */}
+      {/* ================================================================== */}
+      <section className="py-24 bg-muted/30">
         <div className="container">
-          <div className="mx-auto max-w-3xl text-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
             <Badge className="mb-4">Success Stories</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Contractors Like You Are Saving Time & Money
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+              Contractors Like You Are Winning
             </h2>
-          </div>
-          <TestimonialCarousel />
+          </motion.div>
+
+          <TestimonialsSection />
         </div>
       </section>
 
-      {/* LIKING - Relatable Voice */}
-      <section className="py-16 md:py-24 bg-background">
-        <div className="container">
-          <div className="mx-auto max-w-3xl text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              We Speak Construction, Not Tech
-            </h2>
-            <p className="text-lg md:text-xl text-muted-foreground">
-              No more translating between software and jobsite
-            </p>
-          </div>
-
-          <Tabs defaultValue="general" className="max-w-4xl mx-auto">
-            <TabsList className="grid w-full grid-cols-4 h-auto">
-              <TabsTrigger value="general" className="min-h-[56px]">General</TabsTrigger>
-              <TabsTrigger value="electrical" className="min-h-[56px]">Electrical</TabsTrigger>
-              <TabsTrigger value="hvac" className="min-h-[56px]">HVAC</TabsTrigger>
-              <TabsTrigger value="plumbing" className="min-h-[56px]">Plumbing</TabsTrigger>
-            </TabsList>
-            <TabsContent value="general" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-4">For General Contractors</h3>
-                  <ul className="space-y-3" role="list">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Coordinate 12+ subs without email chaos</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>AIA G702/G703 billing in one click</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>CSI MasterFormat organization built-in</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="electrical" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-4">For Electrical Contractors</h3>
-                  <ul className="space-y-3" role="list">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Panel schedule and load calculation tracking</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Shop drawing coordination with structural</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>NEC compliance references built-in</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="hvac" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-4">For HVAC Contractors</h3>
-                  <ul className="space-y-3" role="list">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Equipment submittal workflows with specs</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Duct routing coordination with MEP trades</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Load calculation documentation</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="plumbing" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-4">For Plumbing Contractors</h3>
-                  <ul className="space-y-3" role="list">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Fixture schedule and riser diagram tracking</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Backflow preventer submittal workflows</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />
-                      <span>Underground conflict resolution with MEP</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
-
-      {/* PRICING SECTION - Lazy loaded */}
+      {/* ================================================================== */}
+      {/* PRICING SECTION */}
+      {/* ================================================================== */}
       <PricingSection />
 
-      {/* FAQ SECTION - Lazy loaded */}
-      <FAQSection />
-
-      {/* FINAL CTA - Commitment */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-muted/30 to-background">
+      {/* ================================================================== */}
+      {/* FAQ SECTION */}
+      {/* ================================================================== */}
+      <section className="py-24 bg-muted/30" id="faq">
         <div className="container">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <Badge className="mb-4">FAQ</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Questions? We&apos;ve Got Answers.
+            </h2>
+          </motion.div>
+          <FAQSection />
+        </div>
+      </section>
+
+      {/* ================================================================== */}
+      {/* FINAL CTA SECTION */}
+      {/* ================================================================== */}
+      <section className="py-24 bg-gradient-to-b from-background to-primary/5 relative overflow-hidden">
+        <AnimatedGradientBackground />
+
+        <div className="container relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="max-w-3xl mx-auto text-center"
+          >
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
               Ready to Stop Losing Money to Inefficiency?
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8">
+            <p className="text-xl text-muted-foreground mb-8">
               Join 47 contractors who&apos;ve already made the switch.
               Setup takes 15 minutes. Your team will thank you.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-lg min-h-[64px] px-8"
-                asChild
-              >
-                <Link href="/signup">
-                  Start Your Free 14-Day Trial
-                  <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground mt-4">
-              No credit card required • Cancel anytime • Full features included
+
+            <Button
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-lg min-h-[64px] px-10 shadow-lg shadow-primary/25"
+              asChild
+            >
+              <Link href="/signup">
+                Start Your Free 14-Day Trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+
+            <p className="text-sm text-muted-foreground mt-6">
+              No credit card required • Full features • Cancel anytime
             </p>
-          </div>
+
+            {/* Final social proof */}
+            <div className="flex flex-wrap justify-center gap-8 mt-12 pt-12 border-t">
+              <div className="text-center">
+                <p className="text-2xl font-bold">47+</p>
+                <p className="text-sm text-muted-foreground">Active Contractors</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">$847M</p>
+                <p className="text-sm text-muted-foreground">Projects Managed</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">4.9/5</p>
+                <p className="text-sm text-muted-foreground">Customer Rating</p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* EXIT INTENT MODAL - Reciprocity */}
-      {showExitIntent && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="exit-intent-title"
-        >
-          <Card className="max-w-md w-full">
-            <CardHeader className="relative">
-              <button
-                onClick={handleDismissModal}
-                className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
-                aria-label="Close dialog"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <CardTitle id="exit-intent-title">Wait! Before You Go...</CardTitle>
-              <CardDescription>
-                Get our free guide that&apos;s helped 200+ contractors save $50K per project
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleEmailCapture}>
-                <div className="mb-4">
-                  <Input
-                    type="email"
-                    placeholder="your@email.com"
-                    className="min-h-[56px]"
-                    value={email}
-                    onChange={handleEmailChange}
-                    disabled={isSubmitting}
-                    aria-label="Email address"
-                    aria-invalid={!!emailError}
-                    aria-describedby={emailError ? 'email-error' : undefined}
-                  />
-                  {emailError && (
-                    <p id="email-error" className="text-sm text-destructive mt-1">
-                      {emailError}
-                    </p>
-                  )}
-                  {submitError && (
-                    <p className="text-sm text-destructive mt-1">
-                      {submitError}
-                    </p>
-                  )}
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full min-h-[56px]"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Sending...' : 'Send Me The Free Guide'}
-                </Button>
-              </form>
-              <button
-                onClick={handleDismissModal}
-                className="text-sm text-muted-foreground mt-4 w-full text-center hover:underline"
-                disabled={isSubmitting}
-              >
-                No thanks, I prefer email chaos
-              </button>
-            </CardContent>
-          </Card>
+      {/* ================================================================== */}
+      {/* FOOTER */}
+      {/* ================================================================== */}
+      <footer className="py-12 border-t bg-background">
+        <div className="container">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-6 w-6 text-primary" />
+              <span className="font-bold">Construction Work OS</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Construction Work OS. All rights reserved.
+            </p>
+          </div>
         </div>
-      )}
+      </footer>
     </div>
   )
 }
