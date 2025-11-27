@@ -6,11 +6,10 @@
  */
 
 import { useState } from 'react'
-import { TeamMemberCard, type TeamMember, type Certification } from './team-member-card'
+import { TeamMemberCard, type TeamMember } from './team-member-card'
 import {
   Mail,
   Phone,
-  Briefcase,
   Building2,
   Award,
   Calendar,

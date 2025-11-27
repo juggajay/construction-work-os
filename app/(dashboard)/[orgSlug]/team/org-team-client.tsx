@@ -36,7 +36,7 @@ const ROLE_CONFIG: Record<OrgRole, { bgClass: string; textClass: string }> = {
 
 export function OrgTeamClient({
   orgId,
-  orgSlug,
+  orgSlug: _orgSlug,
   initialTeamMembers,
   isOwnerOrAdmin,
 }: OrgTeamClientProps) {

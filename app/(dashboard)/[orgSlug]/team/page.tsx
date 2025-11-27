@@ -7,10 +7,7 @@ import { getOrganizationBySlug } from '@/lib/actions/organization-helpers'
 import { getOrganizationMembers } from '@/lib/actions/organization-members'
 import { getEnhancedTeamMembers } from '@/lib/actions/team-members'
 import { redirect } from 'next/navigation'
-import { OrgTeamClient } from './org-team-client'
-import { TeamMemberGrid } from '@/components/team/team-member-grid'
-import { LayoutGrid, List, Users, UserPlus, Shield, Award } from 'lucide-react'
-import Link from 'next/link'
+import { Users, Shield, Award } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default async function OrganizationTeamPage({
@@ -51,7 +48,7 @@ export default async function OrganizationTeamPage({
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Team Directory</h1>
           <p className="text-white/50 text-sm mt-1">
-            Manage your organization's team members, roles, and certifications
+            Manage your organization&apos;s team members, roles, and certifications
           </p>
         </div>
       </div>

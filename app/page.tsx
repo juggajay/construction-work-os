@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, ArrowUpRight, Play } from 'lucide-react'
 
 // ============================================================================
@@ -233,7 +233,7 @@ export default function LandingPage() {
                   { value: '$847M+', label: 'Projects managed' },
                   { value: '2,847', label: 'RFIs processed' },
                   { value: '95%', label: 'Field adoption' },
-                ].map((stat, i) => (
+                ].map((stat) => (
                   <div key={stat.label}>
                     <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
                     <p className="text-xs text-white/30 mt-1 uppercase tracking-wider">{stat.label}</p>
@@ -356,7 +356,7 @@ export default function LandingPage() {
             >
               Everything you need.
               <br />
-              <span className="text-white/30">Nothing you don't.</span>
+              <span className="text-white/30">Nothing you don&apos;t.</span>
             </motion.h2>
           </div>
 
@@ -380,7 +380,7 @@ export default function LandingPage() {
                 <h3 className="text-3xl md:text-4xl font-bold mb-4">Offline-first mobile</h3>
                 <p className="text-lg text-white/50 leading-relaxed mb-8">
                   Full functionality in dead zones, tunnels, and basements.
-                  Your data syncs automatically when you're back online.
+                  Your data syncs automatically when you&apos;re back online.
                 </p>
                 <div className="flex items-center gap-2 text-amber-400 text-sm font-medium group-hover:gap-4 transition-all">
                   Learn more
@@ -523,7 +523,7 @@ export default function LandingPage() {
             </motion.div>
 
             <p className="mt-8 text-sm text-white/30">
-              Enterprise? <Link href="/contact" className="text-amber-400 hover:underline">Let's talk</Link>
+              Enterprise? <Link href="/contact" className="text-amber-400 hover:underline">Let&apos;s talk</Link>
             </p>
           </div>
         </div>
