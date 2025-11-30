@@ -138,7 +138,7 @@ export function AppSidebar({ orgSlug, onSearchClick, notificationCount = 0 }: Ap
       animate={{ width: isCollapsed ? 72 : 260 }}
       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-40",
+        "fixed left-0 top-0 h-screen z-40",
         "flex flex-col",
         "bg-[#0a0a0a] border-r border-white/[0.06]"
       )}

@@ -84,6 +84,15 @@ export default async function OrganizationPage({
     return `$${amount.toFixed(0)}`
   }
 
+  // Format status for display
+  const formatStatus = (status: string | null | undefined): string => {
+    if (!status) return 'Draft'
+    return status
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
   // Quick actions
   const quickActions = [
     {
@@ -140,8 +149,8 @@ export default async function OrganizationPage({
       {/* Ambient glow */}
       <div className="fixed top-0 right-0 w-[800px] h-[800px] bg-amber-500/[0.03] rounded-full blur-[150px] pointer-events-none" />
 
-      {/* Main content - offset for sidebar */}
-      <main className="relative z-10 ml-[260px] min-h-screen">
+      {/* Main content */}
+      <main className="relative z-10 min-h-screen">
         <div className="max-w-[1400px] mx-auto px-8 py-8">
 
           {/* ================================================================
@@ -421,9 +430,10 @@ export default async function OrganizationPage({
                             project.status === 'active' && "bg-emerald-500/15 text-emerald-400",
                             project.status === 'on_hold' && "bg-amber-500/15 text-amber-400",
                             project.status === 'completed' && "bg-blue-500/15 text-blue-400",
-                            !['active', 'on_hold', 'completed'].includes(project.status) && "bg-white/10 text-white/50"
+                            project.status === 'planning' && "bg-purple-500/15 text-purple-400",
+                            !['active', 'on_hold', 'completed', 'planning'].includes(project.status) && "bg-white/10 text-white/50"
                           )}>
-                            {project.status || 'draft'}
+                            {formatStatus(project.status)}
                           </span>
                         </div>
                       </Link>

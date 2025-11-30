@@ -14,9 +14,9 @@ export default function OrgsLayout({
   return (
     <>
       {/* Desktop Layout - shown on lg and up */}
-      <div className="hidden lg:flex min-h-screen w-full">
+      <div className="hidden lg:block">
         <AppSidebar />
-        <main className="flex-1 min-w-0 overflow-x-hidden p-6">{children}</main>
+        <div className="ml-[260px] min-h-screen p-6">{children}</div>
       </div>
 
       {/* Mobile Layout - shown below lg */}

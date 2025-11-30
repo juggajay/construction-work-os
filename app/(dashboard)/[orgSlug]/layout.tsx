@@ -18,13 +18,13 @@ export default async function OrgLayout({
   }
 
   return (
-    <div className="flex min-h-screen w-full">
+    <>
       <AppSidebar orgSlug={orgSlug} />
-      <main className="flex-1 min-w-0 overflow-x-hidden p-6">
+      <div className="ml-[260px] min-h-screen">
         <PageTransitionProvider>
           {children}
         </PageTransitionProvider>
-      </main>
-    </div>
+      </div>
+    </>
   )
 }
