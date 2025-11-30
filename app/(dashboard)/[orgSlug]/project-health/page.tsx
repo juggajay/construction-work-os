@@ -1,7 +1,11 @@
+/**
+ * Project Health Overview Page - Industrial Luxury Dark Theme
+ */
+
 import { getOrgProjectsHealth } from '@/lib/actions/project-health'
-import { ProjectCard } from '@/components/project-health/project-card'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Activity, AlertTriangle, CheckCircle2, TrendingUp } from 'lucide-react'
+import { ProjectHealthCard } from '@/components/project-health/project-card'
+import { cn } from '@/lib/utils'
+import { Activity, AlertTriangle, CheckCircle2, TrendingUp, DollarSign, FileText, HeartPulse } from 'lucide-react'
 
 export default async function ProjectHealthPage({
   params,
@@ -13,9 +17,15 @@ export default async function ProjectHealthPage({
 
   if (!projectsResult.success || !projectsResult.data) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center text-red-500">
-          <p>Error loading project health data: {!projectsResult.success ? projectsResult.error : 'Unknown error'}</p>
+      <div className="min-h-screen bg-[#0a0a0a] p-6">
+        <div className={cn(
+          "flex items-center gap-3 rounded-lg p-4",
+          "bg-red-500/10 border border-red-500/20"
+        )}>
+          <AlertTriangle className="h-5 w-5 text-red-400" />
+          <p className="text-sm text-red-400">
+            Error loading project health data: {!projectsResult.success ? projectsResult.error : 'Unknown error'}
+          </p>
         </div>
       </div>
     )
@@ -33,102 +43,124 @@ export default async function ProjectHealthPage({
   const totalInvoices = projects.reduce((sum, p) => sum + p.invoiceCount.total, 0)
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0a0a0a] p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Project Health Overview</h1>
-        <p className="mt-2 text-neutral-600">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-lg bg-amber-500/10">
+            <HeartPulse className="h-5 w-5 text-amber-400" />
+          </div>
+          <h1 className="text-3xl font-bold text-white">Project Health Overview</h1>
+        </div>
+        <p className="text-white/50">
           Monitor cost tracking and budget status across all projects
         </p>
       </div>
 
       {/* Summary Stats */}
-      <div className="mb-8 grid gap-6 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
-            <Activity className="h-4 w-4 text-neutral-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProjects}</div>
-            <div className="mt-1 flex gap-2 text-xs">
-              <span className="text-green-600">{healthyProjects} healthy</span>
-              <span className="text-yellow-600">{warningProjects} warning</span>
-              <span className="text-red-600">{criticalProjects} critical</span>
+      <div className="mb-8 grid gap-4 md:grid-cols-4">
+        {/* Total Projects */}
+        <div className={cn(
+          "rounded-xl p-5",
+          "bg-white/[0.02] border border-white/[0.06]"
+        )}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-white/60">Total Projects</span>
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <Activity className="h-4 w-4 text-blue-400" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">{totalProjects}</div>
+          <div className="flex gap-3 text-xs">
+            <span className="text-emerald-400">{healthyProjects} healthy</span>
+            <span className="text-amber-400">{warningProjects} warning</span>
+            <span className="text-red-400">{criticalProjects} critical</span>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
-            <TrendingUp className="h-4 w-4 text-neutral-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+        {/* Total Budget */}
+        <div className={cn(
+          "rounded-xl p-5",
+          "bg-white/[0.02] border border-white/[0.06]"
+        )}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-white/60">Total Budget</span>
+            <div className="p-2 rounded-lg bg-emerald-500/10">
+              <DollarSign className="h-4 w-4 text-emerald-400" />
             </div>
-            <p className="mt-1 text-xs text-neutral-500">Across all projects</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">
+            ${(totalBudget / 1000000).toFixed(1)}M
+          </div>
+          <p className="text-xs text-white/40">Across all projects</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <TrendingUp className="h-4 w-4 text-neutral-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+        {/* Total Spent */}
+        <div className={cn(
+          "rounded-xl p-5",
+          "bg-white/[0.02] border border-white/[0.06]"
+        )}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-white/60">Total Spent</span>
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <TrendingUp className="h-4 w-4 text-amber-400" />
             </div>
-            <p className="mt-1 text-xs text-neutral-500">
-              {totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(1) : 0}% of total budget
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">
+            ${(totalSpent / 1000000).toFixed(1)}M
+          </div>
+          <p className="text-xs text-white/40">
+            {totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(1) : 0}% of total budget
+          </p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
-            <Activity className="h-4 w-4 text-neutral-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalInvoices}</div>
-            <p className="mt-1 text-xs text-neutral-500">Uploaded across all projects</p>
-          </CardContent>
-        </Card>
+        {/* Total Invoices */}
+        <div className={cn(
+          "rounded-xl p-5",
+          "bg-white/[0.02] border border-white/[0.06]"
+        )}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-white/60">Total Invoices</span>
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <FileText className="h-4 w-4 text-purple-400" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">{totalInvoices}</div>
+          <p className="text-xs text-white/40">Uploaded across all projects</p>
+        </div>
       </div>
 
       {/* Project Count Header */}
       <div className="mb-6 flex items-center gap-4">
-        <h2 className="text-lg font-semibold">All Projects</h2>
-        <div className="flex gap-3 text-sm text-neutral-600">
-          <div className="flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3 text-green-500" />
-            <span>{healthyProjects} healthy</span>
+        <h2 className="text-lg font-semibold text-white">All Projects</h2>
+        <div className="flex gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <span className="text-white/60">{healthyProjects} healthy</span>
           </div>
-          <div className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3 text-yellow-500" />
-            <span>{warningProjects} warning</span>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-400" />
+            <span className="text-white/60">{warningProjects} warning</span>
           </div>
-          <div className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3 text-red-500" />
-            <span>{criticalProjects} critical</span>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-400" />
+            <span className="text-white/60">{criticalProjects} critical</span>
           </div>
         </div>
       </div>
 
       {/* Project Grid */}
       {projects.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-neutral-500">
-            <p>No projects found in this organization.</p>
-          </CardContent>
-        </Card>
+        <div className={cn(
+          "rounded-xl p-12 text-center",
+          "bg-white/[0.02] border border-white/[0.06]"
+        )}>
+          <p className="text-white/40">No projects found in this organization.</p>
+        </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} orgSlug={orgSlug} />
+            <ProjectHealthCard key={project.id} project={project} orgSlug={orgSlug} />
           ))}
         </div>
       )}
