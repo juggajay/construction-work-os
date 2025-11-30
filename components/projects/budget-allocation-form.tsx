@@ -4,12 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateBudgetAllocation } from '@/lib/actions/budgets'
 import { getBudgetBreakdown } from '@/lib/actions/budgets'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
-import { DollarSign, ChevronDown, ChevronRight } from 'lucide-react'
+import { DollarSign, ChevronDown, ChevronRight, Hammer, Package, Truck, MoreHorizontal } from 'lucide-react'
 import { QuoteUploadDialog } from '@/components/budgets/quote-upload-dialog'
 import { LineItemsTable } from '@/components/budgets/line-items-table'
 import type { Database } from '@/lib/types/supabase'
@@ -23,10 +20,10 @@ interface BudgetAllocationFormProps {
 }
 
 const CATEGORIES = [
-  { value: 'labor', label: 'Labor' },
-  { value: 'materials', label: 'Materials' },
-  { value: 'equipment', label: 'Equipment' },
-  { value: 'other', label: 'Other' },
+  { value: 'labor', label: 'Labor', icon: Hammer, color: 'blue' },
+  { value: 'materials', label: 'Materials', icon: Package, color: 'emerald' },
+  { value: 'equipment', label: 'Equipment', icon: Truck, color: 'amber' },
+  { value: 'other', label: 'Other', icon: MoreHorizontal, color: 'purple' },
 ] as const
 
 export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocationFormProps) {
@@ -187,7 +184,7 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
           title: 'Error',
           description: result.error || 'Failed to update budget allocations',
           variant: 'destructive',
-          duration: 7000, // Show error longer
+          duration: 7000,
         })
       }
     } catch (error) {
@@ -198,7 +195,7 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         title: 'Error',
         description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
-        duration: 7000, // Show error longer
+        duration: 7000,
       })
     } finally {
       logger.debug('Budget allocation save process finished', {
@@ -211,18 +208,29 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
   if (isFetching) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="text-neutral-500">Loading budget allocations...</div>
+        <div className="text-white/40">Loading budget allocations...</div>
       </div>
     )
   }
 
+  const inputStyles = cn(
+    "w-full px-4 py-3 rounded-lg text-sm transition-all",
+    "bg-white/[0.03] border border-white/[0.08]",
+    "text-white placeholder:text-white/30",
+    "focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50"
+  )
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
+      {/* Total Budget Display */}
+      <div className={cn(
+        "rounded-lg p-4",
+        "bg-emerald-500/10 border border-emerald-500/20"
+      )}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-blue-900">
-            <DollarSign className="h-4 w-4" />
-            <span className="font-semibold">Total Project Budget:</span>
+          <div className="flex items-center gap-2 text-emerald-400">
+            <DollarSign className="h-5 w-5" />
+            <span className="font-medium">Total Project Budget:</span>
             <span className="text-xl font-bold">${totalBudget.toLocaleString()}</span>
           </div>
           <QuoteUploadDialog
@@ -235,41 +243,64 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Category Allocations */}
+      <div className="space-y-3">
         {CATEGORIES.map((category) => {
           const budgetId = budgetIds[category.value]
           const isExpanded = expandedCategories[category.value]
-          const hasAllocation = parseFloat(allocations[category.value]) > 0
+          const Icon = category.icon
 
           return (
-            <div key={category.value} className="border rounded-lg">
+            <div
+              key={category.value}
+              className={cn(
+                "rounded-lg overflow-hidden",
+                "bg-white/[0.02] border border-white/[0.06]"
+              )}
+            >
               <div className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Button
+                  <div className="flex items-center gap-3">
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
                       onClick={() => toggleCategory(category.value)}
                       disabled={!budgetId}
-                      className="h-6 w-6 p-0"
+                      className={cn(
+                        "p-1.5 rounded-md transition-colors",
+                        budgetId ? "hover:bg-white/[0.05]" : "opacity-50 cursor-not-allowed"
+                      )}
                     >
                       {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronDown className="h-4 w-4 text-white/40" />
                       ) : (
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4 text-white/40" />
                       )}
-                    </Button>
-                    <Label htmlFor={category.value} className="text-lg font-semibold">
+                    </button>
+                    <div className={cn(
+                      "p-2 rounded-lg",
+                      category.color === 'blue' && "bg-blue-500/10",
+                      category.color === 'emerald' && "bg-emerald-500/10",
+                      category.color === 'amber' && "bg-amber-500/10",
+                      category.color === 'purple' && "bg-purple-500/10",
+                    )}>
+                      <Icon className={cn(
+                        "h-4 w-4",
+                        category.color === 'blue' && "text-blue-400",
+                        category.color === 'emerald' && "text-emerald-400",
+                        category.color === 'amber' && "text-amber-400",
+                        category.color === 'purple' && "text-purple-400",
+                      )} />
+                    </div>
+                    <label htmlFor={category.value} className="text-base font-medium text-white">
                       {category.label}
-                    </Label>
+                    </label>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-10">
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
-                    <Input
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">$</span>
+                    <input
                       id={category.value}
                       type="number"
                       step="0.01"
@@ -277,14 +308,14 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
                       value={allocations[category.value]}
                       onChange={(e) => setAllocations({ ...allocations, [category.value]: e.target.value })}
                       placeholder="0.00"
-                      className="pl-7"
+                      className={cn(inputStyles, "pl-8")}
                     />
                   </div>
                 </div>
               </div>
 
               {budgetId && isExpanded && (
-                <div className="border-t p-4 bg-muted/30">
+                <div className="border-t border-white/[0.06] p-4 bg-white/[0.01]">
                   <LineItemsTable
                     budgetId={budgetId}
                     category={category.value as BudgetCategory}
@@ -298,55 +329,105 @@ export function BudgetAllocationForm({ projectId, totalBudget }: BudgetAllocatio
         })}
       </div>
 
-      <div className="rounded-lg border p-4 space-y-2">
+      {/* Budget Summary */}
+      <div className={cn(
+        "rounded-lg p-4 space-y-3",
+        "bg-white/[0.02] border border-white/[0.06]"
+      )}>
         <div className="flex items-center justify-between">
-          <span className="font-medium">Total Allocated:</span>
-          <span className={`text-xl font-bold ${isOverBudget ? 'text-red-600' : 'text-green-600'}`}>
+          <span className="font-medium text-white/70">Total Allocated:</span>
+          <span className={cn(
+            "text-xl font-bold",
+            isOverBudget ? "text-red-400" : "text-emerald-400"
+          )}>
             ${totalAllocated.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="font-medium">Remaining:</span>
-          <span className={`text-xl font-bold ${isOverBudget ? 'text-red-600' : 'text-neutral-900'}`}>
+          <span className="font-medium text-white/70">Remaining:</span>
+          <span className={cn(
+            "text-xl font-bold",
+            isOverBudget ? "text-red-400" : "text-white"
+          )}>
             ${remaining.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </span>
         </div>
         {isOverBudget && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-red-400">
             Total allocation exceeds project budget by ${(totalAllocated - totalBudget).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
         )}
+
+        {/* Progress Bar */}
+        <div className="pt-2">
+          <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all",
+                isOverBudget ? "bg-red-500" : "bg-emerald-500"
+              )}
+              style={{ width: `${Math.min((totalAllocated / totalBudget) * 100, 100)}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-1 text-xs text-white/40">
+            <span>0%</span>
+            <span>{((totalAllocated / totalBudget) * 100).toFixed(0)}% allocated</span>
+            <span>100%</span>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="reason">
-          Reason for Change <span className="text-neutral-500 text-sm">(Optional)</span>
-        </Label>
-        <Textarea
+      {/* Reason for Change */}
+      <div>
+        <label htmlFor="reason" className="block text-sm font-medium text-white/70 mb-2">
+          Reason for Change <span className="text-white/40">(Optional)</span>
+        </label>
+        <textarea
           id="reason"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Explain why you're updating the budget allocations..."
           maxLength={500}
           rows={3}
+          className={cn(
+            "w-full px-4 py-3 rounded-lg text-sm transition-all resize-none",
+            "bg-white/[0.03] border border-white/[0.08]",
+            "text-white placeholder:text-white/30",
+            "focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50"
+          )}
         />
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-white/40 mt-1">
           {reason.length}/500 characters
         </p>
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.06]">
+        <button
           type="button"
-          variant="outline"
           onClick={() => router.refresh()}
           disabled={isLoading}
+          className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+            "bg-white/[0.03] border border-white/[0.08] text-white/60",
+            "hover:bg-white/[0.06] hover:text-white",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
         >
           Reset
-        </Button>
-        <Button type="submit" disabled={isLoading || isOverBudget}>
+        </button>
+        <button
+          type="submit"
+          disabled={isLoading || isOverBudget}
+          className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+            "bg-amber-500/10 border border-amber-500/20 text-amber-400",
+            "hover:bg-amber-500/20",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
+        >
           {isLoading ? 'Saving...' : 'Save Allocations'}
-        </Button>
+        </button>
       </div>
     </form>
   )
